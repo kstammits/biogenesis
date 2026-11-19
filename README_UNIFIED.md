@@ -1,13 +1,18 @@
-# Unified Biogenesis — 0.9 vanilla + X-Mod port (Java 8)
+# Unified Biogenesis — 0.9 vanilla + X-Mod + Efficiency (Java 17)
 
-Branch `unified-0.9-xmod`. Stays on Java 8 for now (system has 1.8.0_151/341 only).
+Branch `unified-0.9-xmod`. Requires JDK 17 (Homebrew `openjdk@17` preferred, falls back to `JAVA_HOME`/`PATH`).
+
+## Run
+- `./build.sh run` — launch the app. First run compiles (~101 classes); repeats skip the compile and start instantly. Pass-through args after `run` go to the app.
+- `./build.sh` — compile only (skipped when up to date); `./build.sh jar` — build `biogenesis.jar`; `./build.sh clean` — remove `classes/` + jar.
+- No Ant/Gradle needed. Legacy `src/build.xml`, `src/uninstall.mf` and `src/launch_biogenesis` were removed; `build.sh` is the canonical build.
 
 ## Layout (matches official `biogenesis_src_0_9.zip`)
 - `src/biogenesis/*.java` — vanilla 0.9 source (symmetry 1-8, backup button, DE/PT/RU, STRtree perf)
 - `src/biogenesis/images/`, `src/biogenesis/messages/` (7 locales)
-- `src/build.xml`, `src/biogenesis.mf`, `src/uninstall.mf`, `src/launch_biogenesis`, `src/biogenesis.desktop`
+- `src/biogenesis.mf`, `src/biogenesis.desktop` (Linux packaging, kept for reference)
 - `lib/jts-core-1.15.0.jar` — required by `World.java` (`org.locationtech.jts`, STRtree collision). Not in git history; vendored from Maven Central. Vanilla 0.9 jars bundle the same version.
-- `build.sh` — Java 8 build without Ant/Gradle: `./build.sh`, `./build.sh jar`, `./build.sh run`
+- `build.sh` — canonical Java 17 build, no Ant/Gradle: `./build.sh run` launches the app
 
 Root `changelog`, `copyright`, `gpl.txt` are still 0.8-era; canonical 0.9 `changelog` is in the release zip (`readme.txt` 2019-07-21).
 
@@ -27,7 +32,7 @@ Root `changelog`, `copyright`, `gpl.txt` are still 0.8-era; canonical 0.9 `chang
 
 Reference: `git show origin/xmod:readme.txt`, `git log --oneline new_design..xmod`, online `x_mod_v0.2.2/readme.txt` + `ColorMod_2_01/` untouched for now.
 
-## Verify (Java 8)
-- `javac -cp lib/jts-core-1.15.0.jar -d /tmp/bio_check src/biogenesis/*.java` → 98 classes, unchecked warnings only
-- `java -cp classes:lib/jts-core-1.15.0.jar biogenesis.MainWindow`
+## Verify (Java 17)
+- `./build.sh` → 101 classes, zero `-Xlint:removal` warnings
+- `./build.sh run` launches `biogenesis.MainWindow`
 - Rust port later: this tree is the spec baseline.
