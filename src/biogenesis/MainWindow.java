@@ -567,7 +567,7 @@ public class MainWindow extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if (_statisticsWindow != null)
 				_statisticsWindow.dispose();
-			_statisticsWindow = _world.createStatisticsWindow();
+			_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
 		}
 	}
 	

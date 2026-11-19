@@ -37,7 +37,7 @@ import java.awt.image.*;
  * part: it's the place where organisms are drawn and is in charge of
  * the context menus management.
  */
-public class VisibleWorld extends JPanel {
+public class VisibleWorld extends JPanel implements WorldView {
 	/**
 	 * The version of this class
 	 */
@@ -469,6 +469,37 @@ public class VisibleWorld extends JPanel {
 	public Organism getSelectedOrganism() {
 		return _selectedOrganism;
 	}
+	// WorldView: view-side seam for the simulation (headless/test/JavaFX use
+	// provides its own implementation; behavior here is unchanged).
+	@Override
+	public void repaintRegion(java.awt.Rectangle region) {
+		repaint(region);
+	}
+	@Override
+	public void clearSelection() {
+		setSelectedOrganism(null);
+	}
+	@Override
+	public void worldStatisticsChanged() {
+		_mainWindow.getInfoPanel().recalculate();
+	}
+	@Override
+	public void organismReproduced() {
+		_mainWindow.getInfoPanel().changeNChildren();
+	}
+	@Override
+	public void organismKilled() {
+		_mainWindow.getInfoPanel().changeNKills();
+	}
+	@Override
+	public void organismInfected() {
+		_mainWindow.getInfoPanel().changeNInfected();
+	}
+	@Override
+	public void worldResized(int width, int height) {
+		setPreferredSize(new Dimension(width, height));
+	}
+	// showDeadToolbar() below already satisfies WorldView.
 	/**
 	 * Set a genetic code as the clipped genetic code, that will be used when
 	 * pasting a new organism or in the genetic lab as the staring genetic code.
@@ -626,6 +657,7 @@ public class VisibleWorld extends JPanel {
 		toolBar.repaint();
 	}
 	
+	@Override
 	public void showDeadToolbar() {
 		JToolBar toolBar = _mainWindow.toolBar;
 		toolBar.removeAll();

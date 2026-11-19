@@ -78,11 +78,13 @@ public class World implements Serializable{
 	 */
 	protected int NEXT_ID;
 	/**
-	 * A reference to the visible world part of this world used basically
-	 * to indicate which parts of the world should be repainted due to
-	 * events in the world.
+	 * The view attached to this world, used basically to indicate which
+	 * parts of the world should be repainted due to events in the world.
+	 * A {@link WorldView} rather than a concrete component so the
+	 * simulation can run headless. Re-linked via {@link #init} after
+	 * deserialization.
 	 */
-	transient protected VisibleWorld _visibleWorld;
+	transient protected WorldView _view;
 	/**
 	 * Frame counter. 256 frames are a time unit. This value is used to count
 	 * time and to trigger some window updating at regular intervals.
@@ -115,11 +117,12 @@ public class World implements Serializable{
 	}
 	/**
 	 * Returns a new StatisticsWindow refering to this world.
-	 * 
+	 *
+	 * @param mainWindow  The owning main window (previously reached via the view).
 	 * @return  A newly created StatisticsWindow.
 	 */
-	public StatisticsWindow createStatisticsWindow() {
-		return new StatisticsWindow(_visibleWorld._mainWindow, worldStatistics, _organisms);
+	public StatisticsWindow createStatisticsWindow(MainWindow mainWindow) {
+		return new StatisticsWindow(mainWindow, worldStatistics, _organisms);
 	}
 	/**
 	 * Finds an organism that has the given coordinates inside its bounding box and
@@ -309,10 +312,10 @@ public class World implements Serializable{
 	 * Constructor of the World class. All internal structures are initialized and
 	 * the world's size is obtained from parameters.
 	 * 
-	 * @param visibleWorld  A reference to the visual representation of this world.
+	 * @param view  The view attached to this world.
 	 */
-	public World(VisibleWorld visibleWorld) {
-		_visibleWorld = visibleWorld;
+	public World(WorldView view) {
+		_view = view;
 		_width = Utils.WORLD_WIDTH;
 		_height = Utils.WORLD_HEIGHT;
 		_organisms = Collections.synchronizedList(new ArrayList<Organism>(Utils.ORGANISMS_VECTOR_SIZE));
@@ -324,11 +327,11 @@ public class World implements Serializable{
 	 * When a world object is read from a file, it must be linked with its visualization.
 	 * That is what this method does.
 	 * 
-	 * @param visibleWorld  A reference to the visual representation of this world.
+	 * @param view  The view attached to this world.
 	 */
-	public void init(VisibleWorld visibleWorld) {
-		_visibleWorld = visibleWorld;
-		_visibleWorld.setPreferredSize(new Dimension(getWidth(), getHeight()));
+	public void init(WorldView view) {
+		_view = view;
+		_view.worldResized(getWidth(), getHeight());
 	}
 	/**
 	 * Populate the word with a new set of organisms.
@@ -341,12 +344,12 @@ public class World implements Serializable{
 		_CO2 = Utils.INITIAL_CO2;
 		NEXT_ID = 0;
 		_population = 0;
-		_visibleWorld.setSelectedOrganism(null);
+		_view.clearSelection();
 		_organisms.clear();
 		// Initialize size
 		_width = Utils.WORLD_WIDTH;
 		_height = Utils.WORLD_HEIGHT;
-		_visibleWorld.setPreferredSize(new Dimension(Utils.WORLD_WIDTH, Utils.WORLD_HEIGHT));
+		_view.worldResized(Utils.WORLD_WIDTH, Utils.WORLD_HEIGHT);
 		// Create statistics
 		worldStatistics = new WorldStatistics();
 		// Create organisms
@@ -438,23 +441,23 @@ public class World implements Serializable{
 		synchronized (inCorridors) {
 			for (Iterator<InCorridor> it = inCorridors.iterator(); it.hasNext();) {
 				c = it.next();
-				_visibleWorld.repaint(c);
+				_view.repaintRegion(c);
 			}
 		}
 		synchronized (outCorridors) {
 			for (Iterator<OutCorridor> it = outCorridors.iterator(); it.hasNext();) {
 				c = it.next();
-				_visibleWorld.repaint(c);
+				_view.repaintRegion(c);
 				if (c.getTravellingOrganism() != null)
-					_visibleWorld.repaint(c.getTravellingOrganism());
+					_view.repaintRegion(c.getTravellingOrganism());
 			}
 		}
 		synchronized (_organisms) {
 			for (Iterator<Organism> it = _organisms.iterator(); it.hasNext();) {
 				b = it.next();
 				if (b.hasMoved) {
-					_visibleWorld.repaint(b.lastFrame);
-					_visibleWorld.repaint(b);
+					_view.repaintRegion(b.lastFrame);
+					_view.repaintRegion(b);
 				}
 			}
 		}
@@ -492,17 +495,17 @@ public class World implements Serializable{
 				b = _organisms.get(i);
 				if (!b.move()) {
 					// Organism has no energy -> remove from the list
-					_visibleWorld.repaint(b);
+					_view.repaintRegion(b);
 					_organisms.remove(i);
-					if (_visibleWorld.getSelectedOrganism() == b)
-						_visibleWorld.setSelectedOrganism(null);
+					if (_view.getSelectedOrganism() == b)
+						_view.clearSelection();
 					l--;
 					i--;
 				}
 			}
 		}
 		if (nFrames++ % 20 == 0)
-			_visibleWorld._mainWindow.getInfoPanel().recalculate();
+			_view.worldStatisticsChanged();
 		if (nFrames % 256 == 0) {
 			nFrames = 0;
 			worldStatistics.eventTime(_population, _O2, _CO2);
@@ -537,8 +540,8 @@ public class World implements Serializable{
 		in.height++;
 		out.width++;
 		out.height++;
-		_visibleWorld.repaint(in);
-		_visibleWorld.repaint(out);
+		_view.repaintRegion(in);
+		_view.repaintRegion(out);
 	}
 	/**
 	 * Checks if an organism enters an output corridor. It is considered
@@ -622,8 +625,8 @@ public class World implements Serializable{
 	 */
 	public void addOrganism(Organism child, Organism parent) {
 		_organisms.add(child);
-		if (parent == _visibleWorld.getSelectedOrganism())
-			_visibleWorld._mainWindow.getInfoPanel().changeNChildren();
+		if (parent == _view.getSelectedOrganism())
+			_view.organismReproduced();
 		if (parent != null) {
 			worldStatistics.eventOrganismBorn(child, parent);
 		}
@@ -638,10 +641,10 @@ public class World implements Serializable{
 	 */
 	public void organismHasDied(Organism dyingOrganism, Organism killingOrganism) {
 		worldStatistics.eventOrganismDie(dyingOrganism, killingOrganism);
-		if (killingOrganism == _visibleWorld.getSelectedOrganism())
-			_visibleWorld._mainWindow.getInfoPanel().changeNKills();
-		if (dyingOrganism == _visibleWorld.getSelectedOrganism())
-			_visibleWorld.showDeadToolbar();
+		if (killingOrganism == _view.getSelectedOrganism())
+			_view.organismKilled();
+		if (dyingOrganism == _view.getSelectedOrganism())
+			_view.showDeadToolbar();
 	}
 	/**
 	 * Informs the world of an infection event. This will update statistics.
@@ -651,7 +654,7 @@ public class World implements Serializable{
 	 */
 	public void organismHasBeenInfected(Organism infectedOrganism, Organism infectingOrganism) {
 		worldStatistics.eventOrganismInfects(infectedOrganism, infectingOrganism);
-		if (infectingOrganism == _visibleWorld.getSelectedOrganism())
-			_visibleWorld._mainWindow.getInfoPanel().changeNInfected();
+		if (infectingOrganism == _view.getSelectedOrganism())
+			_view.organismInfected();
 	}
 }

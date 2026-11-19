@@ -51,10 +51,6 @@ public class Organism extends Rectangle {
 	 */
 	protected World _world;
 	/**
-	 * Reference to the visual part of the world where the organism lives.
-	 */
-	transient protected VisibleWorld _visibleWorld;
-	/**
 	 * Identification number of this organism's parent.
 	 */
 	protected int _parentID;
@@ -352,7 +348,6 @@ public class Organism extends Rectangle {
 	 */
 	public Organism(World world) {
 		_world = world;
-		_visibleWorld = world._visibleWorld;
 		_theta = Utils.random.nextDouble() * Math.PI * 2d;
 	}
 	/**
@@ -365,7 +360,6 @@ public class Organism extends Rectangle {
 	 */
 	public Organism(World world, GeneticCode geneticCode) {
 		_world = world;
-		_visibleWorld = world._visibleWorld;
 		_theta = Utils.random.nextDouble() * Math.PI * 2d;
 		_geneticCode = geneticCode;
 	}

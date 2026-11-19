@@ -34,6 +34,14 @@ Root `changelog`, `copyright`, `gpl.txt` are still 0.8-era; canonical 0.9 `chang
 Reference: `git show origin/xmod:readme.txt`, `git log --oneline new_design..xmod`.
 
 ## Verify (Java 17)
-- `./build.sh` → 98 classes, zero `-Xlint:removal` warnings
+- `./build.sh` → 99 classes, zero `-Xlint:removal` warnings
 - `./build.sh run` launches `biogenesis.MainWindow`
 - Rust port later: this tree is the spec baseline.
+
+## Sim/view seam (`WorldView`)
+`src/biogenesis/WorldView.java` decouples the simulation from Swing: `World`/`Organism`
+talk to the view only through this interface (repaints, selection, stats events).
+`VisibleWorld` implements it today; the JavaFX canvas view will implement it next.
+Headless smoke test (first automated test — no UI, deterministic seed):
+- `javac -cp classes:lib/jts-core-1.15.0.jar -d /tmp/smoke test/SimSmoke.java`
+- `java -Djava.awt.headless=true -cp /tmp/smoke:classes:lib/jts-core-1.15.0.jar SimSmoke [ticks]`
