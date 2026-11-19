@@ -12,6 +12,7 @@ Branch `unified-0.9-xmod`. Requires JDK 17 (Homebrew `openjdk@17` preferred, fal
 - `src/biogenesis/images/`, `src/biogenesis/messages/` (7 locales)
 - `src/biogenesis.mf`, `src/biogenesis.desktop` (Linux packaging, kept for reference)
 - `lib/jts-core-1.15.0.jar` — required by `World.java` (`org.locationtech.jts`, STRtree collision). Not in git history; vendored from Maven Central. Vanilla 0.9 jars bundle the same version.
+- `lib/javafx/` — JavaFX 21.0.13 (base, graphics, controls; mac-aarch64) from Maven Central (`org.openjfx`). Toolchain for the UI port; `build.sh` puts it on the module path. Swing build is unaffected.
 - `build.sh` — canonical Java 17 build, no Ant/Gradle: `./build.sh run` launches the app
 
 Root `changelog`, `copyright`, `gpl.txt` are still 0.8-era; canonical 0.9 `changelog` is in the release zip (`readme.txt` 2019-07-21).

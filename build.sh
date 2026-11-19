@@ -23,11 +23,20 @@ else
   JAR=jar
 fi
 
+# JavaFX 21 (vendored in lib/javafx, mac-aarch64). Present so the toolchain
+# is ready for the UI port; the Swing app doesn't need it yet.
+FX_DIR="$ROOT/lib/javafx"
+FX_MODULES="javafx.controls,javafx.graphics"
+FX_FLAGS=()
+if ls "$FX_DIR"/javafx-*.jar >/dev/null 2>&1; then
+  FX_FLAGS=(--module-path "$FX_DIR" --add-modules "$FX_MODULES")
+fi
 # True (0) when classes are missing or any source/lib is newer than them.
 classes_stale() {
   [[ ! -f "$MARKER" ]] && return 0
   [[ "$LIB" -nt "$MARKER" ]] && return 0
   [[ -n $(find "$SRC/biogenesis" -name "*.java" -newer "$MARKER" -print -quit) ]] && return 0
+  [[ -n $(find "$FX_DIR" -name "*.jar" -newer "$MARKER" -print -quit 2>/dev/null) ]] && return 0
   return 1
 }
 
@@ -40,7 +49,7 @@ jar_stale() {
 
 build_classes() {
   mkdir -p "$OUT"
-  "$JAVAC" -nowarn --release 17 -cp "$LIB" -d "$OUT" "$SRC"/biogenesis/*.java
+  "$JAVAC" -nowarn --release 17 -cp "$LIB" "${FX_FLAGS[@]}" -d "$OUT" "$SRC"/biogenesis/*.java
   cp -R "$SRC"/biogenesis/images "$OUT"/biogenesis/ 2>/dev/null || true
   cp -R "$SRC"/biogenesis/messages "$OUT"/biogenesis/ 2>/dev/null || true
   echo "compiled $(ls "$OUT"/biogenesis/*.class | wc -l | tr -d ' ') classes"
@@ -79,5 +88,5 @@ if [[ "$1" == "jar" || "$1" == "run" ]]; then
 fi
 
 if [[ "$1" == "run" ]]; then
-  exec "$JAVA" -jar "$JARFILE" "${@:2}"
+  exec "$JAVA" "${FX_FLAGS[@]}" -jar "$JARFILE" "${@:2}"
 fi

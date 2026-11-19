@@ -3,5 +3,6 @@ build/
 *.class
 *.jar
 !lib/jts-core-*.jar
+!lib/javafx/*.jar
 .DS_Store
 .!*
