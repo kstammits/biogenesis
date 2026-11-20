@@ -35,7 +35,7 @@ public final class Utils {
 	 * All serializable classes use this value as their serialVersionUID.
 	 */
 	static final int FILE_VERSION = 800; // X-Mod: save/net format bump, old saves incompatible
-	static final int VERSION = 901; // 0.9.1 unified (0.9 vanilla + X-Mod + Efficiency); used for net compat gate
+	static final int VERSION = 902; // 0.9.2 unified (0.9 vanilla + X-Mod + Efficiency, FX shell); used for net compat gate
 
 	// Default values for parameters
 	final static int DEF_WINDOW_X = 0;

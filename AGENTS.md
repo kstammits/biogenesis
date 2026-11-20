@@ -1,4 +1,4 @@
-# AGENTS.md — Biogenesis unified tree (`javafx` branch)
+# AGENTS.md — Biogenesis unified tree (`main` branch)
 
 ## What this is
 Biogenesis artificial-life sim: 0.9 vanilla + X-Mod merged onto Java 17,
@@ -36,7 +36,7 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 - `StdAction` is a plain FX command POJO (name/desc/iconPath/accelerator/
   enabled + `perform()`); no `javax.swing` anywhere. Remaining AWT is renderers
   only (`Color`/`Graphics`/`BufferedImage` + `SwingFXUtils`/`ImageIO` bridge).
-- Serial contract: `FILE_VERSION 800`, `VERSION 901` in `Utils.java`.
+- Serial contract: `FILE_VERSION 800`, `VERSION 902` in `Utils.java`.
   i18n via `Messages.java` + 7 `messages*.properties` (keep 0 missing keys).
 
 ## Gotchas (learned the hard way)
@@ -54,7 +54,7 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 ## State (update as you go)
 - Done: Phase 0 seam, Phase 1 FX toolchain, Phase 2 net windows, dialog sweep,
   `ParamDialog`, `LabWindow`+`ColorComboBox`, headless test gate,
-  `StatisticsWindow`+`InfoToolbar`+`GeneticCodePanel` (FX, JFXPanel-hosted toolbar),
+  `StatisticsWindow`+`InfoToolbar`+`GeneticCodePanel` (FX, embedded in MainWindow),
   `VisibleWorld` canvas (Pane+Canvas in FX ScrollPane, coalesced redraw, FX ContextMenus),
   `MainWindow` shell (Stage/MenuBar/ToolBar/ScrollPane, StdAction wrappers, no Swing windows).
   Migration complete: no `javax.swing` window code remains (`StdAction` command
