@@ -62,6 +62,14 @@ public class VisibleWorld extends Pane implements WorldView {
 	 */
 	private double zoomFactor = 1.0;
 	/**
+	 * Zoom limits (100% = 1.0) and wheel sensitivity. Wheel factor per event
+	 * is {@code exp(deltaY * WHEEL_ZOOM_SENSITIVITY)}: ~7% per classic wheel
+	 * notch (deltaY=40), sub-percent per trackpad tick for smooth feel.
+	 */
+	static final double MIN_ZOOM = 0.25;
+	static final double MAX_ZOOM = 4.0;
+	private static final double WHEEL_ZOOM_SENSITIVITY = 0.0018;
+	/**
 	 * FX canvas. Built on the FX thread in the constructor.
 	 */
 	private Canvas canvas;
@@ -573,6 +581,20 @@ public class VisibleWorld extends Pane implements WorldView {
 			int worldY = toWorldCoord((int) e.getY());
 			maybeShowPopupMenu(worldX, worldY, e.getScreenX(), e.getScreenY());
 		});
+		// Smooth Ctrl/Cmd+wheel zoom to cursor; plain wheel still pans.
+		canvas.setOnScroll(e -> {
+			if (!e.isControlDown() && !e.isMetaDown())
+				return;
+			if (e.getDeltaY() == 0)
+				return;
+			zoomAt(e.getX(), e.getY(), Math.exp(e.getDeltaY() * WHEEL_ZOOM_SENSITIVITY));
+			e.consume();
+		});
+		// Trackpad pinch zoom to cursor.
+		canvas.setOnZoom(e -> {
+			zoomAt(e.getX(), e.getY(), e.getZoomFactor());
+			e.consume();
+		});
 		createPopupMenu();
 	}
 	/**
@@ -713,11 +735,84 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	public void zoomIn() {
-		setZoomFactor(Utils.between(zoomFactor * 1.25, 0.25, 4.0));
+		zoomCentered(1.25);
 	}
 
 	public void zoomOut() {
-		setZoomFactor(Utils.between(zoomFactor / 1.25, 0.25, 4.0));
+		zoomCentered(1.0 / 1.25);
+	}
+
+	/**
+	 * Continuous zoom keeping the content point under the cursor fixed.
+	 * Runs on the FX thread (scroll/pinch handlers, menu actions).
+	 *
+	 * @param anchorX  cursor X in content pixels ({@code ScrollEvent.getX()})
+	 * @param anchorY  cursor Y in content pixels
+	 * @param factor   multiplicative zoom factor (&gt;0)
+	 */
+	public void zoomAt(double anchorX, double anchorY, double factor) {
+		if (factor <= 0 || !Double.isFinite(factor) || canvas == null)
+			return;
+		double oldZoom = zoomFactor;
+		double newZoom = Utils.between(oldZoom * factor, MIN_ZOOM, MAX_ZOOM);
+		if (newZoom == oldZoom)
+			return;
+		var sp = (_mainWindow == null) ? null : _mainWindow.scrollPane;
+		double oldCW = canvas.getWidth();
+		double oldCH = canvas.getHeight();
+		double h = 0, v = 0, vw = 0, vh = 0;
+		boolean hasScroll = sp != null && oldCW > 0 && oldCH > 0;
+		if (hasScroll) {
+			vw = sp.getViewportBounds().getWidth();
+			vh = sp.getViewportBounds().getHeight();
+			h = sp.getHvalue();
+			v = sp.getVvalue();
+		}
+		setZoomFactor(newZoom);
+		if (hasScroll) {
+			double newCW = canvas.getWidth();
+			double newCH = canvas.getHeight();
+			if (newCW > 0 && newCH > 0) {
+				sp.setHvalue(anchoredScroll(anchorX, oldCW, newCW, vw, h));
+				sp.setVvalue(anchoredScroll(anchorY, oldCH, newCH, vh, v));
+			}
+		}
+	}
+
+	/**
+	 * Stepped menu/keyboard zoom anchored at the viewport center.
+	 */
+	private void zoomCentered(double factor) {
+		if (canvas == null) {
+			setZoomFactor(Utils.between(zoomFactor * factor, MIN_ZOOM, MAX_ZOOM));
+			return;
+		}
+		var sp = (_mainWindow == null) ? null : _mainWindow.scrollPane;
+		if (sp == null) {
+			setZoomFactor(Utils.between(zoomFactor * factor, MIN_ZOOM, MAX_ZOOM));
+			return;
+		}
+		double cw = canvas.getWidth();
+		double ch = canvas.getHeight();
+		double vw = sp.getViewportBounds().getWidth();
+		double vh = sp.getViewportBounds().getHeight();
+		double x0 = cw > vw ? sp.getHvalue() * (cw - vw) : 0;
+		double y0 = ch > vh ? sp.getVvalue() * (ch - vh) : 0;
+		zoomAt(x0 + vw / 2, y0 + vh / 2, factor);
+	}
+
+	/**
+	 * Scroll fraction keeping the anchor's viewport-relative position fixed
+	 * across a content resize. Pure math, headless-testable.
+	 */
+	static double anchoredScroll(double anchorContent, double oldContent, double newContent,
+			double viewport, double oldValue) {
+		if (newContent <= viewport || oldContent <= 0 || newContent <= 0)
+			return 0;
+		double x0 = oldContent > viewport ? oldValue * (oldContent - viewport) : 0;
+		double anchorView = anchorContent - x0;
+		double newAnchor = anchorContent * (newContent / oldContent);
+		return Utils.between((newAnchor - anchorView) / (newContent - viewport), 0, 1);
 	}
 	/**
 	 * Resizes the canvas and this pane. Runs on the FX thread.
