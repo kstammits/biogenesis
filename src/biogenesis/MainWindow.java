@@ -856,6 +856,10 @@ public class MainWindow {
 
 		_visibleWorld = new VisibleWorld(this);
 		scrollPane = new ScrollPane(_visibleWorld);
+		// Letterbox behind the world canvas: dark slate so the black world
+		// floor keeps a visible edge when the window is bigger than the world.
+		// -fx-background is inherited by .viewport, so one rule covers both.
+		scrollPane.setStyle("-fx-background: #3a3f44;"); //$NON-NLS-1$
 
 		infoToolbar = new InfoToolbar(null, this);
 
@@ -961,13 +965,29 @@ public class MainWindow {
 		});
 	}
 	/**
-	 * Returns the actual Frame Per Second rate of the program.
+	 * Returns the measured sim ticks per second, sampled over the last
+	 * 20-tick window. Falls back to the 1000/currentDelay target before
+	 * the first sample (e.g. right after launch).
 	 *
 	 * @return  The actual FPS.
 	 */
 	public int getFPS() {
+		if (measuredFps > 0)
+			return measuredFps;
 		return 1000/currentDelay;
 	}
+
+	/**
+	 * Decoupled render target: sim ticks run every {@link #currentDelay} ms,
+	 * repaints happen at most this often. Keeps a 200Hz sim from paying a
+	 * full-world blit per tick.
+	 */
+	protected int renderIntervalMs = 33;
+	protected long lastRenderMs = 0;
+	/** Measured ticks/sec state, sampled on the FX thread in lifeProcess. */
+	protected int measuredFps = -1;
+	protected long fpsWindowStartMs = 0;
+	protected int fpsWindowFrames = 0;
 
 	final transient Runnable lifeProcess = new Runnable() {
 	    public void run() {
@@ -975,13 +995,27 @@ public class MainWindow {
 	    		// executa un torn
 	    		_world.time();
 	    		nFrames++;
+	    		long nowMs = System.currentTimeMillis();
+	    		if (fpsWindowStartMs == 0)
+	    			fpsWindowStartMs = nowMs;
+	    		fpsWindowFrames++;
 	    		if (nFrames % 20 == 0) {
 	    			//if (_statisticsWindow != null)
 	    			//	_statisticsWindow.recalculate();
+	    			long elapsed = nowMs - fpsWindowStartMs;
+	    			if (elapsed > 0)
+	    				measuredFps = (int) Math.round(fpsWindowFrames * 1000.0 / elapsed);
+	    			fpsWindowStartMs = nowMs;
+	    			fpsWindowFrames = 0;
 	    			updateStatusLabel();
 	    		}
-	    		// dibuixa de nou si cal
-	    		_world.setPaintingRegion();
+	    		// dibuixa de nou si cal — throttled: sim runs free, paint
+	    		// at most every renderIntervalMs (explicit refresh() calls
+	    		// from selection/zoom/menus still repaint immediately).
+	    		if (nowMs - lastRenderMs >= renderIntervalMs || lastRenderMs == 0) {
+	    			lastRenderMs = nowMs;
+	    			_world.setPaintingRegion();
+	    		}
 	    		// tracking
 	    		if (_trackedOrganism != null) {
 	    			if (!_trackedOrganism.isAlive()) {
@@ -1041,9 +1075,16 @@ public class MainWindow {
 	 * the program's speed.
 	 */
 	protected long lastPaintTime;
+	/**
+	 * Settle-down ticks after a (re)start before the governor may adapt the
+	 * delay again. Covers cold-start JIT/warmup (where the first deltas are
+	 * meaningless — lastPaintTime starts at 0) and damps backoff oscillation.
+	 */
+	protected int delayCooldown = 0;
 	public void startLifeProcess(int delay) {
 		if (updateTask != null)
 			updateTask.cancel();
+		delayCooldown = 40;
 		updateTask = new TimerTask() {
 		    @Override
 			public void run() {
@@ -1055,9 +1096,14 @@ public class MainWindow {
 					/**
 					 * Checks the actual drawing speed and increases or decreases the speed
 					 * of the program in order to keep it running smoothly.
+					 * Skipped while delayCooldown runs (startup + after each
+					 * adaptation) so one slow frame can't cascade the delay up.
 					 */
 					long actualTime = System.currentTimeMillis();
-					if (actualTime - lastPaintTime > currentDelay*1.5 || currentDelay < Utils.DELAY) {
+					if (delayCooldown > 0) {
+						delayCooldown--;
+						failedTime = 0;
+					} else if (actualTime - lastPaintTime > currentDelay*1.5 || currentDelay < Utils.DELAY) {
 		    			// We can't run so fast
 		    			failedTime=Math.max(failedTime+1, 0);
 		    			if (failedTime >= 2) {
@@ -1065,8 +1111,12 @@ public class MainWindow {
 		    				currentDelay*=1.5;
 		    				startLifeProcess(currentDelay);
 		    			}
-		    		} else {
-		    			if (actualTime - lastPaintTime < currentDelay*1.2 && currentDelay > Utils.DELAY) {
+					} else {
+		    			// Symmetric 1.5x hysteresis for both directions: with
+		    			// FX overhead the interval sits a little above the
+		    			// delay, and a tighter recover threshold wedges the
+		    			// governor one step up (cooldown + resets never clear).
+		    			if (actualTime - lastPaintTime < currentDelay*1.5 && currentDelay > Utils.DELAY) {
 		    				// We can run faster
 		    				failedTime=Math.min(failedTime-1, 0);
 		    				if (failedTime <= -10) {

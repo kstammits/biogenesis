@@ -2,19 +2,22 @@
 
 ## What this is
 Biogenesis artificial-life sim: 0.9 vanilla + X-Mod merged onto Java 17,
-mid-migration from Swing to JavaFX 21. Sim core and `.bio`/net formats stay
+JavaFX 21 UI. Sim core and `.bio`/net formats stay
 unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 
 ## Toolchain
 - JDK 17 (`/opt/homebrew/opt/openjdk@17`, `javac --release 17`). No Ant/Gradle.
 - Vendored: `lib/jts-core-1.15.0.jar`, `lib/javafx/javafx-*-21-mac-aarch64.jar`
-  (base, graphics, controls, swing). mac-aarch64 only.
-- `FX_MODULES=javafx.controls,javafx.graphics,javafx.swing`.
+  (base, graphics, controls). mac-aarch64 only.
+- `FX_MODULES=javafx.controls,javafx.graphics`.
 
 ## Commands (`build.sh` is canonical)
 - `./build.sh` — incremental compile (skips when up to date)
 - `./build.sh test` — headless gate: `SimSmoke` (500 deterministic ticks,
   asserts population survives) + `FxLogicTest` (save-dialog filename rules)
+- `./build.sh bench [...]` — headless scaling benchmark (`test/biogenesis/PerfBench.java`,
+  CSV to stdout; e.g. `--ns 50,200,800 --worlds 1000x560,3162x1778 --seeds 3
+  --collide both --out scale.csv`). Ad-hoc, never shipped in the jar.
 - `./build.sh jar` / `./build.sh run` — self-contained jar (JTS bundled) / launch
 - `./build.sh clean` — remove `classes/` + jar
 - Before committing: `./build.sh test`, then `rm -rf classes biogenesis.jar`
@@ -29,13 +32,14 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   wrappers are thin; verify by eyeball.
 - Ported windows use `Stage` + `APPLICATION_MODAL`. Established pattern:
   constructor takes parent, `Fx.run(this::buildAndShow)`, OK writes prefs,
-  Cancel closes. Preview canvases + `VisibleWorld` render via AWT
-  (`World`/`GeneticCode.draw`) into a `BufferedImage` →
-  `SwingFXUtils.toFXImage`. Keep this bridge — Karl wants the full
-  `GraphicsContext` renderer port later, but it's not hurting anyone right now.
+   Cancel closes. Preview canvases + `VisibleWorld` render via AWT
+   (`World`/`GeneticCode.draw`) into a `BufferedImage` → `ImageFx.toFXImage`
+   (manual PixelWriter copy). Karl wants the full `GraphicsContext` renderer
+   port later, but the bridge is exact and A/B-benched ~20% faster than the
+   previous converter at full-world size.
 - `StdAction` is a plain FX command POJO (name/desc/iconPath/accelerator/
-  enabled + `perform()`); no `javax.swing` anywhere. Remaining AWT is renderers
-  only (`Color`/`Graphics`/`BufferedImage` + `SwingFXUtils`/`ImageIO` bridge).
+   enabled + `perform()`); the UI is pure JavaFX. Remaining AWT is renderers
+   only (`Color`/`Graphics`/`BufferedImage` + `ImageFx`/`ImageIO` bridge).
 - Serial contract: `FILE_VERSION 800`, `VERSION 902` in `Utils.java`.
   i18n via `Messages.java` + 7 `messages*.properties` (keep 0 missing keys).
 
@@ -56,11 +60,30 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   `ParamDialog`, `LabWindow`+`ColorComboBox`, headless test gate,
   `StatisticsWindow`+`InfoToolbar`+`GeneticCodePanel` (FX, embedded in MainWindow),
   `VisibleWorld` canvas (Pane+Canvas in FX ScrollPane, coalesced redraw, FX ContextMenus),
-  `MainWindow` shell (Stage/MenuBar/ToolBar/ScrollPane, StdAction wrappers, no Swing windows).
-  Migration complete: no `javax.swing` window code remains (`StdAction` command
-  objects + `Utils` frame constants gone too — renderers still on AWT).
-- Next: Karl's backlog (FPS limits, zooms, bg color, decoupled sim-speed,
-  branching saves). SimSmoke green each time.
+   `MainWindow` shell (Stage/MenuBar/ToolBar/ScrollPane, StdAction wrappers).
+   UI is pure JavaFX — renderers still on AWT; `ImageFx` manual copy
+   (pixel-exact, faster) with no extra jar or module flag.
+- Done: FPS fix — `getFPS` now reports measured ticks/sec (was `1000/currentDelay`);
+  sim decoupled from paint (`renderIntervalMs=33`, sim every tick, blit at most
+  ~30fps); `VisibleWorld` reuses frame buffers + restores efficiency-mode
+  viewport culling; governor gets a 40-tick settle cooldown (cold-start false
+  positives gone). SimSmoke + FxLogicTest green.
+- Done: 10fps-at-50-creatures root cause — NOT physics (headless: 0.15ms/tick
+  at N=50, 0.39ms at N=400; AWT draw+copy ~1.2ms/frame flat). It was
+  `requestRedraw` running inline on the FX thread: one full render per moved
+  organism per tick (~940 renders/s saturating FX, sim starved behind `Fx.ask`).
+  Now defers via `runLater` so bursts coalesce to one render; headful bench
+  (throwaway `/tmp/dbg/.../FxBench`, 60→153 organisms) holds 154-200fps at
+  delay=5, FX queue latency ≤1.4ms. Governor recovery threshold widened to
+  symmetric 1.5x (was wedging one step up under FX overhead). SimSmoke trace
+  bit-identical (seed 12345: pop=41, same O2/CO2) — sim untouched.
+- Done: `./build.sh bench` + `test/biogenesis/PerfBench.java` — headless scaling
+  matrix (seeds × N × world-size × collide on/off → CSV: mean/p95/max ms/tick,
+  render ms/frame, seg stats, GC time). Findings here: sim ~0.07–0.15ms @50 →
+  ~0.35ms @200 (collision ≈ half); render linear in pixels (1.2ms @560k px,
+  8.8ms @5.6M px); default world caps ~150 creatures via die-off.
+- Next: Karl's backlog (FPS limits, zooms, bg color, branching saves — sim-speed
+  decoupling done). SimSmoke green each time.
 
 ## Backlog (Karl's list — do NOT start unasked)
 - FPS limits: governor (`MainWindow.currentDelay`, auto-pause past 1000ms) trips

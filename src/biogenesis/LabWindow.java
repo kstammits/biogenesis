@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -49,8 +48,8 @@ import org.xml.sax.SAXException;
  * JavaFX port of the genetic laboratory. Gene table, combo selectors and
  * spinners are JavaFX controls; the organism preview still renders through
  * {@link GeneticCode#draw} into a BufferedImage, converted with
- * SwingFXUtils (javafx.swing). See {@link NetConfigWindow} for the
- * Swing-EDT to FX-thread handoff.
+ * ImageFx (manual PixelWriter copy). See {@link NetConfigWindow} for the
+ * sim-thread to FX-thread handoff.
  */
 public class LabWindow {
 	protected MainWindow mainWindow;
@@ -308,7 +307,7 @@ public class LabWindow {
 		} finally {
 			g.dispose();
 		}
-		WritableImage fxImage = SwingFXUtils.toFXImage(image, null);
+		WritableImage fxImage = ImageFx.toFXImage(image);
 		drawCanvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
 	}
 }

@@ -24,10 +24,10 @@ else
   JAR=jar
 fi
 
-# JavaFX 21 (vendored in lib/javafx, mac-aarch64). Present so the toolchain
-# is ready for the UI port; the Swing app doesn't need it yet.
+# JavaFX 21 (vendored in lib/javafx, mac-aarch64). The UI runs on FX;
+# no extra bridge modules required (ImageFx does the BufferedImage copy).
 FX_DIR="$ROOT/lib/javafx"
-FX_MODULES="javafx.controls,javafx.graphics,javafx.swing"
+FX_MODULES="javafx.controls,javafx.graphics"
 FX_FLAGS=()
 if ls "$FX_DIR"/javafx-*.jar >/dev/null 2>&1; then
   FX_FLAGS=(--module-path "$FX_DIR" --add-modules "$FX_MODULES")
@@ -94,6 +94,21 @@ if [[ "$1" == "test" ]]; then
   "$JAVA" -Djava.awt.headless=true -cp "$smoke:$OUT:$LIB" biogenesis.FxLogicTest
   rc=$?
   rm -rf "$smoke"
+  exit $rc
+fi
+
+if [[ "$1" == "bench" ]]; then
+  if classes_stale; then
+    build_classes
+  else
+    echo "classes up to date, skipping compile"
+  fi
+  bench=$(mktemp -d)
+  "$JAVAC" -nowarn --release 17 -cp "$OUT:$LIB" -d "$bench" \
+    "$ROOT"/test/biogenesis/PerfBench.java
+  "$JAVA" -Djava.awt.headless=true -cp "$bench:$OUT:$LIB" biogenesis.PerfBench "${@:2}"
+  rc=$?
+  rm -rf "$bench"
   exit $rc
 fi
 

@@ -24,7 +24,7 @@ import java.awt.Rectangle;
 /**
  * Headless simulation smoke test. Runs the world without any UI by
  * attaching a no-op {@link WorldView}, proving the sim core is decoupled
- * from Swing. Not shipped in the jar (lives in test/, compiled ad-hoc).
+ * from the UI. Not shipped in the jar (lives in test/, compiled ad-hoc).
  */
 public class SimSmoke {
 	static class StubView implements WorldView {

@@ -28,7 +28,7 @@ import javax.imageio.ImageIO;
 
 import org.xml.sax.SAXException;
 
-import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ContextMenu;
@@ -43,8 +43,8 @@ import javafx.scene.layout.Pane;
  *
  * <p>FX port: a plain {@link Pane} hosting a {@link Canvas}, placed in
  * MainWindow's FX ScrollPane. Rendering still goes through the AWT
- * {@link World#draw} into a BufferedImage converted with SwingFXUtils
- * (same bridge as the preview canvases); the renderers move to
+ * {@link World#draw} into a BufferedImage converted with ImageFx
+ * (manual PixelWriter copy); the renderers move to
  * GraphicsContext later. Redraw requests coalesce through a dirty flag
  * so a burst of sim-thread repaints costs a single frame render.
  */
@@ -169,6 +169,12 @@ public class VisibleWorld extends Pane implements WorldView {
 	private final Object redrawLock = new Object();
 	private boolean dirty = false;
 	private boolean redrawPending = false;
+	/**
+	 * Reused frame buffers. Reallocated only when the canvas size changes,
+	 * so the steady-state render loop allocates nothing per frame.
+	 */
+	private BufferedImage frameBuffer;
+	private WritableImage fxFrame;
 	/**
 	 * A reference to the {@link InfoWindow}, that is created from this class.
 	 */
@@ -580,6 +586,11 @@ public class VisibleWorld extends Pane implements WorldView {
 	/**
 	 * Queue a frame render on the FX thread, coalescing bursts.
 	 * Safe to call from any thread (sim, EDT, FX).
+	 *
+	 * <p>Note: when already on the FX thread the render MUST go through
+	 * {@code runLater}, not run inline. The sim loop calls this once per
+	 * moved organism per tick; inline execution would do N full renders
+	 * per tick instead of coalescing them into one.
 	 */
 	private void requestRedraw() {
 		synchronized (redrawLock) {
@@ -588,11 +599,14 @@ public class VisibleWorld extends Pane implements WorldView {
 				return;
 			redrawPending = true;
 		}
-		Fx.run(this::doRedraw);
+		javafx.application.Platform.runLater(this::doRedraw);
 	}
 	/**
-	 * Renders the world through the AWT pipeline into a BufferedImage and
-	 * blits it to the canvas. Runs on the FX thread.
+	 * Renders the world through the AWT pipeline into a reused BufferedImage
+	 * and blits it to the canvas. Runs on the FX thread. Frame buffers are
+	 * reused across ticks; only a canvas resize reallocates. In efficiency
+	 * mode only the scrolled-visible region is drawn (the old paintComponent
+	 * culling path); otherwise the full world is drawn.
 	 */
 	private void doRedraw() {
 		synchronized (redrawLock) {
@@ -610,18 +624,21 @@ public class VisibleWorld extends Pane implements WorldView {
 		double zf = zoomFactor;
 		Organism selected = _selectedOrganism;
 		World world = _mainWindow.getWorld();
-		BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-		java.awt.Graphics2D g = image.createGraphics();
+		if (frameBuffer == null || frameBuffer.getWidth() != w || frameBuffer.getHeight() != h) {
+			frameBuffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+			fxFrame = null;
+		}
+		java.awt.Rectangle visible = visibleWorldRect(w, h, zf);
+		java.awt.Graphics2D g = frameBuffer.createGraphics();
 		try {
 			g.setBackground(Color.BLACK);
 			g.clearRect(0, 0, w, h);
 			if (world != null) {
-				// Zoom-aware full-world draw, like the non-efficiency
-				// paintComponent path. Viewport culling (the efficiency path)
-				// returns when MainWindow itself is FX and the viewport is
-				// native; until then the cost matches the classic path.
 				g.scale(zf, zf);
-				world.draw(g);
+				if (visible != null)
+					world.draw(g, visible);
+				else
+					world.draw(g);
 				if (selected != null) {
 					g.setColor(Color.ORANGE);
 					g.drawRect(selected.x, selected.y,
@@ -631,9 +648,32 @@ public class VisibleWorld extends Pane implements WorldView {
 		} finally {
 			g.dispose();
 		}
-		WritableImage fxImage = SwingFXUtils.toFXImage(image, null);
+		fxFrame = ImageFx.copyToFXImage(frameBuffer, fxFrame);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
-		gc.drawImage(fxImage, 0, 0);
+		gc.drawImage(fxFrame, 0, 0);
+	}
+	/**
+	 * Visible world region in world coordinates for efficiency-mode culling,
+	 * derived from the ScrollPane viewport. Null means draw everything
+	 * (efficiency off, viewport unknown, or content smaller than the view).
+	 */
+	private java.awt.Rectangle visibleWorldRect(int contentW, int contentH, double zf) {
+		if (!Utils.EFFICIENCY_MODE || _mainWindow == null || _mainWindow.scrollPane == null)
+			return null;
+		Bounds vp = _mainWindow.scrollPane.getViewportBounds();
+		double vw = vp.getWidth();
+		double vh = vp.getHeight();
+		if (vw <= 0 || vh <= 0 || contentW <= vw && contentH <= vh)
+			return null;
+		double x0 = contentW > vw ? _mainWindow.scrollPane.getHvalue() * (contentW - vw) : 0;
+		double y0 = contentH > vh ? _mainWindow.scrollPane.getVvalue() * (contentH - vh) : 0;
+		double x1 = Math.min(x0 + vw, contentW);
+		double y1 = Math.min(y0 + vh, contentH);
+		int wx = (int) (x0 / zf);
+		int wy = (int) (y0 / zf);
+		int ww = Math.max(1, (int) (x1 / zf) - wx + 1);
+		int wh = Math.max(1, (int) (y1 / zf) - wy + 1);
+		return new java.awt.Rectangle(wx, wy, ww, wh);
 	}
 	/**
 	 * Finds an organism that has the given coordinates inside its bounding box and

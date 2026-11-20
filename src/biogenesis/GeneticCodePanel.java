@@ -20,7 +20,6 @@ package biogenesis;
 
 import java.awt.image.BufferedImage;
 
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -31,7 +30,7 @@ import javafx.scene.layout.Pane;
 /**
  * Shows a genetic code as a pie chart with a "copy" context menu.
  * Renders through the AWT {@link GeneticCode#draw} into a BufferedImage,
- * converted with SwingFXUtils (same bridge as LabWindow's preview; port the
+ * converted with ImageFx (same bridge as LabWindow's preview; port the
  * renderer to GraphicsContext only after VisibleWorld/MainWindow are done).
  */
 public class GeneticCodePanel extends Pane {
@@ -76,7 +75,7 @@ public class GeneticCodePanel extends Pane {
 		} finally {
 			g.dispose();
 		}
-		WritableImage fxImage = SwingFXUtils.toFXImage(image, null);
+		WritableImage fxImage = ImageFx.toFXImage(image);
 		canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
 	}
 

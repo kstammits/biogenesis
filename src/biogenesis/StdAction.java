@@ -23,9 +23,8 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 
 /**
- * Plain FX command object holding a menu/toolbar action's live state.
- * Previously extended Swing's AbstractAction; now just data + an abstract
- * {@link #perform()} body. FX wrappers ({@code toolButtonFor},
+ * Plain FX command object holding a menu/toolbar action's live state:
+ * just data + an abstract {@link #perform()} body. FX wrappers ({@code toolButtonFor},
  * {@code menuItemFor}, {@code itemFor}) read the getters when rebuilding
  * chrome via {@code refreshChrome()} / {@code createToolBar()}.
  */

@@ -31,8 +31,8 @@ import javafx.scene.layout.Priority;
 
 /**
  * Status bar under the world view: genetic-code pie plus the selected
- * organism's live stats. A plain {@link GridPane} (same 9x3 grid as the old
- * Swing toolbar), embedded directly in MainWindow's FX layout.
+ * organism's live stats. A plain {@link GridPane} (9x3 grid),
+ * embedded directly in MainWindow's FX layout.
  *
  * <p>Must be constructed on the FX thread. All mutators route through
  * {@link Fx#run} because the sim thread drives them off-thread.
