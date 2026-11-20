@@ -18,26 +18,42 @@
 package biogenesis;
 
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.imageio.*;
+import javax.imageio.ImageIO;
+import javax.swing.Action;
 
 import org.xml.sax.SAXException;
 
-
-import java.awt.image.*;
+import javafx.embed.swing.JFXPanel;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Pane;
 /**
  * This class is associated with a {@link World} and represents its visible
  * part: it's the place where organisms are drawn and is in charge of
  * the context menus management.
+ *
+ * <p>FX port: a Swing {@link JFXPanel} (drop-in for MainWindow's JScrollPane)
+ * hosting a {@link Canvas}. Rendering still goes through the AWT
+ * {@link World#draw} into a BufferedImage converted with SwingFXUtils
+ * (same bridge as the preview canvases); the renderers move to
+ * GraphicsContext only after MainWindow itself is FX. Redraw requests
+ * coalesce through a dirty flag so a burst of sim-thread repaints costs
+ * a single frame render, like Swing's RepaintManager did.
  */
-public class VisibleWorld extends JPanel implements WorldView {
+public class VisibleWorld extends JFXPanel implements WorldView {
 	/**
 	 * The version of this class
 	 */
@@ -51,11 +67,18 @@ public class VisibleWorld extends JPanel implements WorldView {
 	 */
 	private double zoomFactor = 1.0;
 	/**
+	 * FX scene parts. Built on the FX thread in the constructor.
+	 */
+	private Canvas canvas;
+	private Pane viewRoot;
+	/**
 	 * The context menu showed when right clicking on an alive organism.
 	 */
-	protected JPopupMenu popupAlive;
+	protected ContextMenu popupAlive;
+	/** First item of {@link #popupAlive}; its text follows the track toggle. */
+	private MenuItem trackMenuItem;
 	/**
-	 * Menu option in {@link popupAlive} used to keep an organism on the center of the view. 
+	 * Menu option in {@link popupAlive} used to keep an organism on the center of the view.
 	 */
 	protected TrackAction trackAction;
 	protected StdAction feedAction;
@@ -99,7 +122,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 	/**
 	 * The context menu showed when right clicking on a dead organism.
 	 */
-	protected JPopupMenu popupDead;
+	protected ContextMenu popupDead;
 	/**
 	 * Menu option in {@link popupDead} used to give live to a dead organism.
 	 */
@@ -110,7 +133,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 	/**
 	 * The context menu showed when right clicking on a void plave in the world.
 	 */
-	protected JPopupMenu popupVoid;
+	protected ContextMenu popupVoid;
 	/**
 	 * Menu option in {@link popupVoid} used to create a new organism with the
 	 * genetic code previously copies with the Copy option.
@@ -121,46 +144,53 @@ public class VisibleWorld extends JPanel implements WorldView {
 	 */
 	protected StdAction randomCreateAction;
 	/**
-	 * Menu option in {@link popupVoid} used to create a new organism with a 
+	 * Menu option in {@link popupVoid} used to create a new organism with a
 	 * genetic code obtained from a file.
 	 */
 	protected StdAction importAction;
 	/**
 	 * This is the selected organism. It is drawn with an orange bounding rectangle
-	 * and, if there is an {@link InfoWindow}, it shows information about this organism. 
+	 * and, if there is an {@link InfoWindow}, it shows information about this organism.
 	 */
 	protected Organism _selectedOrganism = null;
 	/**
 	 * This is the last genetic code obtained using a Copy option. It is used when
-	 * pasting new organisms or in the genetic lab. 
+	 * pasting new organisms or in the genetic lab.
 	 */
 	protected GeneticCode clippedGeneticCode = null;
 	/**
 	 * X coordinate of the mouse pointer when the user clicks or right clicks on the
-	 * visible world.
+	 * visible world, in world coordinates.
 	 */
 	protected int mouseX;
 	/**
 	 * Y coordinate of the mouse pointer when the user clicks or right clicks on the
-	 * visible world.
+	 * visible world, in world coordinates.
 	 */
 	protected int mouseY;
+	/**
+	 * Redraw coalescing: sim-thread repaint requests set the dirty flag; at most
+	 * one frame render is ever queued on the FX thread.
+	 */
+	private final Object redrawLock = new Object();
+	private boolean dirty = false;
+	private boolean redrawPending = false;
 	/**
 	 * A reference to the {@link InfoWindow}, that is created from this class.
 	 */
 	//transient protected InfoWindow _infoWindow = null;
-	
+
 	class TrackAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		protected String name_key2;
 		protected String desc_key2;
-		
+
 		public TrackAction(String text_key, String text_key2, String icon_path, String desc, String desc2) {
 			super(text_key, icon_path, desc);
 			name_key2 = text_key2;
 			desc_key2 = desc2;
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -170,7 +200,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 					_mainWindow.setTrackedOrganism(b);
 			}
 		}
-		
+
 		public void setTracking(boolean isTracking) {
 			if (isTracking) {
 				putValue(NAME, Messages.getString(name_key2));
@@ -183,13 +213,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class FeedAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public FeedAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -200,13 +230,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class WeakenAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public WeakenAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -214,13 +244,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class KillAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public KillAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -228,13 +258,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class CopyAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public CopyAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -242,13 +272,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class SaveImageAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public SaveImageAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -285,13 +315,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class ReviveAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ReviveAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && !b.isAlive()) {
@@ -305,27 +335,27 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class DisperseAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public DisperseAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
-			Organism b = getSelectedOrganism();
-			if (b != null && !b.isAlive()) {
+			if (getSelectedOrganism() != null && !getSelectedOrganism().isAlive()) {
+				Organism b = getSelectedOrganism();
 				b.useEnergy(b.getEnergy());
 			}
 		}
 	}
-	
+
 	class ReproduceAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ReproduceAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -333,13 +363,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class RejuvenateAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public RejuvenateAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -347,13 +377,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class ExportAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ExportAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
@@ -361,26 +391,26 @@ public class VisibleWorld extends JPanel implements WorldView {
 			}
 		}
 	}
-	
+
 	class PasteAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public PasteAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			if (clippedGeneticCode != null) {
 				pasteGeneticCode(clippedGeneticCode, mouseX, mouseY);
 			}
 		}
 	}
-	
+
 	class RandomCreateAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public RandomCreateAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			GeneticCode g = new GeneticCode();
 			Organism newBiot = new Organism(_mainWindow.getWorld(), g);
@@ -388,13 +418,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 				_mainWindow.getWorld().addOrganism(newBiot, null);
 		}
 	}
-	
+
 	class ImportAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ImportAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			GeneticCode g;
 			Organism newBiot;
@@ -427,11 +457,11 @@ public class VisibleWorld extends JPanel implements WorldView {
     		_mainWindow._isProcessActive = processState;
 		}
 	}
-	
+
 	/**
 	 * Sets an organism as the selected organism. If required, it creates an
 	 * {@link InfoWindow} with information of this organism.
-	 * 
+	 *
 	 * @param b  The new selected organism
 	 * @param showInfo  true if an InfoWindow should be created
 	 */
@@ -439,10 +469,10 @@ public class VisibleWorld extends JPanel implements WorldView {
 		Organism lastSelectedOrganism = _selectedOrganism;
 		_selectedOrganism = b;
 		if (lastSelectedOrganism != null)
-			repaint(lastSelectedOrganism);
+			requestRedraw();
 		_mainWindow.getInfoPanel().setSelectedOrganism(b);
 		if (_selectedOrganism != null)
-			repaint(_selectedOrganism);
+			requestRedraw();
 		// Make sure to don't create the tool bar twice when starting the program
 		// because this causes spurious exceptions.
 		if (_selectedOrganism != lastSelectedOrganism) {
@@ -457,8 +487,8 @@ public class VisibleWorld extends JPanel implements WorldView {
 		}
 	}
 	/**
-	 * Return the selected organism. 
-	 * 
+	 * Return the selected organism.
+	 *
 	 * @return  The selected organism, if any.
 	 */
 	public Organism getSelectedOrganism() {
@@ -468,7 +498,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 	// provides its own implementation; behavior here is unchanged).
 	@Override
 	public void repaintRegion(java.awt.Rectangle region) {
-		repaint(region);
+		requestRedraw();
 	}
 	@Override
 	public void clearSelection() {
@@ -492,13 +522,13 @@ public class VisibleWorld extends JPanel implements WorldView {
 	}
 	@Override
 	public void worldResized(int width, int height) {
-		setPreferredSize(new Dimension(width, height));
+		updateSizes(width, height);
 	}
 	// showDeadToolbar() below already satisfies WorldView.
 	/**
 	 * Set a genetic code as the clipped genetic code, that will be used when
 	 * pasting a new organism or in the genetic lab as the staring genetic code.
-	 * 
+	 *
 	 * @param gc  The clipped genetic code
 	 */
 	public void setClippedGeneticCode(GeneticCode gc) {
@@ -507,39 +537,117 @@ public class VisibleWorld extends JPanel implements WorldView {
 	}
 	/**
 	 * Creates a new VisibleWorld associated with a {@link MainWindow}.
-	 * Creates the menus and the MouseAdapter.
-	 * 
+	 * Creates the canvas, the menus and the mouse handlers. The FX scene is
+	 * built synchronously (blocking the caller briefly, like InfoToolbar).
+	 *
 	 * @param mainWindow  The MainWindow associated with this VisibleWorld.
 	 */
 	public VisibleWorld(MainWindow mainWindow) {
 		_mainWindow = mainWindow;
-		setZoomFactor(Utils.ZOOM_FACTOR);
-		setBackground(Color.BLACK);
 		createActions();
+		Fx.ask(() -> {
+			buildScene();
+			return null;
+		});
+		setZoomFactor(Utils.ZOOM_FACTOR);
+	}
+	/**
+	 * Builds the FX scene. Runs on the FX thread.
+	 */
+	private void buildScene() {
+		World w = _mainWindow.getWorld();
+		int ww = (w == null) ? Utils.WORLD_WIDTH : w.getWidth();
+		int wh = (w == null) ? Utils.WORLD_HEIGHT : w.getHeight();
+		canvas = new Canvas((int) (ww * zoomFactor), (int) (wh * zoomFactor));
+		viewRoot = new Pane(canvas);
+		viewRoot.setPrefSize(canvas.getWidth(), canvas.getHeight());
+		canvas.setOnMouseClicked(e -> {
+			if (e.getButton() == MouseButton.PRIMARY) {
+				setSelectedOrganism(findOrganismFromPosition(
+						toWorldCoord((int) e.getX()), toWorldCoord((int) e.getY())));
+			}
+		}
+		);
+		canvas.setOnContextMenuRequested(e -> {
+			int worldX = toWorldCoord((int) e.getX());
+			int worldY = toWorldCoord((int) e.getY());
+			maybeShowPopupMenu(worldX, worldY, e.getScreenX(), e.getScreenY());
+		});
 		createPopupMenu();
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					setSelectedOrganism(findOrganismFromPosition(toWorldCoord(e.getX()), toWorldCoord(e.getY())));
+		setScene(new Scene(viewRoot));
+	}
+	/**
+	 * Explicit content refresh for the two MainWindow call sites that used
+	 * repaint(). The canvas redraw is coalesced; the JFXPanel repaints itself
+	 * when the scene changes.
+	 */
+	public void refresh() {
+		requestRedraw();
+	}
+	/**
+	 * Queue a frame render on the FX thread, coalescing bursts.
+	 * Safe to call from any thread (sim, EDT, FX).
+	 */
+	private void requestRedraw() {
+		synchronized (redrawLock) {
+			dirty = true;
+			if (redrawPending)
+				return;
+			redrawPending = true;
+		}
+		Fx.run(this::doRedraw);
+	}
+	/**
+	 * Renders the world through the AWT pipeline into a BufferedImage and
+	 * blits it to the canvas. Runs on the FX thread.
+	 */
+	private void doRedraw() {
+		synchronized (redrawLock) {
+			redrawPending = false;
+			if (!dirty)
+				return;
+			dirty = false;
+		}
+		if (canvas == null)
+			return;
+		int w = (int) canvas.getWidth();
+		int h = (int) canvas.getHeight();
+		if (w <= 0 || h <= 0)
+			return;
+		double zf = zoomFactor;
+		Organism selected = _selectedOrganism;
+		World world = _mainWindow.getWorld();
+		BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		java.awt.Graphics2D g = image.createGraphics();
+		try {
+			g.setBackground(Color.BLACK);
+			g.clearRect(0, 0, w, h);
+			if (world != null) {
+				// Zoom-aware full-world draw, like the non-efficiency
+				// paintComponent path. Viewport culling (the efficiency path)
+				// returns when MainWindow itself is FX and the viewport is
+				// native; until then the cost matches the classic path.
+				g.scale(zf, zf);
+				world.draw(g);
+				if (selected != null) {
+					g.setColor(Color.ORANGE);
+					g.drawRect(selected.x, selected.y,
+							selected.width - 1, selected.height - 1);
 				}
 			}
-			@Override
-			public void mousePressed(MouseEvent e) {
-				maybeShowPopupMenu(e);
-			}
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				maybeShowPopupMenu(e);
-			}
-		});
+		} finally {
+			g.dispose();
+		}
+		WritableImage fxImage = SwingFXUtils.toFXImage(image, null);
+		GraphicsContext gc = canvas.getGraphicsContext2D();
+		gc.drawImage(fxImage, 0, 0);
 	}
 	/**
 	 * Finds an organism that has the given coordinates inside its bounding box and
 	 * returns a reference to it. If more than on organism satisfies this condition,
 	 * if possible, an alive organism is returned. If non organism satisfies this
 	 * condition, this method returns null.
-	 * 
+	 *
 	 * @param x  X coordinate
 	 * @param y  Y coordinate
 	 * @return  An organism with the point (x,y) inside its bounding box, or null
@@ -548,38 +656,6 @@ public class VisibleWorld extends JPanel implements WorldView {
 	Organism findOrganismFromPosition(int x, int y) {
 		return _mainWindow.getWorld().findOrganismFromPosition(x, y);
 	}
-	/**
-	 * Calls World.draw to draw all world elements and paints the bounding rectangle
-	 * of the selected organism.
-	 *
-	 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
-	 */
-	@Override
-	public void paintComponent (Graphics g) {
-		super.paintComponent(g);
-		if (Utils.EFFICIENCY_MODE) {
-			double zf = zoomFactor;
-			Rectangle vr = getVisibleRect();
-			Rectangle worldVisible = new Rectangle((int) (vr.x / zf), (int) (vr.y / zf),
-					(int) (vr.width / zf) + 1, (int) (vr.height / zf) + 1);
-			Graphics2D g2 = (Graphics2D) g.create();
-			g2.scale(zf, zf);
-			_mainWindow.getWorld().draw(g2, worldVisible);
-			if (getSelectedOrganism() != null) {
-				g2.setColor(Color.ORANGE);
-				g2.drawRect(_selectedOrganism.x, _selectedOrganism.y,
-						_selectedOrganism.width - 1, _selectedOrganism.height - 1);
-			}
-			g2.dispose();
-		} else {
-			_mainWindow.getWorld().draw(g);
-			if (getSelectedOrganism() != null) {
-				g.setColor(Color.ORANGE);
-				g.drawRect(_selectedOrganism.x, _selectedOrganism.y,
-						_selectedOrganism.width - 1, _selectedOrganism.height - 1);
-			}
-		}
-    }
 
 	/**
 	 * Efficiency: set zoom factor, resize viewport, persist to Utils.
@@ -592,9 +668,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 		World w = (_mainWindow == null) ? null : _mainWindow.getWorld();
 		int ww = (w == null) ? Utils.WORLD_WIDTH : w.getWidth();
 		int wh = (w == null) ? Utils.WORLD_HEIGHT : w.getHeight();
-		setPreferredSize(new Dimension((int) (ww * zf), (int) (wh * zf)));
-		revalidate();
-		repaint();
+		updateSizes((int) (ww * zf), (int) (wh * zf));
 	}
 
 	public double getZoomFactor() {
@@ -612,7 +686,33 @@ public class VisibleWorld extends JPanel implements WorldView {
 	public void zoomOut() {
 		setZoomFactor(Utils.between(zoomFactor / 1.25, 0.25, 4.0));
 	}
-	
+	/**
+	 * Resizes the canvas, the scene root and this panel. FX sizes update on
+	 * the FX thread, the Swing preferred size on the EDT.
+	 */
+	private void updateSizes(int w, int h) {
+		if (w <= 0 || h <= 0)
+			return;
+		Fx.run(() -> {
+			if (canvas != null) {
+				canvas.setWidth(w);
+				canvas.setHeight(h);
+			}
+			if (viewRoot != null)
+				viewRoot.setPrefSize(w, h);
+			requestRedraw();
+		});
+		if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+			setPreferredSize(new java.awt.Dimension(w, h));
+			revalidate();
+		} else {
+			javax.swing.SwingUtilities.invokeLater(() -> {
+				setPreferredSize(new java.awt.Dimension(w, h));
+				revalidate();
+			});
+		}
+	}
+
 	private void createActions() {
 		trackAction = new TrackAction("T_TRACK", "T_ABORT_TRACKING", "images/menu_track.png", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				"T_TRACK_ORGANISM", "T_ABORT_TRACKING_ORGANISM"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -639,7 +739,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 	}
 
 	public void showAliveToolbar() {
-		JToolBar toolBar = _mainWindow.toolBar;
+		javax.swing.JToolBar toolBar = _mainWindow.toolBar;
 		toolBar.removeAll();
 		toolBar.add(feedAction);
 		toolBar.add(weakenAction);
@@ -651,56 +751,42 @@ public class VisibleWorld extends JPanel implements WorldView {
 		toolBar.invalidate();
 		toolBar.repaint();
 	}
-	
+
 	@Override
 	public void showDeadToolbar() {
-		JToolBar toolBar = _mainWindow.toolBar;
+		javax.swing.JToolBar toolBar = _mainWindow.toolBar;
 		toolBar.removeAll();
 		toolBar.add(reviveAction);
 		toolBar.add(disperseAction);
 		toolBar.invalidate();
 		toolBar.repaint();
 	}
-	
+
 	/**
-	 * Creates all popup menus.
+	 * Creates all popup menus. Runs on the FX thread; menu items wrap the
+	 * Swing actions (still owned by the Swing toolbar) and read their live
+	 * text/enabled state at build time.
 	 */
 	private void createPopupMenu() {
-		JMenuItem menuItem;
-	    popupAlive = new JPopupMenu();
-	    menuItem = new JMenuItem(trackAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    menuItem = new JMenuItem(feedAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    menuItem = new JMenuItem(weakenAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    popupAlive.add(new JMenuItem(reproduceAction));
-	    popupAlive.add(new JMenuItem(rejuvenateAction));
-	    menuItem = new JMenuItem(killAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    menuItem = new JMenuItem(copyAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    popupAlive.add(new JMenuItem(exportAction));
-	    menuItem = new JMenuItem(saveImageAction);
-	    menuItem.setIcon(null);
-	    popupAlive.add(menuItem);
-	    popupDead = new JPopupMenu();
-	    menuItem = new JMenuItem(reviveAction);
-	    menuItem.setIcon(null);
-	    popupDead.add(menuItem);
-	    menuItem = new JMenuItem(disperseAction);
-	    menuItem.setIcon(null);
-	    popupDead.add(menuItem);
-	    popupVoid = new JPopupMenu();
-	    popupVoid.add(new JMenuItem(pasteAction));
-	    popupVoid.add(new JMenuItem(randomCreateAction));
-	    popupVoid.add(new JMenuItem(importAction));
-	    // Only enable file management menu options if at least there is 
+		popupAlive = new ContextMenu();
+		trackMenuItem = itemFor(trackAction);
+		popupAlive.getItems().add(trackMenuItem);
+		popupAlive.getItems().add(itemFor(feedAction));
+		popupAlive.getItems().add(itemFor(weakenAction));
+		popupAlive.getItems().add(itemFor(reproduceAction));
+		popupAlive.getItems().add(itemFor(rejuvenateAction));
+		popupAlive.getItems().add(itemFor(killAction));
+		popupAlive.getItems().add(itemFor(copyAction));
+		popupAlive.getItems().add(itemFor(exportAction));
+		popupAlive.getItems().add(itemFor(saveImageAction));
+	    popupDead = new ContextMenu();
+	    popupDead.getItems().add(itemFor(reviveAction));
+	    popupDead.getItems().add(itemFor(disperseAction));
+	    popupVoid = new ContextMenu();
+	    popupVoid.getItems().add(itemFor(pasteAction));
+	    popupVoid.getItems().add(itemFor(randomCreateAction));
+	    popupVoid.getItems().add(itemFor(importAction));
+	    // Only enable file management menu options if at least there is
 		//permission to read user's home directory
 		// (Java 17: SecurityManager is deprecated for removal, probe property directly)
 		try {
@@ -710,6 +796,16 @@ public class VisibleWorld extends JPanel implements WorldView {
 			importAction.setEnabled(false);
 			saveImageAction.setEnabled(false);
 		}
+	}
+	/**
+	 * Wraps a Swing action in an FX menu item. Bodies ignore the event, so a
+	 * null ActionEvent is safe.
+	 */
+	private MenuItem itemFor(StdAction action) {
+		MenuItem item = new MenuItem((String) action.getValue(Action.NAME));
+		item.setDisable(!action.isEnabled());
+		item.setOnAction(evt -> action.actionPerformed(null));
+		return item;
 	}
 	/**
 	 * Called from MainWindow when the locale is changed in order to update the menu
@@ -725,22 +821,22 @@ public class VisibleWorld extends JPanel implements WorldView {
 	    copyAction.changeLocale();
 	    exportAction.changeLocale();
 	    saveImageAction.changeLocale();
-	    reviveAction.changeLocale();	    
+	    reviveAction.changeLocale();
 	    disperseAction.changeLocale();
 	    pasteAction.changeLocale();
 	    randomCreateAction.changeLocale();
 	    importAction.changeLocale();
-	    createPopupMenu();
+	    Fx.run(this::createPopupMenu);
 	}
 	/**
 	 * Creates a new organism with the given genetic code and puts it in the world,
 	 * at the specified position.
-	 * 
+	 *
 	 * @param gc  The genetic code for the new organism
 	 * @param x  X coordinate
 	 * @param y  Y coordinate
 	 * @return  true if the organism has been created (if there is space for it), false otherwise
-	 */	
+	 */
 	public boolean pasteGeneticCode(GeneticCode gc, int x, int y) {
 		Organism newOrganism = new Organism(_mainWindow.getWorld(), gc);
 		if (newOrganism.pasteOrganism(x, y)) {
@@ -750,27 +846,26 @@ public class VisibleWorld extends JPanel implements WorldView {
 		return false;
 	}
 	/**
-	 * This method is called when a mouse event occurs. If the mouse event is
-	 * a popup trigger, this method decide which popup menu is shown, based on
-	 * the position of the mouse.
-	 * 
-	 * @param e
+	 * Shows the popup menu for a world position. Coordinates are converted
+	 * by the caller; screen coordinates position the menu.
 	 */
-	void maybeShowPopupMenu(MouseEvent e) {
-		if (e.isPopupTrigger()) {
-			mouseX = e.getX();
-			mouseY = e.getY();
-			Organism b = findOrganismFromPosition(mouseX,mouseY);
+	void maybeShowPopupMenu(int worldX, int worldY, double screenX, double screenY) {
+		// FX-only (ContextMenu.show); inline when already on the FX thread.
+		Fx.run(() -> {
+			mouseX = worldX;
+			mouseY = worldY;
+			Organism b = findOrganismFromPosition(mouseX, mouseY);
 			if (b != null) {
 				setSelectedOrganism(b);
 				if (b.isAlive()) {
 					trackAction.setTracking(_mainWindow._trackedOrganism == b);
-					popupAlive.show(e.getComponent(), mouseX, mouseY);
+					trackMenuItem.setText((String) trackAction.getValue(Action.NAME));
+					popupAlive.show(canvas, screenX, screenY);
 				}
 				else
-					popupDead.show(e.getComponent(), mouseX, mouseY);
+					popupDead.show(canvas, screenX, screenY);
 			} else
-				popupVoid.show(e.getComponent(), mouseX, mouseY);
-		}
+				popupVoid.show(canvas, screenX, screenY);
+		});
 	}
 }

@@ -492,8 +492,8 @@ public class MainWindow extends JFrame {
 					// Torna a assignar els valors dels camps no guardats a l'objecte world
 					_world.init(_visibleWorld);
 					scrollPane.setViewportView(_visibleWorld);
-					// Assegurem que s'ha dibuixat el m�n
-					_visibleWorld.repaint();
+				// Assegurem que s'ha dibuixat el m�n
+				_visibleWorld.refresh();
 				}
 			} catch (SecurityException ex) {
 				System.err.println(ex.getMessage());
@@ -672,7 +672,7 @@ public class MainWindow extends JFrame {
 			Utils.savePreferences();
 			setStatusMessage(on ? "Efficiency mode ON" : "Efficiency mode OFF"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (_visibleWorld != null)
-				_visibleWorld.repaint();
+				_visibleWorld.refresh();
 		}
 	}
 

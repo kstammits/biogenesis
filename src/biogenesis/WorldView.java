@@ -20,8 +20,8 @@ package biogenesis;
 /**
  * View-side seam for the simulation.
  *
- * Implemented by the Swing {@link VisibleWorld} now and by the JavaFX canvas
- * view later. Lets {@link World} and {@link Organism} run headless (tests,
+ * Implemented by {@link VisibleWorld} (a Swing JFXPanel hosting the JavaFX
+ * canvas view). Lets {@link World} and {@link Organism} run headless (tests,
  * server use) and replaces direct component reach-through such as
  * {@code _visibleWorld._mainWindow.getInfoPanel()...}.
  *
