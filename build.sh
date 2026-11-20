@@ -1,9 +1,10 @@
 #!/bin/bash
 # Java 17 build for unified tree (no Ant/Gradle required)
-# Usage: ./build.sh [clean|jar|run]
+# Usage: ./build.sh [clean|jar|run|test]
 #   (no arg)  compile if sources changed
 #   jar       build biogenesis.jar if stale
 #   run       launch the app (builds first if stale)
+#   test      headless gates: SimSmoke + FxLogicTest (no display needed)
 #   clean     remove build outputs
 # Prefers Homebrew openjdk@17, falls back to JAVA_HOME / PATH java.
 set -e
@@ -77,6 +78,22 @@ if classes_stale; then
   build_classes
 else
   echo "classes up to date, skipping compile"
+fi
+
+if [[ "$1" == "test" ]]; then
+  if classes_stale; then
+    build_classes
+  else
+    echo "classes up to date, skipping compile"
+  fi
+  smoke=$(mktemp -d)
+  "$JAVAC" -nowarn --release 17 -cp "$OUT:$LIB" "${FX_FLAGS[@]}" -d "$smoke" \
+    "$ROOT"/test/SimSmoke.java "$ROOT"/test/biogenesis/FxLogicTest.java
+  "$JAVA" -Djava.awt.headless=true -cp "$smoke:$OUT:$LIB" SimSmoke "${@:2}"
+  "$JAVA" -Djava.awt.headless=true -cp "$smoke:$OUT:$LIB" biogenesis.FxLogicTest
+  rc=$?
+  rm -rf "$smoke"
+  exit $rc
 fi
 
 if [[ "$1" == "jar" || "$1" == "run" ]]; then

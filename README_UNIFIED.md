@@ -43,6 +43,9 @@ Reference: `git show origin/xmod:readme.txt`, `git log --oneline new_design..xmo
 `src/biogenesis/WorldView.java` decouples the simulation from Swing: `World`/`Organism`
 talk to the view only through this interface (repaints, selection, stats events).
 `VisibleWorld` implements it today; the JavaFX canvas view will implement it next.
-Headless smoke test (first automated test — no UI, deterministic seed):
-- `javac -cp classes:lib/jts-core-1.15.0.jar -d /tmp/smoke test/SimSmoke.java`
-- `java -Djava.awt.headless=true -cp /tmp/smoke:classes:lib/jts-core-1.15.0.jar SimSmoke [ticks]`
+Headless test gate (no UI, no display needed) — sim core plus the
+save-dialog filename rules (`Fx.withAppendedExt`, the only branchy logic in
+the Swing→FX bridge; the rest is thin dialog wrappers verified by eyeball):
+- `./build.sh test` — incremental compile, then `SimSmoke` (500 ticks,
+deterministic seed, asserts population survives) and `FxLogicTest`
+(extension auto-append on/off, null-safe cancel path).

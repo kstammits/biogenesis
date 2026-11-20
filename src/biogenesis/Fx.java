@@ -136,6 +136,19 @@ public final class Fx {
 		return chooser;
 	}
 
+	/**
+	 * Pure extension rule for save dialogs, extracted for headless testing:
+	 * appends ".ext" when missing unless {@code autoAppendExt} is false
+	 * (e.g. PNG snapshots keep the name as typed). Null in, null out.
+	 */
+	static File withAppendedExt(File f, String ext, boolean autoAppendExt) {
+		if (f == null)
+			return null;
+		if (autoAppendExt && f.getName().lastIndexOf('.') == -1)
+			return new File(f.getAbsolutePath() + "." + ext); //$NON-NLS-1$
+		return f;
+	}
+
 	/** Modal open-file dialog with a single extension filter. Null if cancelled. */
 	public static File showOpenFile(String titleKey, String descKey, String ext) {
 		return ask(() -> {
@@ -157,9 +170,7 @@ public final class Fx {
 			File f = chooser(titleKey, descKey, ext).showSaveDialog(null);
 			if (f == null)
 				return null;
-			String name = f.getName();
-			if (autoAppendExt && name.lastIndexOf('.') == -1)
-				f = new File(f.getAbsolutePath() + "." + ext); //$NON-NLS-1$
+			f = withAppendedExt(f, ext, autoAppendExt);
 			if (f.getParentFile() != null)
 				lastDir = f.getParentFile();
 			return f;
