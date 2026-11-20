@@ -65,6 +65,9 @@ public class PerfBench {
 		String collide = "both"; // on|off|both
 		boolean render = true;
 		String baseSeed = "12345";
+		double initCO2 = Double.NaN; // NaN = leave Utils default
+		double initO2 = Double.NaN;
+		int rticks = 100;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -102,6 +105,15 @@ public class PerfBench {
 			case "--base-seed":
 				cfg.baseSeed = args[++i];
 				break;
+			case "--co2":
+				cfg.initCO2 = Double.parseDouble(args[++i]);
+				break;
+			case "--o2":
+				cfg.initO2 = Double.parseDouble(args[++i]);
+				break;
+			case "--rticks":
+				cfg.rticks = Integer.parseInt(args[++i]);
+				break;
 			case "--out":
 				outPath = args[++i];
 				break;
@@ -109,14 +121,14 @@ public class PerfBench {
 				System.err.println("unknown arg: " + args[i]);
 				System.err.println("usage: PerfBench [--ns 50,100,...] [--worlds WxH,...] [--seeds N]"
 						+ " [--ticks N] [--warmup N] [--collide both|on|off] [--render on|off]"
-						+ " [--base-seed N] [--out file.csv]");
+						+ " [--base-seed N] [--co2 N] [--o2 N] [--rticks N] [--out file.csv]");
 				System.exit(2);
 			}
 		}
 
 		String header = "run_ts,host,os,arch,java,seed,world_w,world_h,initial_n,placed_n,"
 				+ "pop_warm,pop_end,ticks,warmup,collide,sim_ms_mean,sim_ms_p95,sim_ms_max,"
-				+ "render_ms_mean,avg_seg,max_seg,gc_ms,notes";
+				+ "render_ms_mean,avg_seg,max_seg,gc_ms,init_co2,init_o2,rticks,notes";
 		StringBuilder csv = new StringBuilder(header).append('\n');
 		String runTs = Instant.now().toString();
 		String os = System.getProperty("os.name") + " " + System.getProperty("os.version");
@@ -155,6 +167,10 @@ public class PerfBench {
 		Utils.WORLD_WIDTH = ww;
 		Utils.WORLD_HEIGHT = wh;
 		Utils.INITIAL_ORGANISMS = n;
+		if (!Double.isNaN(cfg.initCO2))
+			Utils.INITIAL_CO2 = cfg.initCO2;
+		if (!Double.isNaN(cfg.initO2))
+			Utils.INITIAL_O2 = cfg.initO2;
 		BenchWorld.noCollide = noCollide;
 		BenchWorld world = new BenchWorld(new StubView());
 		world.genesis();
@@ -203,7 +219,8 @@ public class PerfBench {
 					java.awt.image.BufferedImage.TYPE_INT_RGB);
 			int w = buf.getWidth(), h = buf.getHeight();
 			int[] argb = new int[w * h];
-			for (int i = 0; i < 20; i++) {
+			int rwarm = Math.min(20, cfg.rticks);
+			for (int i = 0; i < rwarm; i++) {
 				java.awt.Graphics2D g = buf.createGraphics();
 				g.setBackground(java.awt.Color.BLACK);
 				g.clearRect(0, 0, w, h);
@@ -211,7 +228,7 @@ public class PerfBench {
 				g.dispose();
 				buf.getRGB(0, 0, w, h, argb, 0, w);
 			}
-			int rticks = 100;
+			int rticks = cfg.rticks;
 			long r0 = System.nanoTime();
 			for (int i = 0; i < rticks; i++) {
 				java.awt.Graphics2D g = buf.createGraphics();
@@ -225,11 +242,15 @@ public class PerfBench {
 		}
 
 		return String.format(java.util.Locale.ROOT,
-				"%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%.4f,%.4f,%.4f,%s,%.1f,%d,%d,%s%n",
+				"%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%.4f,%.4f,%.4f,%s,%.1f,%d,%d,%s,%s,%d,%s%n",
 				runTs, host, os, arch, javaVer, seed, ww, wh, n, placed,
 				popWarm, popEnd, cfg.ticks, cfg.warmup, noCollide ? "off" : "on",
 				sum / cfg.ticks, percentile(sorted, 0.95), max,
 				Double.isNaN(renderMean) ? "" : String.format(java.util.Locale.ROOT, "%.4f", renderMean),
-				avgSeg, segMax, gc1 - gc0, notes);
+				avgSeg, segMax, gc1 - gc0,
+				Double.isNaN(cfg.initCO2) ? "" : String.format(java.util.Locale.ROOT, "%.0f", cfg.initCO2),
+				Double.isNaN(cfg.initO2) ? "" : String.format(java.util.Locale.ROOT, "%.0f", cfg.initO2),
+				cfg.rticks,
+				notes);
 	}
 }
