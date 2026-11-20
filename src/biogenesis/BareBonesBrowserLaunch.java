@@ -14,7 +14,6 @@ package biogenesis;
 import java.awt.Desktop;
 import java.lang.reflect.Method;
 import java.net.URI;
-import javax.swing.JOptionPane;
 
 public class BareBonesBrowserLaunch {
 
@@ -57,7 +56,7 @@ public class BareBonesBrowserLaunch {
 				Runtime.getRuntime().exec(new String[] { browser, url });
 			}
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, errMsg
+			Fx.error(null, errMsg
 					+ ":\n" + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 	}

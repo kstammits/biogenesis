@@ -23,7 +23,6 @@ import java.util.prefs.*;
 import java.awt.*;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 /**
  * This class contains all global program parameters and a few useful methods for
@@ -811,9 +810,8 @@ public final class Utils {
 		try {
 			Preferences prefs = Preferences.userNodeForPackage(Utils.class);
 			if (HARDWARE_ACCELERATION == 2 || HARDWARE_ACCELERATION == 5) {
-				String[] options = {Messages.getString("T_YES"), Messages.getString("T_NO")}; //$NON-NLS-1$ //$NON-NLS-2$
-				int answer = JOptionPane.showOptionDialog(null, Messages.getString("T_DID_OPENGL_WORK_WELL"), Messages.getString("T_OPENGL_CONFIRMATION"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);  //$NON-NLS-1$//$NON-NLS-2$
-				if (answer == JOptionPane.YES_OPTION)
+				boolean answer = Fx.confirmYesNo(Messages.getString("T_OPENGL_CONFIRMATION"), Messages.getString("T_DID_OPENGL_WORK_WELL"));  //$NON-NLS-1$//$NON-NLS-2$
+				if (answer)
 					prefs.putInt("HARDWARE_ACCELERATION", HARDWARE_ACCELERATION+1); //$NON-NLS-1$
 			}
 		

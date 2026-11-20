@@ -24,7 +24,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 
 public class CheckVersionThread extends Thread {
@@ -65,14 +64,14 @@ public class CheckVersionThread extends Thread {
 			url = new URL("https://biogenesis.sourceforge.net/lastversion.txt"); //$NON-NLS-1$
 			try (BufferedReader autoBr = new BufferedReader(new InputStreamReader(url.openStream()))) {
 				String s = translateVersion(autoBr.readLine());
-				JOptionPane.showMessageDialog(parentFrame,Messages.getString("T_YOUR_VERSION")+translateVersion(String.valueOf(Utils.VERSION))+"\n"+Messages.getString("T_LAST_VERSION")+s,  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ 
-						Messages.getString("T_VERSION_TITLE"), JOptionPane.INFORMATION_MESSAGE);   //$NON-NLS-1$
+				Fx.info(Messages.getString("T_VERSION_TITLE"), //$NON-NLS-1$
+						Messages.getString("T_YOUR_VERSION")+translateVersion(String.valueOf(Utils.VERSION))+"\n"+Messages.getString("T_LAST_VERSION")+s);  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 			}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(parentFrame,Messages.getString("T_CANT_CHECK_CURRENT_VERSION")+e.getLocalizedMessage(), //$NON-NLS-1$ 
-					Messages.getString("T_VERSION_TITLE"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+			Fx.error(Messages.getString("T_VERSION_TITLE"), //$NON-NLS-1$
+					Messages.getString("T_CANT_CHECK_CURRENT_VERSION")+e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 	}
 }

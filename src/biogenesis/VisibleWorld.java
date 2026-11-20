@@ -259,18 +259,14 @@ public class VisibleWorld extends JPanel implements WorldView {
 				BufferedImage image = b.getImage();
 				try {
 					// Ask for file name
-					JFileChooser chooser = new JFileChooser();
-					chooser.setFileFilter(new BioFileFilter("png")); //$NON-NLS-1$
-					int returnVal = chooser.showSaveDialog(null);
-					if(returnVal == JFileChooser.APPROVE_OPTION) {
-						int canWrite = JOptionPane.YES_OPTION;
-						File f = chooser.getSelectedFile();
+					File f = Fx.showSaveFile("T_SAVE_IMAGE", "T_PNG_IMAGE_FILES", "png", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					if (f != null) {
+						boolean canWrite = true;
 						// Check if file already exists and ask for confirmation
 						if (f.exists()) {
-							canWrite = JOptionPane.showConfirmDialog(null,Messages.getString("T_CONFIRM_FILE_OVERRIDE"), //$NON-NLS-1$
-									Messages.getString("T_FILE_EXISTS"),JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+							canWrite = Fx.confirmYesNo(Messages.getString("T_FILE_EXISTS"), Messages.getString("T_CONFIRM_FILE_OVERRIDE")); //$NON-NLS-1$ //$NON-NLS-2$
 						}
-						if (canWrite == JOptionPane.YES_OPTION) {
+						if (canWrite) {
 							// Write image to file
 							try {
 								ImageIO.write(image,"PNG",f); //$NON-NLS-1$
@@ -283,7 +279,7 @@ public class VisibleWorld extends JPanel implements WorldView {
 					}
 				} catch (SecurityException ex) {
 					System.err.println(ex.getMessage());
-					JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+					Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				_mainWindow._isProcessActive = processState;
 			}
@@ -406,28 +402,27 @@ public class VisibleWorld extends JPanel implements WorldView {
 			// Stop time
     		_mainWindow._isProcessActive = false;
     		try {
-    			JFileChooser chooser = _mainWindow.getGeneticCodeChooser();
-    			int returnVal = chooser.showOpenDialog(null);
-    			if (returnVal == JFileChooser.APPROVE_OPTION) {
+    			File f = Fx.showOpenFile("T_IMPORT", "T_BIOGENESIS_GENETIC_CODE_FILES", "bgg"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    			if (f != null) {
     				try {
     					// Read XML code from file
     					BioXMLParser parser = new BioXMLParser();
-						g = parser.parseGeneticCode(chooser.getSelectedFile());
+						g = parser.parseGeneticCode(f);
 						// Create organism
     					newBiot = new Organism(_mainWindow.getWorld(), g);
     					if (newBiot.pasteOrganism(mouseX, mouseY))
     						_mainWindow.getWorld().addOrganism(newBiot, null);
     				} catch (SAXException ex) {
     					System.err.println(ex.getMessage());
-    					JOptionPane.showMessageDialog(null,Messages.getString("T_WRONG_FILE_VERSION"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
     				} catch (IOException ex) {
     					System.err.println(ex.getMessage());
-    					JOptionPane.showMessageDialog(null,Messages.getString("T_CANT_READ_FILE"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 					}
     			}
     		} catch (SecurityException ex) {
     			System.err.println(ex.getMessage());
-    			JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+    			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		_mainWindow._isProcessActive = processState;
 		}

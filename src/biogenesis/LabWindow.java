@@ -30,6 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -218,28 +219,26 @@ public class LabWindow extends JDialog implements ActionListener, ChangeListener
 			public void actionPerformed(ActionEvent e) {
 				GeneticCode g;
 	    		try {
-	    			JFileChooser chooser = mainWindow.getGeneticCodeChooser();
-	    			chooser.setFileFilter(new BioFileFilter(BioFileFilter.GENETIC_CODE_EXTENSION));
-	    			int returnVal = chooser.showOpenDialog(null);
-	    			if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    			File f = Fx.showOpenFile("T_IMPORT", "T_BIOGENESIS_GENETIC_CODE_FILES", "bgg"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	    			if (f != null) {
 	    				try {
 	    					// Read XML code from file
 	    					BioXMLParser parser = new BioXMLParser();
-							g = parser.parseGeneticCode(chooser.getSelectedFile());
+							g = parser.parseGeneticCode(f);
 							genesList.clear();
 							importGeneticCode(g);
 							refreshGenesPanel();
 	    				} catch (SAXException ex) {
 	    					System.err.println(ex.getMessage());
-	    					JOptionPane.showMessageDialog(null,Messages.getString("T_WRONG_FILE_VERSION"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+	    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
 	    				} catch (IOException ex) {
 	    					System.err.println(ex.getMessage());
-	    					JOptionPane.showMessageDialog(null,Messages.getString("T_CANT_READ_FILE"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+	    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 	    			}
 	    		} catch (SecurityException ex) {
 	    			System.err.println(ex.getMessage());
-	    			JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+	    			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 	    		}
 			}
 		});

@@ -37,8 +37,6 @@ public class MainWindow extends JFrame {
 	protected boolean _isProcessActive=false;
 	protected transient java.util.Timer _timer;
 	protected transient TimerTask updateTask = null;
-	protected JFileChooser worldChooser = new JFileChooser();
-	protected JFileChooser geneticCodeChooser = new JFileChooser();
 	protected File _gameFile = null;
 	
 	protected JScrollPane scrollPane;
@@ -88,13 +86,6 @@ public class MainWindow extends JFrame {
 	protected long nFrames=0;
 	private ImageIcon imageIcon = new ImageIcon(getClass().getResource("images/bullet.jpg")); //$NON-NLS-1$
 
-	public JFileChooser getWorldChooser() {
-		return worldChooser;
-	}
-	public JFileChooser getGeneticCodeChooser() {
-		return geneticCodeChooser;
-	}
-	
 	public void setStatusMessage(String str) {
 		statusMessage = str;
 		updateStatusLabel();
@@ -465,8 +456,8 @@ public class MainWindow extends JFrame {
 			boolean processState = _isProcessActive;
 			_isProcessActive = false;
 			try {
-				int returnVal = getWorldChooser().showOpenDialog(null);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File f = Fx.showOpenFile("T_OPEN_WORLD", "T_BIOGENESIS_WORLD_FILES", "bgw"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				if (f != null) {
 					// Elimina les finestres antigues
 					if (_statisticsWindow != null) {
 						_statisticsWindow.dispose();
@@ -475,7 +466,6 @@ public class MainWindow extends JFrame {
 					//_world.clean();
 					ObjectInputStream inputStream;
 					try {
-						File f = getWorldChooser().getSelectedFile();
 						FileInputStream fileStream = new FileInputStream(f);
 						inputStream = new ObjectInputStream(fileStream);
 						_world = (World) inputStream.readObject();
@@ -488,16 +478,16 @@ public class MainWindow extends JFrame {
 						// Serial version mismatch (e.g. pre-800 save): report as
 						// wrong version, not generic read failure.
 						System.err.println(ex.getMessage());
-						JOptionPane.showMessageDialog(null,Messages.getString("T_WRONG_FILE_VERSION"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
 					} catch (IOException ex) {
 						System.err.println(ex.getMessage());
-						JOptionPane.showMessageDialog(null,Messages.getString("T_CANT_READ_FILE"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 					} catch (ClassNotFoundException ex) {
 						System.err.println(ex.getMessage());
-						JOptionPane.showMessageDialog(null,Messages.getString("T_WRONG_FILE_TYPE"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_TYPE")); //$NON-NLS-1$ //$NON-NLS-2$
 					} catch (ClassCastException ex) {
 						System.err.println(ex.getMessage());
-						JOptionPane.showMessageDialog(null,Messages.getString("T_WRONG_FILE_VERSION"),Messages.getString("T_READ_ERROR"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					// Torna a assignar els valors dels camps no guardats a l'objecte world
 					_world.init(_visibleWorld);
@@ -507,7 +497,7 @@ public class MainWindow extends JFrame {
 				}
 			} catch (SecurityException ex) {
 				System.err.println(ex.getMessage());
-				JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+				Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			_isProcessActive = processState;
 		}
@@ -536,11 +526,10 @@ public class MainWindow extends JFrame {
 	}
 	
 	public void quit() {
-		int save = JOptionPane.showConfirmDialog(this,Messages.getString("T_SAVE_BEFORE_QUIT"), //$NON-NLS-1$
-				Messages.getString("T_SAVE_WORLD"),JOptionPane.YES_NO_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE); //$NON-NLS-1$
-		
-		if (save != JOptionPane.CANCEL_OPTION) {
-			if (save == JOptionPane.YES_OPTION) {
+		Fx.Answer save = Fx.confirmYesNoCancel(Messages.getString("T_SAVE_WORLD"), Messages.getString("T_SAVE_BEFORE_QUIT")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		if (save != Fx.Answer.CANCEL) {
+			if (save == Fx.Answer.YES) {
 				if (_gameFile != null)
 					saveObject(_world, _gameFile);
 				else
@@ -750,8 +739,21 @@ public class MainWindow extends JFrame {
 		+Messages.getString("T_VERSION_B")+" "+CheckVersionThread.translateVersion(String.valueOf(Utils.VERSION))+"\n"+ //$NON-NLS-1$//$NON-NLS-2$
 				Messages.getString("T_VANILLA_COPYRIGHT")+"joanq@users.sourceforge.net\n"+ //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("T_ARTWORK_BY")+" Ananda Daydream, Florian Haag (http://toolbaricons.sourceforge.net/)";  //$NON-NLS-1$//$NON-NLS-2$
-		JOptionPane.showMessageDialog(this, aboutString, Messages.getString("T_ABOUT"), //$NON-NLS-1$
-				JOptionPane.INFORMATION_MESSAGE,imageIcon);
+		Fx.ask(() -> {
+			javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+					javafx.scene.control.Alert.AlertType.INFORMATION, aboutString,
+					javafx.scene.control.ButtonType.OK);
+			alert.setTitle(Messages.getString("T_ABOUT")); //$NON-NLS-1$
+			alert.setHeaderText(null);
+			try {
+				alert.setGraphic(new javafx.scene.image.ImageView(new javafx.scene.image.Image(
+						getClass().getResourceAsStream("images/bullet.jpg")))); //$NON-NLS-1$
+			} catch (Exception e) {
+				// icon is decorative; show the dialog without it
+			}
+			alert.showAndWait();
+			return null;
+		});
 	}
 	
 	private void setControls () {
@@ -779,37 +781,25 @@ public class MainWindow extends JFrame {
 		_nf.setMaximumFractionDigits(1);
         getContentPane().add(_statusLabel, BorderLayout.SOUTH);
         getContentPane().add(toolBar, BorderLayout.NORTH);
-        
-        worldChooser.setFileFilter(new BioFileFilter(BioFileFilter.WORLD_EXTENSION));
-        geneticCodeChooser.setFileFilter(new BioFileFilter(BioFileFilter.GENETIC_CODE_EXTENSION));
     }
 		
 	public File saveObjectAs(Object obj) {
 		File resultFile = null;
 		boolean processState = _isProcessActive;
 		_isProcessActive = false;
-		
+
 		try {
-			JFileChooser chooser;
+			File f;
 			if (obj instanceof GeneticCode)
-				chooser = getGeneticCodeChooser();
+				f = Fx.showSaveFile("T_EXPORT", "T_BIOGENESIS_GENETIC_CODE_FILES", "bgg", true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			else
-				chooser = getWorldChooser();
-			int returnVal = chooser.showSaveDialog(null);
-			if(returnVal == JFileChooser.APPROVE_OPTION) {
-				int canWrite = JOptionPane.YES_OPTION;
-				File f = chooser.getSelectedFile();
-				String filename = f.getName();
-				String ext = (filename.lastIndexOf(".")==-1)?"":filename.substring(filename.lastIndexOf(".")+1,filename.length());
-				if (ext.equals("")) {
-					f = new File(f.getAbsolutePath()+"."+((BioFileFilter)chooser.getFileFilter()).getValidExtension());
-					chooser.setSelectedFile(f);
-				}
+				f = Fx.showSaveFile("T_SAVE_WORLD_AS", "T_BIOGENESIS_WORLD_FILES", "bgw", true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (f != null) {
+				boolean canWrite = true;
 				if (f.exists()) {
-					canWrite = JOptionPane.showConfirmDialog(null,Messages.getString("T_CONFIRM_FILE_OVERRIDE"), //$NON-NLS-1$
-						Messages.getString("T_FILE_EXISTS"),JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+					canWrite = Fx.confirmYesNo(Messages.getString("T_FILE_EXISTS"), Messages.getString("T_CONFIRM_FILE_OVERRIDE")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
-				if (canWrite == JOptionPane.YES_OPTION) {
+				if (canWrite) {
 					if (obj instanceof GeneticCode) {
 						try {
 							BioXMLParser.writeGeneticCode(new PrintStream(f),(GeneticCode)obj);
@@ -817,14 +807,14 @@ public class MainWindow extends JFrame {
 						} catch (FileNotFoundException ex) {
 							System.err.println(ex.getLocalizedMessage());
 						}
-					} else 							
+					} else
 						if (saveObject(obj, f))
 							resultFile = f;
 				}
 			}
 		} catch (SecurityException ex) {
 			System.err.println(ex.getMessage());
-			JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	    _isProcessActive = processState;
 	    return resultFile;
@@ -845,7 +835,7 @@ public class MainWindow extends JFrame {
 			System.err.println(e.getMessage());
 		} catch (SecurityException ex) {
 			System.err.println(ex.getMessage());
-			JOptionPane.showMessageDialog(null,Messages.getString("T_PERMISSION_DENIED"),Messages.getString("T_PERMISSION_DENIED"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
+			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return false;
 	}
