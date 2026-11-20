@@ -30,9 +30,7 @@ import javax.swing.Action;
 
 import org.xml.sax.SAXException;
 
-import javafx.embed.swing.JFXPanel;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ContextMenu;
@@ -45,15 +43,15 @@ import javafx.scene.layout.Pane;
  * part: it's the place where organisms are drawn and is in charge of
  * the context menus management.
  *
- * <p>FX port: a Swing {@link JFXPanel} (drop-in for MainWindow's JScrollPane)
- * hosting a {@link Canvas}. Rendering still goes through the AWT
+ * <p>FX port: a plain {@link Pane} hosting a {@link Canvas}, placed in
+ * MainWindow's FX ScrollPane. Rendering still goes through the AWT
  * {@link World#draw} into a BufferedImage converted with SwingFXUtils
  * (same bridge as the preview canvases); the renderers move to
  * GraphicsContext only after MainWindow itself is FX. Redraw requests
  * coalesce through a dirty flag so a burst of sim-thread repaints costs
  * a single frame render, like Swing's RepaintManager did.
  */
-public class VisibleWorld extends JFXPanel implements WorldView {
+public class VisibleWorld extends Pane implements WorldView {
 	/**
 	 * The version of this class
 	 */
@@ -67,10 +65,9 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 	 */
 	private double zoomFactor = 1.0;
 	/**
-	 * FX scene parts. Built on the FX thread in the constructor.
+	 * FX canvas. Built on the FX thread in the constructor.
 	 */
 	private Canvas canvas;
-	private Pane viewRoot;
 	/**
 	 * The context menu showed when right clicking on an alive organism.
 	 */
@@ -552,15 +549,15 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 		setZoomFactor(Utils.ZOOM_FACTOR);
 	}
 	/**
-	 * Builds the FX scene. Runs on the FX thread.
+	 * Builds the canvas and menus. Runs on the FX thread.
 	 */
 	private void buildScene() {
 		World w = _mainWindow.getWorld();
 		int ww = (w == null) ? Utils.WORLD_WIDTH : w.getWidth();
 		int wh = (w == null) ? Utils.WORLD_HEIGHT : w.getHeight();
 		canvas = new Canvas((int) (ww * zoomFactor), (int) (wh * zoomFactor));
-		viewRoot = new Pane(canvas);
-		viewRoot.setPrefSize(canvas.getWidth(), canvas.getHeight());
+		getChildren().add(canvas);
+		setPrefSize(canvas.getWidth(), canvas.getHeight());
 		canvas.setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY) {
 				setSelectedOrganism(findOrganismFromPosition(
@@ -574,7 +571,6 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 			maybeShowPopupMenu(worldX, worldY, e.getScreenX(), e.getScreenY());
 		});
 		createPopupMenu();
-		setScene(new Scene(viewRoot));
 	}
 	/**
 	 * Explicit content refresh for the two MainWindow call sites that used
@@ -687,8 +683,7 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 		setZoomFactor(Utils.between(zoomFactor / 1.25, 0.25, 4.0));
 	}
 	/**
-	 * Resizes the canvas, the scene root and this panel. FX sizes update on
-	 * the FX thread, the Swing preferred size on the EDT.
+	 * Resizes the canvas and this pane. Runs on the FX thread.
 	 */
 	private void updateSizes(int w, int h) {
 		if (w <= 0 || h <= 0)
@@ -698,19 +693,10 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 				canvas.setWidth(w);
 				canvas.setHeight(h);
 			}
-			if (viewRoot != null)
-				viewRoot.setPrefSize(w, h);
+			setPrefSize(w, h);
+			requestLayout();
 			requestRedraw();
 		});
-		if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-			setPreferredSize(new java.awt.Dimension(w, h));
-			revalidate();
-		} else {
-			javax.swing.SwingUtilities.invokeLater(() -> {
-				setPreferredSize(new java.awt.Dimension(w, h));
-				revalidate();
-			});
-		}
 	}
 
 	private void createActions() {
@@ -739,27 +725,28 @@ public class VisibleWorld extends JFXPanel implements WorldView {
 	}
 
 	public void showAliveToolbar() {
-		javax.swing.JToolBar toolBar = _mainWindow.toolBar;
-		toolBar.removeAll();
-		toolBar.add(feedAction);
-		toolBar.add(weakenAction);
-		toolBar.add(killAction);
-		toolBar.add(copyAction);
-		toolBar.add(saveImageAction);
-		toolBar.add(trackAction);
-		toolBar.add(_mainWindow.abortTrackingAction);
-		toolBar.invalidate();
-		toolBar.repaint();
+		// Called from any thread (selection changes); inline on the FX thread.
+		Fx.run(() -> {
+			javafx.scene.control.ToolBar toolBar = _mainWindow.toolBar;
+			toolBar.getItems().clear();
+			toolBar.getItems().add(_mainWindow.toolButtonFor(feedAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(weakenAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(killAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(copyAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(saveImageAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(trackAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(_mainWindow.abortTrackingAction));
+		});
 	}
 
 	@Override
 	public void showDeadToolbar() {
-		javax.swing.JToolBar toolBar = _mainWindow.toolBar;
-		toolBar.removeAll();
-		toolBar.add(reviveAction);
-		toolBar.add(disperseAction);
-		toolBar.invalidate();
-		toolBar.repaint();
+		Fx.run(() -> {
+			javafx.scene.control.ToolBar toolBar = _mainWindow.toolBar;
+			toolBar.getItems().clear();
+			toolBar.getItems().add(_mainWindow.toolButtonFor(reviveAction));
+			toolBar.getItems().add(_mainWindow.toolButtonFor(disperseAction));
+		});
 	}
 
 	/**

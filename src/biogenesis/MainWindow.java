@@ -18,28 +18,46 @@
 package biogenesis;
 
 
-import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-
-
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.awt.*;
-import java.awt.event.*;
+
 import java.text.NumberFormat;
 import java.util.*;
 
-public class MainWindow extends JFrame {
-	private static final long serialVersionUID = Utils.FILE_VERSION;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.KeyStroke;
+
+public class MainWindow {
 	protected VisibleWorld _visibleWorld;
 	protected World _world;
 	protected boolean _isProcessActive=false;
 	protected transient java.util.Timer _timer;
 	protected transient TimerTask updateTask = null;
 	protected File _gameFile = null;
-	
-	protected JScrollPane scrollPane;
+
+	protected ScrollPane scrollPane;
 	protected StdAction newGameAction;
 	protected StartStopAction startStopAction;
 	protected StdAction saveGameAction;
@@ -62,66 +80,75 @@ public class MainWindow extends JFrame {
 	protected StdAction toggleEfficiencyAction;
 	protected StdAction zoomInAction;
 	protected StdAction zoomOutAction;
-	
-	protected JMenuItem _menuStartStopGame;
-	protected JMenu _menuGame;
-	protected JMenu _menuWorld;
-	protected JMenu _menuHelp;
-	protected JMenu _menuNet;
+
+	protected MenuBar menuBar;
+	protected MenuItem _menuStartStopGame;
+	protected Menu _menuGame;
+	protected Menu _menuWorld;
+	protected Menu _menuHelp;
+	protected Menu _menuNet;
 	protected NumberFormat _nf;
-	protected JLabel _statusLabel;
-	protected JToolBar toolBar = new JToolBar(Messages.getString("T_PROGRAM_NAME")); //$NON-NLS-1$
-	
+	protected Label _statusLabel;
+	protected ToolBar toolBar;
+
 	protected InfoToolbar infoToolbar;
-	
+
+	protected Stage stage;
+
 	private String statusMessage=""; //$NON-NLS-1$
 	private StringBuilder statusLabelText = new StringBuilder(100);
 	protected Organism _trackedOrganism = null;
-	
+
 	protected transient NetServerThread serverThread = null;
-	
-	
+
+
 	protected StatisticsWindow _statisticsWindow = null;
 //	 Comptador de frames, per saber quan actualitzar la finestra d'informaci�
 	protected long nFrames=0;
-	private ImageIcon imageIcon = new ImageIcon(getClass().getResource("images/bullet.jpg")); //$NON-NLS-1$
 
 	public void setStatusMessage(String str) {
-		statusMessage = str;
-		updateStatusLabel();
+		Fx.run(() -> {
+			statusMessage = str;
+			updateStatusLabel();
+		});
 	}
 	public String getStatusMessage() {
 		return statusMessage;
 	}
-	
+
 	public World getWorld() {
 		return _world;
 	}
-	
+
 	public VisibleWorld getVisibleWorld() {
         return _visibleWorld;
     }
-	
+
 	public boolean isProcessActive() {
 		return _isProcessActive;
 	}
-	
+
 	public InfoToolbar getInfoPanel() {
 		return infoToolbar;
 	}
-	
+
+	/**
+	 * Builds the whole shell. Must run on the FX thread (like InfoToolbar);
+	 * use {@code Fx.ask(() -> new MainWindow())} from anywhere else.
+	 */
 	public MainWindow() {
 		createActions();
-		createMenu();
-		createToolBar();
+		toolBar = new ToolBar();
+		menuBar = new MenuBar();
 		setControls();
+		refreshChrome();
 		configureApp();
 		_world = new World(_visibleWorld);
 		startApp();
 		_world.genesis();
-		scrollPane.setViewportView(_visibleWorld);
+		scrollPane.setContent(_visibleWorld);
 	}
-	
+
 	/**
 	 * @param args
 	 */
@@ -137,9 +164,9 @@ public class MainWindow extends JFrame {
 			}
 		}
 		Utils.readPreferences();
-		new MainWindow();
+		Fx.ask(() -> new MainWindow());
 	}
-	
+
 	private void createActions() {
 		newGameAction = new NewGameAction("T_NEW", "images/menu_new.png", //$NON-NLS-1$ //$NON-NLS-2$
 				"T_NEW_WORLD"); //$NON-NLS-1$
@@ -163,8 +190,8 @@ public class MainWindow extends JFrame {
 		killAllAction = new KillAllAction("T_KILL_ALL", null, "T_KILL_ALL_ORGANISMS"); //$NON-NLS-1$ //$NON-NLS-2$
 		disperseAllAction = new DisperseAllAction("T_DISPERSE_ALL", null, "T_DISPERSE_ALL_DEAD_ORGANISMS"); //$NON-NLS-1$ //$NON-NLS-2$
 		parametersAction = new ParametersAction("T_PARAMETERS", null, "T_EDIT_PARAMETERS"); //$NON-NLS-1$ //$NON-NLS-2$
-		aboutAction = new AboutAction("T_ABOUT", null, "T_ABOUT");  //$NON-NLS-1$//$NON-NLS-2$
-		manualAction = new ManualAction("T_USER_MANUAL", null, "T_USER_MANUAL");  //$NON-NLS-1$//$NON-NLS-2$
+		aboutAction = new AboutAction("T_ABOUT", null, "T_ABOUT");  //$NON-NLS-1$ //$NON-NLS-2$
+		manualAction = new ManualAction("T_USER_MANUAL", null, "T_USER_MANUAL");  //$NON-NLS-1$ //$NON-NLS-2$
 		checkLastVersionAction = new CheckLastVersionAction("T_CHECK_LAST_VERSION", null, "T_CHECK_LAST_VERSION"); //$NON-NLS-1$ //$NON-NLS-2$
 		netConfigAction = new NetConfigAction("T_CONFIGURE_NETWORK", null, "T_CONFIGURE_NETWORK"); //$NON-NLS-1$ //$NON-NLS-2$
 		toggleEfficiencyAction = new ToggleEfficiencyModeAction("T_EFFICIENCY_MODE", null, "T_EFFICIENCY_MODE_DESC"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -172,70 +199,131 @@ public class MainWindow extends JFrame {
 		zoomOutAction = new ZoomOutAction("T_ZOOM_OUT", null, "T_ZOOM_OUT"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void createToolBar() {
-		toolBar.removeAll();
-		toolBar.add(newGameAction);
-		toolBar.add(startStopAction);
-		toolBar.add(saveGameAction);
-		toolBar.add(increaseCO2Action);
-		toolBar.add(decreaseCO2Action);
-		toolBar.add(manageConnectionsAction);
-		toolBar.add(abortTrackingAction);
-		abortTrackingAction.setEnabled(_trackedOrganism != null);
-		toolBar.invalidate();
-		toolBar.repaint();
+	/**
+	 * Loads an action's icon for FX controls. Null when the action has none.
+	 */
+	private static ImageView iconView(StdAction action) {
+		if (action.iconPath == null)
+			return null;
+		try (InputStream in = StdAction.class.getResourceAsStream(action.iconPath)) {
+			if (in == null)
+				return null;
+			return new ImageView(new Image(in));
+		} catch (IOException e) {
+			return null;
+		}
 	}
-	
-	private void createMenu() {
-		JMenuItem menuItem;
-		JMenuBar menuBar = new JMenuBar();
-		_menuGame = new JMenu(Messages.getString("T_GAME")); //$NON-NLS-1$
-		_menuGame.setMnemonic(Messages.getMnemonic("T_GAME").intValue()); //$NON-NLS-1$
-		menuBar.add(_menuGame);
-		menuItem = new JMenuItem(newGameAction);
-		menuItem.setIcon(null);
-		_menuGame.add(menuItem);
-		_menuStartStopGame = new JMenuItem(startStopAction);
-		_menuStartStopGame.setIcon(null);
-		_menuGame.add(_menuStartStopGame);
-		_menuGame.add(new JMenuItem(openGameAction));
-		menuItem = new JMenuItem(saveGameAction);
-		menuItem.setIcon(null);
-		_menuGame.add(menuItem);
-		_menuGame.add(new JMenuItem(saveGameAsAction));
-		_menuGame.add(new JMenuItem(quitAction));
-		_menuWorld = new JMenu(Messages.getString("T_WORLD")); //$NON-NLS-1$
-		_menuWorld.setMnemonic(Messages.getMnemonic("T_WORLD").intValue()); //$NON-NLS-1$
-		menuBar.add(_menuWorld);
-		_menuWorld.add(new JMenuItem(statisticsAction));
-		_menuWorld.add(new JMenuItem(labAction));
-		menuItem = new JMenuItem(increaseCO2Action);
-		menuItem.setIcon(null);
-		_menuWorld.add(menuItem);
-		menuItem = new JMenuItem(decreaseCO2Action);
-		menuItem.setIcon(null);
-		_menuWorld.add(menuItem);
-		_menuWorld.add(new JMenuItem(killAllAction));
-		_menuWorld.add(new JMenuItem(disperseAllAction));
-		_menuWorld.add(new JMenuItem(parametersAction));
-		_menuWorld.addSeparator();
-		_menuWorld.add(new JMenuItem(toggleEfficiencyAction));
-		_menuWorld.add(new JMenuItem(zoomInAction));
-		_menuWorld.add(new JMenuItem(zoomOutAction));
-		_menuNet = new JMenu(Messages.getString("T_NETWORK")); //$NON-NLS-1$
-		_menuNet.setMnemonic(Messages.getMnemonic("T_NETWORK").intValue()); //$NON-NLS-1$
-		menuBar.add(_menuNet);
-		_menuNet.add(new JMenuItem(netConfigAction));
-		menuItem = new JMenuItem(manageConnectionsAction);
-		menuItem.setIcon(null);
-		_menuNet.add(menuItem);
-		_menuHelp = new JMenu(Messages.getString("T_HELP")); //$NON-NLS-1$
-		_menuHelp.setMnemonic(Messages.getMnemonic("T_HELP").intValue()); //$NON-NLS-1$
-		menuBar.add(_menuHelp);
-		_menuHelp.add(new JMenuItem(manualAction));
-		_menuHelp.add(new JMenuItem(checkLastVersionAction));
-		_menuHelp.add(new JMenuItem(aboutAction));
-		// Only enable file management menu options if at least there is 
+
+	/**
+	 * Wraps a Swing action in an FX toolbar button. Bodies ignore the event,
+	 * so a null ActionEvent is safe.
+	 */
+	Button toolButtonFor(StdAction action) {
+		Button button = new Button((String) action.getValue(Action.NAME), iconView(action));
+		Object desc = action.getValue(Action.SHORT_DESCRIPTION);
+		if (desc != null)
+			button.setTooltip(new Tooltip(desc.toString()));
+		button.setDisable(!action.isEnabled());
+		button.setOnAction(evt -> action.actionPerformed(null));
+		return button;
+	}
+
+	/**
+	 * Converts a Swing accelerator KeyStroke (plain letters like P/S, with
+	 * modifiers when present) into an FX KeyCombination.
+	 */
+	private static KeyCombination acceleratorOf(StdAction action) {
+		Object acc = action.getValue(Action.ACCELERATOR_KEY);
+		if (!(acc instanceof KeyStroke))
+			return null;
+		KeyStroke ks = (KeyStroke) acc;
+		KeyCode code = KeyCode.getKeyCode(java.awt.event.KeyEvent.getKeyText(ks.getKeyCode()));
+		if (code == null)
+			return null;
+		int mods = ks.getModifiers();
+		return new KeyCodeCombination(code,
+				(mods & InputEvent.SHIFT_DOWN_MASK) != 0 ? KeyCombination.SHIFT_DOWN : KeyCombination.SHIFT_ANY,
+				(mods & InputEvent.CTRL_DOWN_MASK) != 0 ? KeyCombination.CONTROL_DOWN : KeyCombination.CONTROL_ANY,
+				(mods & InputEvent.ALT_DOWN_MASK) != 0 ? KeyCombination.ALT_DOWN : KeyCombination.ALT_ANY,
+				(mods & InputEvent.META_DOWN_MASK) != 0 ? KeyCombination.META_DOWN : KeyCombination.META_ANY,
+				KeyCombination.SHORTCUT_ANY);
+	}
+
+	/**
+	 * Wraps a Swing action in an FX menu item, keeping the icon policy of the
+	 * old menu (icons dropped where the Swing items nulled them).
+	 */
+	private static MenuItem menuItemFor(StdAction action, boolean keepIcon) {
+		MenuItem item = new MenuItem((String) action.getValue(Action.NAME));
+		if (keepIcon)
+			item.setGraphic(iconView(action));
+		item.setDisable(!action.isEnabled());
+		KeyCombination acc = acceleratorOf(action);
+		if (acc != null)
+			item.setAccelerator(acc);
+		item.setOnAction(evt -> action.actionPerformed(null));
+		return item;
+	}
+
+	public void createToolBar() {
+		abortTrackingAction.setEnabled(_trackedOrganism != null);
+		toolBar.getItems().setAll(
+			toolButtonFor(newGameAction),
+			toolButtonFor(startStopAction),
+			toolButtonFor(saveGameAction),
+			toolButtonFor(increaseCO2Action),
+			toolButtonFor(decreaseCO2Action),
+			toolButtonFor(manageConnectionsAction),
+			toolButtonFor(abortTrackingAction));
+	}
+
+	/**
+	 * Rebuilds menus and toolbar from the actions' live text/icons/enabled
+	 * state. Called after anything that mutates them (toggles, selection,
+	 * locale change) instead of syncing individual controls. Runs on the FX
+	 * thread (inline when already there).
+	 */
+	private void refreshChrome() {
+		Fx.run(() -> {
+			menuBar.getMenus().setAll(
+				buildGameMenu(), buildWorldMenu(), buildNetMenu(), buildHelpMenu());
+			createToolBar();
+		});
+	}
+
+	private Menu buildGameMenu() {
+		_menuGame = new Menu(Messages.getString("T_GAME")); //$NON-NLS-1$
+		_menuGame.getItems().add(menuItemFor(newGameAction, false));
+		_menuStartStopGame = menuItemFor(startStopAction, false);
+		_menuGame.getItems().add(_menuStartStopGame);
+		_menuGame.getItems().add(menuItemFor(openGameAction, true));
+		_menuGame.getItems().add(menuItemFor(saveGameAction, false));
+		_menuGame.getItems().add(menuItemFor(saveGameAsAction, true));
+		_menuGame.getItems().add(menuItemFor(quitAction, true));
+		return _menuGame;
+	}
+
+	private Menu buildWorldMenu() {
+		_menuWorld = new Menu(Messages.getString("T_WORLD")); //$NON-NLS-1$
+		_menuWorld.getItems().add(menuItemFor(statisticsAction, true));
+		_menuWorld.getItems().add(menuItemFor(labAction, true));
+		_menuWorld.getItems().add(menuItemFor(increaseCO2Action, false));
+		_menuWorld.getItems().add(menuItemFor(decreaseCO2Action, false));
+		_menuWorld.getItems().add(menuItemFor(killAllAction, true));
+		_menuWorld.getItems().add(menuItemFor(disperseAllAction, true));
+		_menuWorld.getItems().add(menuItemFor(parametersAction, true));
+		_menuWorld.getItems().add(new SeparatorMenuItem());
+		_menuWorld.getItems().add(menuItemFor(toggleEfficiencyAction, true));
+		_menuWorld.getItems().add(menuItemFor(zoomInAction, true));
+		_menuWorld.getItems().add(menuItemFor(zoomOutAction, true));
+		return _menuWorld;
+	}
+
+	private Menu buildNetMenu() {
+		_menuNet = new Menu(Messages.getString("T_NETWORK")); //$NON-NLS-1$
+		_menuNet.getItems().add(menuItemFor(netConfigAction, true));
+		_menuNet.getItems().add(menuItemFor(manageConnectionsAction, false));
+		// Only enable file management menu options if at least there is
 		//permission to read user's home directory
 		// (Java 17: SecurityManager is deprecated for removal, probe property directly)
 		try {
@@ -248,18 +336,26 @@ public class MainWindow extends JFrame {
 			netConfigAction.setEnabled(false);
 			manageConnectionsAction.setEnabled(false);
 		}
-		setJMenuBar(menuBar);
+		return _menuNet;
 	}
-	
+
+	private Menu buildHelpMenu() {
+		_menuHelp = new Menu(Messages.getString("T_HELP")); //$NON-NLS-1$
+		_menuHelp.getItems().add(menuItemFor(manualAction, true));
+		_menuHelp.getItems().add(menuItemFor(checkLastVersionAction, true));
+		_menuHelp.getItems().add(menuItemFor(aboutAction, true));
+		return _menuHelp;
+	}
+
 	protected void checkLastVersion() {
-		CheckVersionThread thread = new CheckVersionThread(this);
+		CheckVersionThread thread = new CheckVersionThread();
 		thread.start();
 	}
 
 	protected void netConfig() {
 		new NetConfigWindow(this);
 	}
-	
+
 	public void setAcceptConnections(boolean newAcceptConnections) {
 		if (newAcceptConnections != Utils.ACCEPT_CONNECTIONS) {
 			Utils.ACCEPT_CONNECTIONS = newAcceptConnections;
@@ -273,11 +369,11 @@ public class MainWindow extends JFrame {
 	public boolean isAcceptingConnections() {
 		return Utils.ACCEPT_CONNECTIONS;
 	}
-	
+
 	public NetServerThread getNetServer() {
 		return serverThread;
 	}
-	
+
 	public NetServerThread startServer() {
 		if (serverThread == null || !serverThread.isActive()) {
 			serverThread = new NetServerThread(this);
@@ -285,45 +381,44 @@ public class MainWindow extends JFrame {
 		}
 		return serverThread;
 	}
-	
+
 	public void stopServer() {
 		if (serverThread != null) {
 			serverThread.closeServer();
 		}
 	}
-	
+
 	class NewGameAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public NewGameAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			_trackedOrganism = null;
 			_world.genesis();
-			scrollPane.setViewportView(_visibleWorld);
+			scrollPane.setContent(_visibleWorld);
 			_isProcessActive = true;
 			startStopAction.setActive(true);
-			_menuStartStopGame.setIcon(null);
 			setStatusMessage(Messages.getString("T_NEW_WORLD_CREATED")); //$NON-NLS-1$
 		}
 	}
-	
+
 	class StartStopAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		protected String name2;
 		protected String description2;
 		protected Integer mnemonic2;
 		protected ImageIcon icon2;
-		
+
 		protected String name2_key;
 		protected String desc2_key;
-		
+
 		protected boolean active;
-		
+
 		public StartStopAction(String text1, String text2, String icon_path1,
 				String icon_path2, String desc1, String desc2) {
-			super(text1, icon_path1, desc1); 
+			super(text1, icon_path1, desc1);
 			name2 = Messages.getString(text2);
 			description2 = Messages.getString(desc2);
 			icon2 = createIcon(icon_path2);
@@ -331,17 +426,17 @@ public class MainWindow extends JFrame {
 			name2_key = text2;
 			desc2_key = desc2;
 			active = false;
-			
+
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_PAUSE_ACCELERATOR")));
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			if (_isProcessActive)
 				pauseGame();
 			else
 				playGame();
 		}
-		
+
 		public void toogle() {
 			String aux;
 			ImageIcon auxicon;
@@ -360,7 +455,7 @@ public class MainWindow extends JFrame {
 			mnemonic2 = auxmnemonic;
 			active = !active;
 		}
-		
+
 		@Override
 		public void changeLocale() {
 			super.changeLocale();
@@ -368,90 +463,90 @@ public class MainWindow extends JFrame {
 			description2 = Messages.getString(desc2_key);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_PAUSE_ACCELERATOR")));
 		}
-		
+
 		public void setActive(boolean newState) {
 			if (newState != active) {
 				toogle();
 				active = newState;
 			}
 		}
-		
+
 		public boolean isActive() {
 			return active;
 		}
 	}
-	
+
 	class SaveGameAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public SaveGameAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_SAVE_ACCELERATOR")));
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			if (_gameFile != null)
 				saveObject(_world, _gameFile);
 			else
 				saveGameAs();
 		}
-		
+
 		@Override
 		public void changeLocale() {
 			super.changeLocale();
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_SAVE_ACCELERATOR")));
 		}
 	}
-	
+
 	class IncreaseCO2Action extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public IncreaseCO2Action(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			_world.addCO2(500);
 		}
 	}
-	
+
 	class DecreaseCO2Action extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public DecreaseCO2Action(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			_world.decreaseCO2(500);
 		}
 	}
-	
+
 	class ManageConnectionsAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ManageConnectionsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			netConnectionsWindow();
 		}
 	}
-	
+
 	class AbortTrackingAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public AbortTrackingAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			setTrackedOrganism(null);
 		}
 	}
-	
+
 	class OpenGameAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public OpenGameAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			boolean processState = _isProcessActive;
 			_isProcessActive = false;
@@ -491,7 +586,7 @@ public class MainWindow extends JFrame {
 					}
 					// Torna a assignar els valors dels camps no guardats a l'objecte world
 					_world.init(_visibleWorld);
-					scrollPane.setViewportView(_visibleWorld);
+					scrollPane.setContent(_visibleWorld);
 				// Assegurem que s'ha dibuixat el m�n
 				_visibleWorld.refresh();
 				}
@@ -502,29 +597,29 @@ public class MainWindow extends JFrame {
 			_isProcessActive = processState;
 		}
 	}
-	
+
 	class SaveGameAsAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public SaveGameAsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			saveGameAs();
 		}
 	}
-	
+
 	class QuitAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public QuitAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			quit();
 		}
 	}
-	
+
 	public void quit() {
 		Fx.Answer save = Fx.confirmYesNoCancel(Messages.getString("T_SAVE_WORLD"), Messages.getString("T_SAVE_BEFORE_QUIT")); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -542,74 +637,91 @@ public class MainWindow extends JFrame {
 			try {
 				System.exit(0);
 			} catch (SecurityException ex) {
-				dispose();
+				stage.close();
 			}
 		}
 	}
-	
+
+	/** Geometry for Utils.quitProgram (prefs), read off the stage. */
+	public int getX() {
+		return (int) stage.getX();
+	}
+	public int getY() {
+		return (int) stage.getY();
+	}
+	public int getWidth() {
+		return (int) stage.getWidth();
+	}
+	public int getHeight() {
+		return (int) stage.getHeight();
+	}
+	public int getExtendedState() {
+		return stage.isMaximized() ? Frame.MAXIMIZED_BOTH : Frame.NORMAL;
+	}
+
 	class StatisticsAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public StatisticsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			if (_statisticsWindow != null)
 				_statisticsWindow.dispose();
 			_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
 		}
 	}
-	
+
 	class LabAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public LabAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			new LabWindow(MainWindow.this);
 		}
 	}
-	
+
 	class KillAllAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public KillAllAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			_world.killAll();
 		}
 	}
-	
+
 	class DisperseAllAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public DisperseAllAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			_world.disperseAll();
 		}
 	}
-	
+
 	class ParametersAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ParametersAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			paramDialog();
 		}
 	}
-	
+
 	class ManualAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public ManualAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 		String DirNameManual = "/usr/share/doc/biogenesis/biogenesis_manual";
 		if ((new File(DirNameManual+"/manual_"+Messages.getLanguage()+".html")).exists()) {
@@ -627,35 +739,35 @@ public class MainWindow extends JFrame {
 		}
 		}
 	}
-	
+
 	class CheckLastVersionAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public CheckLastVersionAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			checkLastVersion();
 		}
 	}
-	
+
 	class AboutAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public AboutAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			about();
 		}
 	}
-	
+
 	class NetConfigAction extends StdAction {
 		private static final long serialVersionUID = 1L;
 		public NetConfigAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
-		
+
 		public void actionPerformed(ActionEvent e) {
 			netConfig();
 		}
@@ -699,46 +811,51 @@ public class MainWindow extends JFrame {
 				_visibleWorld.zoomOut();
 		}
 	}
-	
+
 	protected void paramDialog() {
 		new ParamDialog(this);
 	}
-	
+
 	public void setTrackedOrganism(Organism org) {
 		_trackedOrganism = org;
 		abortTrackingAction.setEnabled(_trackedOrganism != null);
+		refreshChrome();
 	}
-	
+
 	protected void netConnectionsWindow() {
 		new NetConnectionsWindow(this);
 	}
-	
+
 	public void pauseGame() {
-		_isProcessActive = false;
-		startStopAction.toogle();
-		_menuStartStopGame.setIcon(null);
-		setStatusMessage(Messages.getString("T_GAME_PAUSED")); //$NON-NLS-1$
+		Fx.run(() -> {
+			_isProcessActive = false;
+			startStopAction.toogle();
+			refreshChrome();
+			setStatusMessage(Messages.getString("T_GAME_PAUSED")); //$NON-NLS-1$
+		});
 	}
-	
+
 	public void playGame() {
-		_isProcessActive = true;
-		startStopAction.toogle();
-		_menuStartStopGame.setIcon(null);
-    	setStatusMessage(Messages.getString("T_GAME_RESUMED")); //$NON-NLS-1$
+		Fx.run(() -> {
+			_isProcessActive = true;
+			startStopAction.toogle();
+			refreshChrome();
+			setStatusMessage(Messages.getString("T_GAME_RESUMED")); //$NON-NLS-1$
+		});
 	}
-	
+
 	protected File saveGameAs() {
 		File savedFile = saveObjectAs(_world);
 		if (savedFile != null)
 			_gameFile = savedFile;
 		return savedFile;
 	}
-	
+
 	protected void about() {
-		String aboutString = Messages.getString("T_PROGRAM_NAME")+"http://biogenesis.sourceforge.net/"+"\n"  //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+		String aboutString = Messages.getString("T_PROGRAM_NAME")+"http://biogenesis.sourceforge.net/"+"\n"  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 		+Messages.getString("T_VERSION_B")+" "+CheckVersionThread.translateVersion(String.valueOf(Utils.VERSION))+"\n"+ //$NON-NLS-1$//$NON-NLS-2$
 				Messages.getString("T_VANILLA_COPYRIGHT")+"joanq@users.sourceforge.net\n"+ //$NON-NLS-1$ //$NON-NLS-2$
-				Messages.getString("T_ARTWORK_BY")+" Ananda Daydream, Florian Haag (http://toolbaricons.sourceforge.net/)";  //$NON-NLS-1$//$NON-NLS-2$
+				Messages.getString("T_ARTWORK_BY")+" Ananda Daydream, Florian Haag (http://toolbaricons.sourceforge.net/)";  //$NON-NLS-1$ //$NON-NLS-2$
 		Fx.ask(() -> {
 			javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
 					javafx.scene.control.Alert.AlertType.INFORMATION, aboutString,
@@ -755,36 +872,38 @@ public class MainWindow extends JFrame {
 			return null;
 		});
 	}
-	
+
 	private void setControls () {
-		setIconImage(imageIcon.getImage());
-		JPanel centralPanel = new JPanel();
-		centralPanel.setLayout(new BorderLayout());
-		
-        _visibleWorld=new VisibleWorld(this);
-        scrollPane = new JScrollPane(_visibleWorld);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-        setLocation(Utils.WINDOW_X, Utils.WINDOW_Y);
-        setExtendedState(Utils.WINDOW_STATE);
-        getContentPane().setLayout(new BorderLayout());
-        
-        infoToolbar = Fx.ask(() -> new InfoToolbar(null, this));
-        javafx.embed.swing.JFXPanel infoPanel = new javafx.embed.swing.JFXPanel();
-        infoPanel.setScene(Fx.ask(() -> new javafx.scene.Scene(infoToolbar)));
-        centralPanel.add(scrollPane, BorderLayout.CENTER);
-        centralPanel.add(infoPanel, BorderLayout.SOUTH);
-        
-        getContentPane().add(centralPanel, BorderLayout.CENTER);
-        
-        _statusLabel = new JLabel(" "); //$NON-NLS-1$
-        _statusLabel.setBorder(new EtchedBorder());
-        _nf = NumberFormat.getInstance();
+		stage = new Stage();
+		stage.setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
+		try (InputStream iconStream = getClass().getResourceAsStream("images/bullet.jpg")) { //$NON-NLS-1$
+			if (iconStream != null)
+				stage.getIcons().add(new Image(iconStream));
+		} catch (IOException e) {
+			// icon is decorative; run without it
+		}
+		stage.setX(Utils.WINDOW_X);
+		stage.setY(Utils.WINDOW_Y);
+
+		_visibleWorld = new VisibleWorld(this);
+		scrollPane = new ScrollPane(_visibleWorld);
+
+		infoToolbar = new InfoToolbar(null, this);
+
+		_statusLabel = new Label(" "); //$NON-NLS-1$
+		_statusLabel.setStyle("-fx-border-color: grey; -fx-padding: 2;"); //$NON-NLS-1$
+		_nf = NumberFormat.getInstance();
 		_nf.setMaximumFractionDigits(1);
-        getContentPane().add(_statusLabel, BorderLayout.SOUTH);
-        getContentPane().add(toolBar, BorderLayout.NORTH);
+
+		BorderPane root = new BorderPane();
+		VBox top = new VBox(menuBar, toolBar);
+		root.setTop(top);
+		root.setCenter(scrollPane);
+		VBox bottom = new VBox(infoToolbar, _statusLabel);
+		root.setBottom(bottom);
+		stage.setScene(new Scene(root));
     }
-		
+
 	public File saveObjectAs(Object obj) {
 		File resultFile = null;
 		boolean processState = _isProcessActive;
@@ -821,7 +940,7 @@ public class MainWindow extends JFrame {
 	    _isProcessActive = processState;
 	    return resultFile;
 	}
-	
+
 	public boolean saveObject(Object obj, File f) {
 		ObjectOutputStream outputStream;
 		try {
@@ -841,50 +960,46 @@ public class MainWindow extends JFrame {
 		}
 		return false;
 	}
-	
+
 	public void configureApp() {
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				quit();
-			}
+		stage.setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
+		stage.setOnCloseRequest(e -> {
+			e.consume();
+			quit();
 		});
-		setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
-		UIManager.put("OptionPane.yesButtonText", Messages.getString("T_YES"));
-		UIManager.put("OptionPane.noButtonText", Messages.getString("T_NO"));
-		UIManager.put("OptionPane.cancelButtonText", Messages.getString("T_CANCEL"));
 	}
-	
+
 	public void updateStatusLabel() {
-		statusLabelText.setLength(0);
-		statusLabelText.append(Messages.getString("T_FPS")); //$NON-NLS-1$
-		statusLabelText.append(getFPS());
-		statusLabelText.append("     "); //$NON-NLS-1$
-		statusLabelText.append(Messages.getString("T_TIME")); //$NON-NLS-1$
-		statusLabelText.append(_world.getTime());
-		statusLabelText.append("     "); //$NON-NLS-1$
-		statusLabelText.append(Messages.getString("T_CURRENT_POPULATION")); //$NON-NLS-1$
-		statusLabelText.append(_world.getPopulation());
-		statusLabelText.append("     "); //$NON-NLS-1$
-		statusLabelText.append(Messages.getString("T_O2")); //$NON-NLS-1$
-		statusLabelText.append(_nf.format(_world.getO2()));
-		statusLabelText.append("     "); //$NON-NLS-1$
-		statusLabelText.append(Messages.getString("T_CO2")); //$NON-NLS-1$
-		statusLabelText.append(_nf.format(_world.getCO2()));
-		statusLabelText.append("     "); //$NON-NLS-1$
-		statusLabelText.append(getStatusMessage());
-		_statusLabel.setText(statusLabelText.toString());
+		Fx.run(() -> {
+			statusLabelText.setLength(0);
+			statusLabelText.append(Messages.getString("T_FPS")); //$NON-NLS-1$
+			statusLabelText.append(getFPS());
+			statusLabelText.append("     "); //$NON-NLS-1$
+			statusLabelText.append(Messages.getString("T_TIME")); //$NON-NLS-1$
+			statusLabelText.append(_world.getTime());
+			statusLabelText.append("     "); //$NON-NLS-1$
+			statusLabelText.append(Messages.getString("T_CURRENT_POPULATION")); //$NON-NLS-1$
+			statusLabelText.append(_world.getPopulation());
+			statusLabelText.append("     "); //$NON-NLS-1$
+			statusLabelText.append(Messages.getString("T_O2")); //$NON-NLS-1$
+			statusLabelText.append(_nf.format(_world.getO2()));
+			statusLabelText.append("     "); //$NON-NLS-1$
+			statusLabelText.append(Messages.getString("T_CO2")); //$NON-NLS-1$
+			statusLabelText.append(_nf.format(_world.getCO2()));
+			statusLabelText.append("     "); //$NON-NLS-1$
+			statusLabelText.append(getStatusMessage());
+			_statusLabel.setText(statusLabelText.toString());
+		});
 	}
 	/**
 	 * Returns the actual Frame Per Second rate of the program.
-	 * 
+	 *
 	 * @return  The actual FPS.
 	 */
 	public int getFPS() {
 		return 1000/currentDelay;
 	}
-	
+
 	final transient Runnable lifeProcess = new Runnable() {
 	    public void run() {
 	    	if (_isProcessActive) {
@@ -903,33 +1018,38 @@ public class MainWindow extends JFrame {
 	    			if (!_trackedOrganism.isAlive()) {
 	    				_trackedOrganism = null;
 	    				abortTrackingAction.setEnabled(false);
+	    				refreshChrome();
 	    			}
 	    			else {
-	    				JScrollBar bar = scrollPane.getHorizontalScrollBar();
-	    				bar.setValue(Utils.between(_trackedOrganism._centerX - scrollPane.getWidth()/2,
-	    						bar.getValue()-2*(int)Utils.MAX_VEL,bar.getValue()+2*(int)Utils.MAX_VEL));
-	    				bar = scrollPane.getVerticalScrollBar();
-	    				bar.setValue(Utils.between(_trackedOrganism._centerY - scrollPane.getHeight()/2,
-	    						bar.getValue()-2*(int)Utils.MAX_VEL,bar.getValue()+2*(int)Utils.MAX_VEL));
+	    				double vw = scrollPane.getViewportBounds().getWidth();
+	    				double vh = scrollPane.getViewportBounds().getHeight();
+	    				scrollPane.setHvalue(scrollTo(_trackedOrganism._centerX,
+	    						_visibleWorld.getWidth(), vw));
+	    				scrollPane.setVvalue(scrollTo(_trackedOrganism._centerY,
+	    						_visibleWorld.getHeight(), vh));
 	    			}
 	    		}
 	    	}
 	    }
 	};
-	
+
+	/**
+	 * Maps a content pixel offset to a 0..1 scroll fraction.
+	 */
+	private static double scrollTo(double center, double content, double viewport) {
+		if (content <= viewport)
+			return 0;
+		return Utils.between((center - viewport / 2) / (content - viewport), 0, 1);
+	}
+
 	public void startApp() {
-		/*GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-		if (gd.isFullScreenSupported()) {
-			setResizable(false);
-			setUndecorated(true);
-			gd.setFullScreenWindow(this);
-			validate();
-		} else {*/
-			setResizable(true);
-			setSize(new Dimension(Utils.WINDOW_WIDTH,Utils.WINDOW_HEIGHT));
-			setVisible(true);
-		//}
-		
+		stage.setResizable(true);
+		stage.setWidth(Utils.WINDOW_WIDTH);
+		stage.setHeight(Utils.WINDOW_HEIGHT);
+		if (Utils.WINDOW_STATE == Frame.MAXIMIZED_BOTH)
+			stage.setMaximized(true);
+		stage.show();
+
 		_timer = new java.util.Timer();
 		startLifeProcess(Utils.DELAY);
 		if (isAcceptingConnections())
@@ -959,7 +1079,10 @@ public class MainWindow extends JFrame {
 		    @Override
 			public void run() {
 		    	try {
-					EventQueue.invokeAndWait(lifeProcess);
+					Fx.ask(() -> {
+						lifeProcess.run();
+						return null;
+					});
 					/**
 					 * Checks the actual drawing speed and increases or decreases the speed
 					 * of the program in order to keep it running smoothly.
@@ -989,30 +1112,21 @@ public class MainWindow extends JFrame {
 		    			pauseGame();
 		    		}
 		    		lastPaintTime = actualTime;
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (InvocationTargetException e) {
+				} catch (RuntimeException e) {
 					e.printStackTrace();
 				}
 		    }
 		};
 		_timer.schedule(updateTask, delay, delay);
 	}
-	
+
 	public void changeLocale() {
-		UIManager.put("OptionPane.yesButtonText", Messages.getString("T_YES"));
-		UIManager.put("OptionPane.noButtonText", Messages.getString("T_NO"));
-		UIManager.put("OptionPane.cancelButtonText", Messages.getString("T_CANCEL"));
-		_menuGame.setText(Messages.getString("T_GAME")); //$NON-NLS-1$
-		_menuGame.setMnemonic(Messages.getMnemonic("T_GAME").intValue()); //$NON-NLS-1$
 		newGameAction.changeLocale();
 		startStopAction.changeLocale();
 		openGameAction.changeLocale();
 		saveGameAction.changeLocale();
 		saveGameAsAction.changeLocale();
 		quitAction.changeLocale();
-		_menuWorld.setText(Messages.getString("T_WORLD")); //$NON-NLS-1$
-		_menuWorld.setMnemonic(Messages.getMnemonic("T_WORLD").intValue()); //$NON-NLS-1$
 		statisticsAction.changeLocale();
 		increaseCO2Action.changeLocale();
 		decreaseCO2Action.changeLocale();
@@ -1020,17 +1134,13 @@ public class MainWindow extends JFrame {
 		labAction.changeLocale();
 		killAllAction.changeLocale();
 		disperseAllAction.changeLocale();
-		_menuHelp.setText(Messages.getString("T_HELP")); //$NON-NLS-1$
-		_menuHelp.setMnemonic(Messages.getMnemonic("T_HELP").intValue()); //$NON-NLS-1$
 		manualAction.changeLocale();
 		checkLastVersionAction.changeLocale();
 		aboutAction.changeLocale();
-		_menuNet.setText(Messages.getString("T_NETWORK")); //$NON-NLS-1$
-		_menuNet.setMnemonic(Messages.getMnemonic("T_NETWORK").intValue()); //$NON-NLS-1$
 		netConfigAction.changeLocale();
 		manageConnectionsAction.changeLocale();
-		setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
-		createMenu();
+		stage.setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
+		refreshChrome();
 		_visibleWorld.changeLocale();
 		infoToolbar.changeLocale();
 	}

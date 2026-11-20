@@ -51,9 +51,12 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 - Done: Phase 0 seam, Phase 1 FX toolchain, Phase 2 net windows, dialog sweep,
   `ParamDialog`, `LabWindow`+`ColorComboBox`, headless test gate,
   `StatisticsWindow`+`InfoToolbar`+`GeneticCodePanel` (FX, JFXPanel-hosted toolbar),
-  `VisibleWorld` canvas (JFXPanel+Canvas, coalesced redraw, FX ContextMenus).
-- Next: `MainWindow` shell (last Swing). One window per commit,
-  SimSmoke green each time.
+  `VisibleWorld` canvas (Pane+Canvas in FX ScrollPane, coalesced redraw, FX ContextMenus),
+  `MainWindow` shell (Stage/MenuBar/ToolBar/ScrollPane, StdAction wrappers, no Swing windows).
+  Migration complete: no `javax.swing` window code remains (`StdAction` command
+  objects + `Utils` frame constants aside — renderers still on AWT).
+- Next: Karl's backlog (FPS limits, zooms, bg color, decoupled sim-speed,
+  branching saves). SimSmoke green each time.
 
 ## Backlog (Karl's list — do NOT start unasked)
 - FPS limits: governor (`MainWindow.currentDelay`, auto-pause past 1000ms) trips

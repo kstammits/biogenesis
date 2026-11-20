@@ -27,6 +27,11 @@ public abstract class StdAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;
 	protected String name_key;
 	protected String desc_key;
+	/**
+	 * Icon resource path (e.g. "images/menu_track.png"), kept so FX menus and
+	 * buttons can load the same artwork without going through ImageIcon.
+	 */
+	protected String iconPath;
 	
 	protected ImageIcon createIcon(String imageName) {
 		ImageIcon icon = null;
@@ -48,6 +53,7 @@ public abstract class StdAction extends AbstractAction {
 		super(Messages.getString(key));
 		name_key = key;
 		desc_key = desc;
+		iconPath = icon_path;
 		putValue(SMALL_ICON, createIcon(icon_path));
 		putValue(SHORT_DESCRIPTION, Messages.getString(desc));
 		putValue(MNEMONIC_KEY, Messages.getMnemonic(key));

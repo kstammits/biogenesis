@@ -23,11 +23,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.swing.JFrame;
-
-
 public class CheckVersionThread extends Thread {
-	private JFrame parentFrame;
 	
 	public static String translateVersion(String str) {
 		String zero = "000000"; //$NON-NLS-1$
@@ -53,8 +49,7 @@ public class CheckVersionThread extends Thread {
 		return result; 
 	}
 	
-	public CheckVersionThread(JFrame frame) {
-		parentFrame = frame;
+	public CheckVersionThread() {
 	}
 	
 	@Override
