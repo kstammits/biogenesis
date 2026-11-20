@@ -62,7 +62,7 @@ build_jar() {
   local stage
   stage=$(mktemp -d)
   cp -R "$OUT/biogenesis" "$stage/"
-  cp "$ROOT/gpl.txt" "$ROOT/copyright" "$stage/"
+  cp "$ROOT/gpl.txt" "$ROOT/copyright" "$ROOT"/NOTICE-*.txt "$stage/"
   (cd "$stage" && "$JAR" xf "$LIB")
   (cd "$stage" && "$JAR" cfm "$JARFILE" "$SRC/biogenesis.mf" .)
   rm -rf "$stage"

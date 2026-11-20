@@ -1,5 +1,11 @@
 # Unified Biogenesis — 0.9 vanilla + X-Mod + Efficiency (Java 17)
 
+Derived work in progress, maintained by Karl Stamm (https://github.com/kstammits,
+kstammits) — this tree will eventually live there. It combines the GPL-2.0-or-later
+lineages credited in About/COPYRIGHT (vanilla, X-Mod, Efficiency, ColorMod fixes)
+with a Java 17 + JavaFX 21 port; the whole tree stays under GPL-2.0-or-later
+(`gpl.txt`), with third-party notices in `NOTICE-JTS.txt` / `NOTICE-ICONS.txt`.
+
 Branch `unified-0.9-xmod`. Requires JDK 17 (Homebrew `openjdk@17` preferred, falls back to `JAVA_HOME`/`PATH`).
 
 ## Run
