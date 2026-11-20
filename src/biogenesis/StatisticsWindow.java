@@ -53,10 +53,12 @@ public class StatisticsWindow {
 	private VisibleWorld visibleWorld;
 	private WorldStatistics worldStatistics;
 	private List<Organism> organisms;
+	private Stage ownerStage;
 
 	public StatisticsWindow(MainWindow w, WorldStatistics ws, List<Organism> os) {
 		world = w.getWorld();
 		visibleWorld = w.getVisibleWorld();
+		ownerStage = w.getStage();
 		worldStatistics = ws;
 		organisms = os;
 		Fx.run(this::buildAndShow);
@@ -72,7 +74,8 @@ public class StatisticsWindow {
 
 	private void buildAndShow() {
 		stage = new Stage();
-		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initOwner(ownerStage);
+		stage.initModality(Modality.WINDOW_MODAL);
 		stage.setTitle(Messages.getString("T_STATISTICS")); //$NON-NLS-1$
 		stage.setResizable(false);
 		stage.setScene(new Scene(buildRoot()));

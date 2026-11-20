@@ -88,7 +88,8 @@ public class LabWindow {
 			importGeneticCode(gc);
 
 		stage = new Stage();
-		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initOwner(mainWindow.getStage());
+		stage.initModality(Modality.WINDOW_MODAL);
 		stage.setTitle(Messages.getString("T_GENETIC_LABORATORY")); //$NON-NLS-1$
 
 		setComponents();
@@ -200,16 +201,26 @@ public class LabWindow {
 					refreshGenesPanel();
 				} catch (SAXException ex) {
 					System.err.println(ex.getMessage());
-					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
 				} catch (IOException ex) {
 					System.err.println(ex.getMessage());
-					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
+					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		} catch (SecurityException ex) {
 			System.err.println(ex.getMessage());
-			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
+			errorAlert(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+	}
+
+	private void errorAlert(String title, String message) {
+		javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+				javafx.scene.control.Alert.AlertType.ERROR, message,
+				javafx.scene.control.ButtonType.OK);
+		alert.initOwner(stage);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.showAndWait();
 	}
 
 	private void onColorChanged(int index, ColorComboBox combo) {

@@ -52,7 +52,11 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   and verify dialogs by eyeball. Production (user clicks buttons) is unaffected.
 - Headful eyeball flow (throwaway, NEVER commit): `/tmp/dbg/.../DebugDialogs.java`
   boots `MainWindow` and fires one window per mode arg (`config|connections|
-  about|params|lab`). Keep verification lightweight — no screenshot harnesses.
+  about|params|lab`). Snapshot harnesses are fine: `scene.snapshot()` → PNG,
+  then `System.exit(0)` on the FX thread — never close the modal cross-thread.
+- Ownerless `APPLICATION_MODAL` dialogs break macOS native fullscreen: the child
+  opens in another Space (blank slide-out) and red-X close beachballs Glass.
+  All dialogs must `initOwner(mainStage)` + `WINDOW_MODAL` (`MainWindow.getStage()`).
 - `MainWindow` may only exist once per JVM; test launchers must reuse frames.
 
 ## State (update as you go)
@@ -82,6 +86,15 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   render ms/frame, seg stats, GC time). Findings here: sim ~0.07–0.15ms @50 →
   ~0.35ms @200 (collision ≈ half); render linear in pixels (1.2ms @560k px,
   8.8ms @5.6M px); default world caps ~150 creatures via die-off.
+- Done: fullscreen dialog fix — all 5 dialogs (`NetConnections`, `NetConfig`,
+  `Param`, `Lab`, `Statistics`) are now owned `WINDOW_MODAL` children of the
+  main stage (was ownerless `APPLICATION_MODAL`: blank slide-out + beachball
+  on close in macOS fullscreen). `NetConnections` gains a `Close` button
+  (was red-X-only) + owned error alert; `Lab` import errors use an owned alert.
+  `NetConnections` grid fix: `fitToWidth` + address column absorbs shortfall
+  with ellipsis, port/Disconnect pinned to pref (long hostnames clipped
+  Disconnect off-panel). All dialogs + all 5 param tabs verified via throwaway
+  snapshot harness (`/tmp/dbg/.../ShotAll`). SimSmoke + FxLogicTest green.
 - Next: Karl's backlog (FPS limits, zooms, bg color, branching saves — sim-speed
   decoupling done). SimSmoke green each time.
 

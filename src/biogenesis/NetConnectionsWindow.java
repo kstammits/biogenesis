@@ -23,14 +23,20 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -62,7 +68,8 @@ public class NetConnectionsWindow {
 
 	private void buildAndShow() {
 		stage = new Stage();
-		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initOwner(mainWindow.getStage());
+		stage.initModality(Modality.WINDOW_MODAL);
 		stage.setTitle(Messages.getString("T_NETWORK_CONNECTIONS")); //$NON-NLS-1$
 		stage.setResizable(false);
 
@@ -85,11 +92,32 @@ public class NetConnectionsWindow {
 		connectionsGrid = new GridPane();
 		connectionsGrid.setHgap(8);
 		connectionsGrid.setVgap(4);
+		connectionsGrid.setMaxWidth(Double.MAX_VALUE);
+		// Address column takes any slack/shortfall; port and button
+		// columns never shrink so Disconnect stays fully visible.
+		ColumnConstraints addrCol = new ColumnConstraints();
+		addrCol.setHgrow(Priority.ALWAYS);
+		addrCol.setFillWidth(true);
+		addrCol.setMaxWidth(Double.MAX_VALUE);
+		ColumnConstraints portCol = new ColumnConstraints();
+		portCol.setHgrow(Priority.NEVER);
+		portCol.setMinWidth(Region.USE_PREF_SIZE);
+		ColumnConstraints btnCol = new ColumnConstraints();
+		btnCol.setHgrow(Priority.NEVER);
+		btnCol.setMinWidth(Region.USE_PREF_SIZE);
+		connectionsGrid.getColumnConstraints().addAll(addrCol, portCol, btnCol);
 		refreshConnectionsPanel();
 		ScrollPane scroll = new ScrollPane(connectionsGrid);
 		scroll.setPrefSize(440, 300);
+		scroll.setFitToWidth(true);
 
-		VBox root = new VBox(10, form, scroll);
+		Button closeButton = new Button(Messages.getString("T_CLOSE")); //$NON-NLS-1$
+		closeButton.setCancelButton(true);
+		closeButton.setOnAction(evt -> stage.close());
+		HBox buttons = new HBox(8, closeButton);
+		buttons.setAlignment(Pos.CENTER);
+
+		VBox root = new VBox(10, form, scroll, buttons);
 		root.setPadding(new Insets(10));
 		stage.setScene(new Scene(root));
 		stage.sizeToScene();
@@ -120,6 +148,7 @@ public class NetConnectionsWindow {
 
 	private void errorAlert(String title, String message) {
 		Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+		alert.initOwner(stage);
 		alert.setTitle(title);
 		alert.setHeaderText(null);
 		alert.showAndWait();
@@ -131,10 +160,17 @@ public class NetConnectionsWindow {
 		if (netServer != null) {
 			List<Connection> connections = netServer.getConnections();
 			synchronized(connections) {
-				int i = 0;
-				for (Connection c : connections) {
-					connectionsGrid.add(new Label(c.getRemoteAddress().toString()), 0, i);
-					connectionsGrid.add(new Label(Integer.toString(c.getRemotePort())), 1, i);
+			int i = 0;
+			for (Connection c : connections) {
+				Label addrLabel = new Label(c.getRemoteAddress().toString());
+				// Let long hostnames truncate instead of pushing Disconnect out.
+				addrLabel.setMinWidth(0);
+				addrLabel.setMaxWidth(Double.MAX_VALUE);
+				addrLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
+				GridPane.setHgrow(addrLabel, Priority.ALWAYS);
+				GridPane.setFillWidth(addrLabel, Boolean.TRUE);
+				connectionsGrid.add(addrLabel, 0, i);
+				connectionsGrid.add(new Label(Integer.toString(c.getRemotePort())), 1, i);
 					Button button = new Button(Messages.getString("T_DISCONNECT")); //$NON-NLS-1$
 					final Connection target = c;
 					button.setOnAction(evt -> {

@@ -115,6 +115,11 @@ public class MainWindow {
         return _visibleWorld;
     }
 
+	/** Owner for owned modal dialogs so they composite over fullscreen. */
+	public Stage getStage() {
+		return stage;
+	}
+
 	public boolean isProcessActive() {
 		return _isProcessActive;
 	}

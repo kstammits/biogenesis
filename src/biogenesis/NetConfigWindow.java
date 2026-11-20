@@ -55,7 +55,8 @@ public class NetConfigWindow {
 
 	private void buildAndShow() {
 		stage = new Stage();
-		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initOwner(mainWindow.getStage());
+		stage.initModality(Modality.WINDOW_MODAL);
 		stage.setTitle(Messages.getString("T_NETWORK_CONFIGURATION")); //$NON-NLS-1$
 		stage.setResizable(false);
 
