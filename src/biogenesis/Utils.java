@@ -67,29 +67,17 @@ public final class Utils {
 	/** Maximized window state (value matches old JFrame.MAXIMIZED_BOTH for prefs compat). */
 	final static int WINDOW_STATE_MAXIMIZED = 6;
 	final static int DEF_WINDOW_STATE = WINDOW_STATE_NORMAL;
-	/**
-	 * This is the default value of organisms that are created when a new world begins.
-	 */
+	/** This is the default value of organisms that are created when a new world begins. */
 	final static int DEF_INITIAL_ORGANISMS = 30;
-	/**
-	 * This is the default amount of O2 that exists in a newly created world.
-	 */
+	/** This is the default amount of O2 that exists in a newly created world. */
 	final static double DEF_INITIAL_O2 = 0;
-	/**
-	 * This is the default amount of CO2 that exists in a newly created world.
-	 */
+	/** This is the default amount of CO2 that exists in a newly created world. */
 	final static double DEF_INITIAL_CO2 = 7000;
-	/**
-	 * This is the initial size of the organisms vector.
-	 */
+	/** This is the initial size of the organisms vector. */
 	final static int DEF_ORGANISMS_VECTOR_SIZE = 50;
-	/**
-	 * This is the default world's width.
-	 */
+	/** This is the default world's width. */
 	final static int DEF_WORLD_WIDTH = 1000;
-	/**
-	 * This is the default world's height.
-	 */
+	/** This is the default world's height. */
 	final static int DEF_WORLD_HEIGHT = 560;
 	/**
 	 * X-Mod: default stress resistance (replaces MAX_AGE).
@@ -101,21 +89,13 @@ public final class Utils {
 	 * Multiplied by the speed at every frame.
 	 */
 	final static double DEF_FRICTION = 0.98d;
-	/**
-	 * Efficiency: default zoom factor (1.0 = 100%).
-	 */
+	/** Efficiency: default zoom factor (1.0 = 100%). */
 	final static double DEF_ZOOM_FACTOR = 1.0d;
-	/**
-	 * X-Mod: default major mutation rate (replaces single MUTATION_RATE).
-	 */
+	/** X-Mod: default major mutation rate (replaces single MUTATION_RATE). */
 	final static double DEF_MAJOR_MUTATION_RATE = 0.002d;
-	/**
-	 * X-Mod: default minor mutation rate (small length/angle changes).
-	 */
+	/** X-Mod: default minor mutation rate (small length/angle changes). */
 	final static double DEF_MINOR_MUTATION_RATE = 0.02d;
-	/**
-	 * X-Mod: default maximum relative change of a minor mutation.
-	 */
+	/** X-Mod: default maximum relative change of a minor mutation. */
 	final static double DEF_MINOR_MUTATION_AMPLITUDE = 0.05d;
 	/**
 	 * X-Mod: default spontaneous mutation rate per frame (organism mutates
@@ -145,61 +125,33 @@ public final class Utils {
 	 * is added to the atmospheric CO2. The rest is added to the attacker's energy.
 	 */
 	final static double DEF_ORGANIC_SUBS_PRODUCED = 0.1d;
-	/**
-	 * This is the default energy that is consumed when a red segment is used.
-	 */
+	/** This is the default energy that is consumed when a red segment is used. */
 	final static double DEF_RED_ENERGY_CONSUMPTION = 0d;
-	/**
-	 * This is the default energy that is consumed when a green segment is used.
-	 */
+	/** This is the default energy that is consumed when a green segment is used. */
 	final static double DEF_GREEN_ENERGY_CONSUMPTION = 0d;
-	/**
-	 * This is the default energy that is consumed when a blue segment is used.
-	 */
+	/** This is the default energy that is consumed when a blue segment is used. */
 	final static double DEF_BLUE_ENERGY_CONSUMPTION = 0d;
-	/**
-	 * This is the default energy that is consumed when a cyan segment is used.
-	 */
+	/** This is the default energy that is consumed when a cyan segment is used. */
 	final static double DEF_CYAN_ENERGY_CONSUMPTION = 0d;
-	/**
-	 * This is the default energy that is consumed when a white segment is used.
-	 */
+	/** This is the default energy that is consumed when a white segment is used. */
 	final static double DEF_WHITE_ENERGY_CONSUMPTION = 1d;
-	/**
-	 * This is the default energy that is consumed when a gray segment is used.
-	 */
+	/** This is the default energy that is consumed when a gray segment is used. */
 	final static double DEF_GRAY_ENERGY_CONSUMPTION = 1d;
-	/**
-	 * This is the default energy that is consumed when a yellow segment is used.
-	 */
+	/** This is the default energy that is consumed when a yellow segment is used. */
 	final static double DEF_YELLOW_ENERGY_CONSUMPTION = 0d;
-	/**
-	 * This is the default probability for a new segment to be red.
-	 */
+	/** This is the default probability for a new segment to be red. */
 	final static int DEF_RED_PROB = 10;
-	/**
-	 * This is the default probability for a new segment to be green.
-	 */
+	/** This is the default probability for a new segment to be green. */
 	final static int DEF_GREEN_PROB = 20;
-	/**
-	 * This is the default probability for a new segment to be blue.
-	 */
+	/** This is the default probability for a new segment to be blue. */
 	final static int DEF_BLUE_PROB = 10;
-	/**
-	 * This is the default probability for a new segment to be cyan.
-	 */
+	/** This is the default probability for a new segment to be cyan. */
 	final static int DEF_CYAN_PROB = 20;
-	/**
-	 * This is the default probability for a new segment to be white.
-	 */
+	/** This is the default probability for a new segment to be white. */
 	final static int DEF_WHITE_PROB = 10;
-	/**
-	 * This is the default probability for a new segment to be gray.
-	 */
+	/** This is the default probability for a new segment to be gray. */
 	final static int DEF_GRAY_PROB = 10;
-	/**
-	 * This is the default probability for a new segment to be yellow.
-	 */
+	/** This is the default probability for a new segment to be yellow. */
 	final static int DEF_YELLOW_PROB = 10;
 	/**
 	 * This default value divides the amount of CO2 in the atmosphere to
@@ -226,42 +178,26 @@ public final class Utils {
 	 * the energy that a movement keeps after a collision.
 	 */
 	final static double DEF_ELASTICITY = 0.8d;
-	/**
-	 * This is the default number of miliseconds that pas between frames.
-	 */
+	/** This is the default number of miliseconds that pas between frames. */
 	final static int DEF_DELAY = 5;
-	/**
-	 * Efficiency: default efficiency mode (false = full rendering).
-	 */
+	/** Efficiency: default efficiency mode (false = full rendering). */
 	final static boolean DEF_EFFICIENCY_MODE = false;
-	/**
-	 * This is the default port where the net server will listen for connections.
-	 */
+	/** This is the default port where the net server will listen for connections. */
 	final static int DEF_LOCAL_PORT = 8888;
-	/**
-	 * This is the default value for the maximum number of network connections allowed.
-	 */
+	/** This is the default value for the maximum number of network connections allowed. */
 	final static int DEF_MAX_CONNECTIONS = 1;
-	/**
-	 * This is the default value for accepting or not new connections from other hosts.
-	 */
+	/** This is the default value for accepting or not new connections from other hosts. */
 	final static boolean DEF_ACCEPT_CONNECTIONS = false;
 	/**
 	 * This is the default value for using or not a meta-server to find other instances
 	 * of biogenesis running. At the moment it is not used.
 	 */
 	final static boolean DEF_CONNECT_TO_SERVER = false;
-	/**
-	 * This is the default IP that the meta-server will have. At the moment it is not used.
-	 */
+	/** This is the default IP that the meta-server will have. At the moment it is not used. */
 	final static String DEF_SERVER_ADDRESS = ""; //$NON-NLS-1$
-	/**
-	 * This is the default port where the meta-server will listen. At the moment it is not used.
-	 */
+	/** This is the default port where the meta-server will listen. At the moment it is not used. */
 	final static int DEF_SERVER_PORT = 0;
-	/**
-	 * This is the default hardware acceleration applied when drawing
-	 */
+	/** This is the default hardware acceleration applied when drawing */
 	final static int DEF_HARDWARE_ACCELERATION = 0; //0 none, 1 try opengl, 2 opengl
 	
 	final static double DEF_DECAY_ENERGY = 0.1d;
@@ -271,54 +207,32 @@ public final class Utils {
 	static int WINDOW_WIDTH = DEF_WINDOW_WIDTH;
 	static int WINDOW_HEIGHT = DEF_WINDOW_HEIGHT;
 	static int WINDOW_STATE = DEF_WINDOW_STATE;
-	/**
-	 * This is the effective value of organisms that are created when a new world begins.
-	 */
+	/** This is the effective value of organisms that are created when a new world begins. */
 	static int INITIAL_ORGANISMS = DEF_INITIAL_ORGANISMS;
-	/**
-	 * This is the effective amount of O2 that exists in a newly created world.
-	 */
+	/** This is the effective amount of O2 that exists in a newly created world. */
 	static double INITIAL_O2 = DEF_INITIAL_O2;
-	/**
-	 * This is the effective amount of CO2 that exists in a newly created world.
-	 */
+	/** This is the effective amount of CO2 that exists in a newly created world. */
 	static double INITIAL_CO2 = DEF_INITIAL_CO2;
-	/**
-	 * This is the effective size of the organisms vector.
-	 */
+	/** This is the effective size of the organisms vector. */
 	static int ORGANISMS_VECTOR_SIZE = DEF_ORGANISMS_VECTOR_SIZE;
-	/**
-	 * This is the effective world's width for new worlds.
-	 */
+	/** This is the effective world's width for new worlds. */
 	static int WORLD_WIDTH = DEF_WORLD_WIDTH;
-	/**
-	 * This is the effective world's height for new worlds.
-	 */
+	/** This is the effective world's height for new worlds. */
 	static int WORLD_HEIGHT = DEF_WORLD_HEIGHT;
-	/**
-	 * X-Mod: stress resistance (replaces MAX_AGE).
-	 */
+	/** X-Mod: stress resistance (replaces MAX_AGE). */
 	static double STRESS_RESISTANCE = DEF_STRESS_RESISTANCE;
 	/**
 	 * X-Mod: friction coefficient (renamed from RUBBING).
 	 * Multiplied by the speed at every frame.
 	 */
 	static double FRICTION = DEF_FRICTION;
-	/**
-	 * X-Mod: major mutation rate (large structural changes).
-	 */
+	/** X-Mod: major mutation rate (large structural changes). */
 	static double MAJOR_MUTATION_RATE = DEF_MAJOR_MUTATION_RATE;
-	/**
-	 * X-Mod: minor mutation rate (small length/angle tweaks).
-	 */
+	/** X-Mod: minor mutation rate (small length/angle tweaks). */
 	static double MINOR_MUTATION_RATE = DEF_MINOR_MUTATION_RATE;
-	/**
-	 * X-Mod: minor mutation amplitude (max relative change).
-	 */
+	/** X-Mod: minor mutation amplitude (max relative change). */
 	static double MINOR_MUTATION_AMPLITUDE = DEF_MINOR_MUTATION_AMPLITUDE;
-	/**
-	 * X-Mod: spontaneous mutation rate per frame (no reproduction needed).
-	 */
+	/** X-Mod: spontaneous mutation rate per frame (no reproduction needed). */
 	static double SPONTANEOUS_MUTATION_RATE = DEF_SPONTANEOUS_MUTATION_RATE;
 	/**
 	 * This value is used to calculate the energy cost that an organism must
@@ -343,61 +257,33 @@ public final class Utils {
 	 * is added to the atmospheric CO2. The rest is added to the attacker's energy.
 	 */
 	static double ORGANIC_SUBS_PRODUCED = DEF_ORGANIC_SUBS_PRODUCED;
-	/**
-	 * This is the energy that is consumed when a red segment is used.
-	 */
+	/** This is the energy that is consumed when a red segment is used. */
 	static double RED_ENERGY_CONSUMPTION = DEF_RED_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a green segment is used.
-	 */
+	/** This is the energy that is consumed when a green segment is used. */
 	static double GREEN_ENERGY_CONSUMPTION = DEF_GREEN_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a blue segment is used.
-	 */
+	/** This is the energy that is consumed when a blue segment is used. */
 	static double BLUE_ENERGY_CONSUMPTION = DEF_BLUE_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a cyan segment is used.
-	 */
+	/** This is the energy that is consumed when a cyan segment is used. */
 	static double CYAN_ENERGY_CONSUMPTION = DEF_CYAN_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a white segment is used.
-	 */
+	/** This is the energy that is consumed when a white segment is used. */
 	static double WHITE_ENERGY_CONSUMPTION = DEF_WHITE_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a gray segment is used.
-	 */
+	/** This is the energy that is consumed when a gray segment is used. */
 	static double GRAY_ENERGY_CONSUMPTION = DEF_GRAY_ENERGY_CONSUMPTION;
-	/**
-	 * This is the energy that is consumed when a yellow segment is used.
-	 */
+	/** This is the energy that is consumed when a yellow segment is used. */
 	static double YELLOW_ENERGY_CONSUMPTION = DEF_YELLOW_ENERGY_CONSUMPTION;
-	/**
-	 * This is the probability for a new segment to be red.
-	 */
+	/** This is the probability for a new segment to be red. */
 	static int RED_PROB = DEF_RED_PROB;
-	/**
-	 * This is the probability for a new segment to be green.
-	 */
+	/** This is the probability for a new segment to be green. */
 	static int GREEN_PROB = DEF_GREEN_PROB;
-	/**
-	 * This is the probability for a new segment to be blue.
-	 */
+	/** This is the probability for a new segment to be blue. */
 	static int BLUE_PROB = DEF_BLUE_PROB;
-	/**
-	 * This is the probability for a new segment to be cyan.
-	 */
+	/** This is the probability for a new segment to be cyan. */
 	static int CYAN_PROB = DEF_CYAN_PROB;
-	/**
-	 * This is the probability for a new segment to be white.
-	 */
+	/** This is the probability for a new segment to be white. */
 	static int WHITE_PROB = DEF_WHITE_PROB;
-	/**
-	 * This is the probability for a new segment to be gray.
-	 */
+	/** This is the probability for a new segment to be gray. */
 	static int GRAY_PROB = DEF_GRAY_PROB;
-	/**
-	 * This is the probability for a new segment to be yellow.
-	 */
+	/** This is the probability for a new segment to be yellow. */
 	static int YELLOW_PROB = DEF_YELLOW_PROB;
 	/**
 	 * This value divides the amount of CO2 in the atmosphere to
@@ -424,9 +310,7 @@ public final class Utils {
 	 * the energy that a movement keeps after a collision.
 	 */
 	static double ELASTICITY = DEF_ELASTICITY;
-	/**
-	 * This is the number of miliseconds that pas between frames.
-	 */
+	/** This is the number of miliseconds that pas between frames. */
 	static int DELAY = DEF_DELAY;
 	/**
 	 * Sim-rate presets in ticks/sec, offered in the parameters dialog.
@@ -442,30 +326,20 @@ public final class Utils {
 	 * VisibleWorld/World). Default off — no behavior change until toggled.
 	 */
 	static boolean EFFICIENCY_MODE = DEF_EFFICIENCY_MODE;
-	/**
-	 * Efficiency: zoom factor for VisibleWorld (1.0 = 100%).
-	 */
+	/** Efficiency: zoom factor for VisibleWorld (1.0 = 100%). */
 	static double ZOOM_FACTOR = DEF_ZOOM_FACTOR;
-	/**
-	 * This is the port where the net server will listen for connections.
-	 */
+	/** This is the port where the net server will listen for connections. */
 	static int LOCAL_PORT = DEF_LOCAL_PORT;
-	/**
-	 * This is the value for the maximum number of network connections allowed.
-	 */
+	/** This is the value for the maximum number of network connections allowed. */
 	static int MAX_CONNECTIONS = DEF_MAX_CONNECTIONS;
-	/**
-	 * This is the value for accepting or not new connections from other hosts.
-	 */
+	/** This is the value for accepting or not new connections from other hosts. */
 	static boolean ACCEPT_CONNECTIONS = DEF_ACCEPT_CONNECTIONS;
 	/**
 	 * This is the value for using or not a meta-server to find other instances
 	 * of biogenesis running. At the moment it is not used.
 	 */
 	static boolean CONNECT_TO_SERVER = DEF_CONNECT_TO_SERVER;
-	/**
-	 * This is the IP that the meta-server will have. At the moment it is not used.
-	 */
+	/** This is the IP that the meta-server will have. At the moment it is not used. */
 	static String SERVER_ADDRESS = DEF_SERVER_ADDRESS;
 	/**
 	 * This is the hardware acceleration applied when drawing.
@@ -474,15 +348,11 @@ public final class Utils {
 	 * 6 opengl without fbobject
 	 */
 	static int HARDWARE_ACCELERATION = DEF_HARDWARE_ACCELERATION;
-	/**
-	 * This is the port where the meta-server will listen. At the moment it is not used.
-	 */
+	/** This is the port where the meta-server will listen. At the moment it is not used. */
 	static int SERVER_PORT = DEF_SERVER_PORT;
 	
 	static double DECAY_ENERGY = DEF_DECAY_ENERGY;
-	/**
-	 * Tolerance. Smaller numbers are considered equal to 0.
-	 */
+	/** Tolerance. Smaller numbers are considered equal to 0. */
 	static final double tol = 0.0000001;
 	/**
 	 * Indicates the eight possible directions. The row is the direction we want, from 0 to 7, first
@@ -498,61 +368,33 @@ public final class Utils {
 	static final double scale[] = {1.00, 1.12, 1.25, 1.40, 1.57, 1.76, 1.97, 2.21,
         2.47, 2.77, 3.11, 3.48, 3.90, 4.36, 4.89, 5.47};
 	
-	/**
-	 * Precalculated dark green color
-	 */
+	/** Precalculated dark green color */
 	static final Color ColorDARK_GREEN = Color.GREEN.darker();
-	/**
-	 * Precalculated dark red color
-	 */
+	/** Precalculated dark red color */
 	static final Color ColorDARK_RED = Color.RED.darker();
-	/**
-	 * Precalculated dark cyan color
-	 */
+	/** Precalculated dark cyan color */
 	static final Color ColorDARK_CYAN = Color.CYAN.darker();
-	/**
-	 * Precalculated dark blue color
-	 */
+	/** Precalculated dark blue color */
 	static final Color ColorDARK_BLUE = Color.BLUE.darker();
-	/**
-	 * Precalculated dark magenta color
-	 */
+	/** Precalculated dark magenta color */
 	static final Color ColorDARK_MAGENTA = Color.MAGENTA.darker();
-	/**
-	 * Precalculated dark pink color
-	 */
+	/** Precalculated dark pink color */
 	static final Color ColorDARK_PINK = Color.PINK.darker();
-	/**
-	 * Precalculated dark orange color
-	 */
+	/** Precalculated dark orange color */
 	static final Color ColorDARK_ORANGE = Color.ORANGE.darker();
-	/**
-	 * Precalculated dark white color
-	 */
+	/** Precalculated dark white color */
 	static final Color ColorDARK_WHITE = Color.WHITE.darker();
-	/**
-	 * Precalculated dark gray color
-	 */
+	/** Precalculated dark gray color */
 	static final Color ColorDARK_GRAY = Color.GRAY.darker();
-	/**
-	 * Precalculated dark yellow color
-	 */
+	/** Precalculated dark yellow color */
 	static final Color ColorDARK_YELLOW = Color.YELLOW.darker();
-	/**
-	 * Precalculated brown color
-	 */
+	/** Precalculated brown color */
 	static final Color ColorBROWN = new Color(150,75,0);
-	/**
-	 * Precalculated light blue color
-	 */
+	/** Precalculated light blue color */
 	static final Color ColorLIGHT_BLUE = new Color(0,0,100);
-	/**
-	 * Precalculated light red color
-	 */
+	/** Precalculated light red color */
 	static final Color ColorLIGHT_RED = new Color(100,0,0);
-	/**
-	 * Used through all program to calculate random numbers
-	 */
+	/** Used through all program to calculate random numbers */
 	public static Random random = new Random();
 	/**
 	 * Used to get a random -1 or 1 to create numbers with random sign. 
@@ -670,129 +512,159 @@ public final class Utils {
 			return true;
 		return false;
 	}
-	/**
-	 * X-Mod: relative factor for a minor mutation (geometric mean 1).
-	 */
+	/** X-Mod: relative factor for a minor mutation (geometric mean 1). */
 	public static final double minorMutationFactor() {
 		return Math.exp(2.0 * (random.nextDouble() - 0.5) * MINOR_MUTATION_AMPLITUDE);
 	}
-	/**
-	 * X-Mod: additive amount for a minor mutation (arithmetic mean 0).
-	 */
+	/** X-Mod: additive amount for a minor mutation (arithmetic mean 0). */
 	public static final double minorMutationModifier() {
 		return 2.0 * (random.nextDouble() - 0.5) * MINOR_MUTATION_AMPLITUDE;
 	}
-	/**
-	 * X-Mod: check spontaneous mutation (no reproduction needed).
-	 */
+	/** X-Mod: check spontaneous mutation (no reproduction needed). */
 	public static final boolean checkSpontaneousMutation() {
 		if (random.nextDouble() < SPONTANEOUS_MUTATION_RATE / (1 + SPONTANEOUS_MUTATION_RATE))
 			return true;
 		return false;
 	}
-	/**
-	 * Efficiency: current efficiency mode.
-	 */
-	public static boolean isEFFICIENCY_MODE() {
-		return EFFICIENCY_MODE;
-	}
-	/**
-	 * Efficiency: toggle and return new mode.
-	 */
+	/** Efficiency: toggle and return new mode. */
 	public static boolean toggleEFFICIENCY_MODE() {
 		EFFICIENCY_MODE = !EFFICIENCY_MODE;
 		return EFFICIENCY_MODE;
 	}
-	/**
-	 * Efficiency: current zoom factor.
-	 */
-	public static double getZOOM_FACTOR() {
-		return ZOOM_FACTOR;
-	}
-	/**
-	 * Return the localized name of a color.
-	 * 
-	 * @param c  A color
-	 * @return  A String representing the name of the color
-	 */
-	public static final String colorToString(Color c) {
-		if (c.equals(Color.RED)) return Messages.getString("T_RED"); //$NON-NLS-1$
-		if (c.equals(Color.GREEN)) return Messages.getString("T_GREEN"); //$NON-NLS-1$
-		if (c.equals(Color.BLUE)) return Messages.getString("T_BLUE"); //$NON-NLS-1$
-		if (c.equals(Color.CYAN)) return Messages.getString("T_CYAN"); //$NON-NLS-1$
-		if (c.equals(Color.MAGENTA)) return Messages.getString("T_MAGENTA"); //$NON-NLS-1$
-		if (c.equals(Color.PINK)) return Messages.getString("T_PINK"); //$NON-NLS-1$
-		if (c.equals(Color.ORANGE)) return Messages.getString("T_ORANGE"); //$NON-NLS-1$
-		if (c.equals(Color.WHITE)) return Messages.getString("T_WHITE"); //$NON-NLS-1$
-		if (c.equals(Color.GRAY)) return Messages.getString("T_GRAY"); //$NON-NLS-1$
-		if (c.equals(Color.YELLOW)) return Messages.getString("T_YELLOW"); //$NON-NLS-1$
-		return ""; //$NON-NLS-1$
-	}
-	/**
-	 * Save user preferences to disk
-	 */
+	/** Save user preferences to disk */
 	public static final void savePreferences() {
+		savePreferences(Preferences.userNodeForPackage(Utils.class));
+	}
+
+	/** Read user preferences from disc */
+	public static final void readPreferences() {
+		readPreferences(Preferences.userNodeForPackage(Utils.class));
+	}
+
+	/** One mirrored preference: same key saved and loaded. */
+	private static abstract class Pref {
+		final String key;
+		Pref(String key) {
+			this.key = key;
+		}
+		abstract void save(Preferences p);
+		abstract void load(Preferences p);
+	}
+
+	private static Pref intPref(String key, java.util.function.IntSupplier get,
+			java.util.function.IntConsumer set, int def) {
+		return new Pref(key) {
+			void save(Preferences p) {
+				p.putInt(key, get.getAsInt());
+			}
+			void load(Preferences p) {
+				set.accept(p.getInt(key, def));
+			}
+		};
+	}
+
+	private static Pref doublePref(String key, java.util.function.DoubleSupplier get,
+			java.util.function.DoubleConsumer set, double def) {
+		return new Pref(key) {
+			void save(Preferences p) {
+				p.putDouble(key, get.getAsDouble());
+			}
+			void load(Preferences p) {
+				set.accept(p.getDouble(key, def));
+			}
+		};
+	}
+
+	private static Pref boolPref(String key, java.util.function.BooleanSupplier get,
+			java.util.function.Consumer<Boolean> set, boolean def) {
+		return new Pref(key) {
+			void save(Preferences p) {
+				p.putBoolean(key, get.getAsBoolean());
+			}
+			void load(Preferences p) {
+				set.accept(p.getBoolean(key, def));
+			}
+		};
+	}
+
+	private static Pref strPref(String key, java.util.function.Supplier<String> get,
+			java.util.function.Consumer<String> set, String def) {
+		return new Pref(key) {
+			void save(Preferences p) {
+				p.put(key, get.get());
+			}
+			void load(Preferences p) {
+				set.accept(p.get(key, def));
+			}
+		};
+	}
+
+	/** Every preference stored under the same key in both directions. */
+	private static final Pref[] PREFS = {
+		intPref("INITIAL_ORGANISMS", () -> INITIAL_ORGANISMS, v -> INITIAL_ORGANISMS = v, DEF_INITIAL_ORGANISMS), //$NON-NLS-1$
+		doublePref("INITIAL_O2", () -> INITIAL_O2, v -> INITIAL_O2 = v, DEF_INITIAL_O2), //$NON-NLS-1$
+		doublePref("INITIAL_CO2", () -> INITIAL_CO2, v -> INITIAL_CO2 = v, DEF_INITIAL_CO2), //$NON-NLS-1$
+		intPref("ORGANISMS_VECTOR_SIZE", () -> ORGANISMS_VECTOR_SIZE, v -> ORGANISMS_VECTOR_SIZE = v, DEF_ORGANISMS_VECTOR_SIZE), //$NON-NLS-1$
+		intPref("WORLD_WIDTH", () -> WORLD_WIDTH, v -> WORLD_WIDTH = v, DEF_WORLD_WIDTH), //$NON-NLS-1$
+		intPref("WORLD_HEIGHT", () -> WORLD_HEIGHT, v -> WORLD_HEIGHT = v, DEF_WORLD_HEIGHT), //$NON-NLS-1$
+		doublePref("STRESS_RESISTANCE", () -> STRESS_RESISTANCE, v -> STRESS_RESISTANCE = v, DEF_STRESS_RESISTANCE), //$NON-NLS-1$
+		doublePref("FRICTION", () -> FRICTION, v -> FRICTION = v, DEF_FRICTION), //$NON-NLS-1$
+		doublePref("MAJOR_MUTATION_RATE", () -> MAJOR_MUTATION_RATE, v -> MAJOR_MUTATION_RATE = v, DEF_MAJOR_MUTATION_RATE), //$NON-NLS-1$
+		doublePref("MINOR_MUTATION_RATE", () -> MINOR_MUTATION_RATE, v -> MINOR_MUTATION_RATE = v, DEF_MINOR_MUTATION_RATE), //$NON-NLS-1$
+		doublePref("MINOR_MUTATION_AMPLITUDE", () -> MINOR_MUTATION_AMPLITUDE, v -> MINOR_MUTATION_AMPLITUDE = v, DEF_MINOR_MUTATION_AMPLITUDE), //$NON-NLS-1$
+		doublePref("SPONTANEOUS_MUTATION_RATE", () -> SPONTANEOUS_MUTATION_RATE, v -> SPONTANEOUS_MUTATION_RATE = v, DEF_SPONTANEOUS_MUTATION_RATE), //$NON-NLS-1$
+		intPref("SEGMENT_COST_DIVISOR", () -> SEGMENT_COST_DIVISOR, v -> SEGMENT_COST_DIVISOR = v, DEF_SEGMENT_COST_DIVISOR), //$NON-NLS-1$
+		doublePref("ORGANIC_OBTAINED_ENERGY", () -> ORGANIC_OBTAINED_ENERGY, v -> ORGANIC_OBTAINED_ENERGY = v, DEF_ORGANIC_OBTAINED_ENERGY), //$NON-NLS-1$
+		intPref("GREEN_OBTAINED_ENERGY_DIVISOR", () -> GREEN_OBTAINED_ENERGY_DIVISOR, v -> GREEN_OBTAINED_ENERGY_DIVISOR = v, DEF_GREEN_OBTAINED_ENERGY_DIVISOR), //$NON-NLS-1$
+		doublePref("ORGANIC_SUBS_PRODUCED", () -> ORGANIC_SUBS_PRODUCED, v -> ORGANIC_SUBS_PRODUCED = v, DEF_ORGANIC_SUBS_PRODUCED), //$NON-NLS-1$
+		doublePref("RED_ENERGY_CONSUMPTION", () -> RED_ENERGY_CONSUMPTION, v -> RED_ENERGY_CONSUMPTION = v, DEF_RED_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("GREEN_ENERGY_CONSUMPTION", () -> GREEN_ENERGY_CONSUMPTION, v -> GREEN_ENERGY_CONSUMPTION = v, DEF_GREEN_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("BLUE_ENERGY_CONSUMPTION", () -> BLUE_ENERGY_CONSUMPTION, v -> BLUE_ENERGY_CONSUMPTION = v, DEF_BLUE_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("CYAN_ENERGY_CONSUMPTION", () -> CYAN_ENERGY_CONSUMPTION, v -> CYAN_ENERGY_CONSUMPTION = v, DEF_CYAN_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("WHITE_ENERGY_CONSUMPTION", () -> WHITE_ENERGY_CONSUMPTION, v -> WHITE_ENERGY_CONSUMPTION = v, DEF_WHITE_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("GRAY_ENERGY_CONSUMPTION", () -> GRAY_ENERGY_CONSUMPTION, v -> GRAY_ENERGY_CONSUMPTION = v, DEF_GRAY_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		doublePref("YELLOW_ENERGY_CONSUMPTION", () -> YELLOW_ENERGY_CONSUMPTION, v -> YELLOW_ENERGY_CONSUMPTION = v, DEF_YELLOW_ENERGY_CONSUMPTION), //$NON-NLS-1$
+		intPref("RED_PROB", () -> RED_PROB, v -> RED_PROB = v, DEF_RED_PROB), //$NON-NLS-1$
+		intPref("GREEN_PROB", () -> GREEN_PROB, v -> GREEN_PROB = v, DEF_GREEN_PROB), //$NON-NLS-1$
+		intPref("BLUE_PROB", () -> BLUE_PROB, v -> BLUE_PROB = v, DEF_BLUE_PROB), //$NON-NLS-1$
+		intPref("CYAN_PROB", () -> CYAN_PROB, v -> CYAN_PROB = v, DEF_CYAN_PROB), //$NON-NLS-1$
+		intPref("WHITE_PROB", () -> WHITE_PROB, v -> WHITE_PROB = v, DEF_WHITE_PROB), //$NON-NLS-1$
+		intPref("GRAY_PROB", () -> GRAY_PROB, v -> GRAY_PROB = v, DEF_GRAY_PROB), //$NON-NLS-1$
+		intPref("YELLOW_PROB", () -> YELLOW_PROB, v -> YELLOW_PROB = v, DEF_YELLOW_PROB), //$NON-NLS-1$
+		intPref("DRAIN_SUBS_DIVISOR", () -> DRAIN_SUBS_DIVISOR, v -> DRAIN_SUBS_DIVISOR = v, DEF_DRAIN_SUBS_DIVISOR), //$NON-NLS-1$
+		intPref("INITIAL_ENERGY", () -> INITIAL_ENERGY, v -> INITIAL_ENERGY = v, DEF_INITIAL_ENERGY), //$NON-NLS-1$
+		doublePref("MAX_VEL", () -> MAX_VEL, v -> MAX_VEL = v, DEF_MAX_VEL), //$NON-NLS-1$
+		doublePref("MAX_ROT", () -> MAX_ROT, v -> MAX_ROT = v, DEF_MAX_ROT), //$NON-NLS-1$
+		doublePref("ELASTICITY", () -> ELASTICITY, v -> ELASTICITY = v, DEF_ELASTICITY), //$NON-NLS-1$
+		intPref("DELAY", () -> DELAY, v -> DELAY = v, DEF_DELAY), //$NON-NLS-1$
+		doublePref("ZOOM_FACTOR", () -> ZOOM_FACTOR, v -> ZOOM_FACTOR = v, DEF_ZOOM_FACTOR), //$NON-NLS-1$
+		boolPref("EFFICIENCY_MODE", () -> EFFICIENCY_MODE, v -> EFFICIENCY_MODE = v, DEF_EFFICIENCY_MODE), //$NON-NLS-1$
+		intPref("LOCAL_PORT", () -> LOCAL_PORT, v -> LOCAL_PORT = v, DEF_LOCAL_PORT), //$NON-NLS-1$
+		boolPref("ACCEPT_CONNECTIONS", () -> ACCEPT_CONNECTIONS, v -> ACCEPT_CONNECTIONS = v, DEF_ACCEPT_CONNECTIONS), //$NON-NLS-1$
+		boolPref("CONNECT_TO_SERVER", () -> CONNECT_TO_SERVER, v -> CONNECT_TO_SERVER = v, DEF_CONNECT_TO_SERVER), //$NON-NLS-1$
+		strPref("SERVER_ADDRESS", () -> SERVER_ADDRESS, v -> SERVER_ADDRESS = v, DEF_SERVER_ADDRESS), //$NON-NLS-1$
+		intPref("SERVER_PORT", () -> SERVER_PORT, v -> SERVER_PORT = v, DEF_SERVER_PORT), //$NON-NLS-1$
+		intPref("MAX_CONNECTIONS", () -> MAX_CONNECTIONS, v -> MAX_CONNECTIONS = v, DEF_MAX_CONNECTIONS), //$NON-NLS-1$
+		intPref("HARDWARE_ACCELERATION", () -> HARDWARE_ACCELERATION, v -> HARDWARE_ACCELERATION = v, DEF_HARDWARE_ACCELERATION), //$NON-NLS-1$
+		doublePref("DECAY_ENERGY", () -> DECAY_ENERGY, v -> DECAY_ENERGY = v, DEF_DECAY_ENERGY), //$NON-NLS-1$
+	};
+
+	/** Preference-node variant, for tests (production passes the user node). */
+	static void savePreferences(Preferences prefs) {
 		try {
-			Preferences prefs = Preferences.userNodeForPackage(Utils.class);
 			prefs.putInt("VERSION",FILE_VERSION); //$NON-NLS-1$
-			prefs.putInt("INITIAL_ORGANISMS",INITIAL_ORGANISMS); //$NON-NLS-1$
-			prefs.putDouble("INITIAL_O2",INITIAL_O2); //$NON-NLS-1$
-			prefs.putDouble("INITIAL_CO2",INITIAL_CO2); //$NON-NLS-1$
-			prefs.putInt("ORGANISMS_VECTOR_SIZE",ORGANISMS_VECTOR_SIZE); //$NON-NLS-1$
-			prefs.putInt("WORLD_WIDTH",WORLD_WIDTH); //$NON-NLS-1$
-			prefs.putInt("WORLD_HEIGHT",WORLD_HEIGHT); //$NON-NLS-1$
-			prefs.putDouble("STRESS_RESISTANCE",STRESS_RESISTANCE); //$NON-NLS-1$
-			prefs.putDouble("FRICTION",FRICTION); //$NON-NLS-1$
-			prefs.putDouble("MAJOR_MUTATION_RATE",MAJOR_MUTATION_RATE); //$NON-NLS-1$
-			prefs.putDouble("MINOR_MUTATION_RATE",MINOR_MUTATION_RATE); //$NON-NLS-1$
-			prefs.putDouble("MINOR_MUTATION_AMPLITUDE",MINOR_MUTATION_AMPLITUDE); //$NON-NLS-1$
-			prefs.putDouble("SPONTANEOUS_MUTATION_RATE",SPONTANEOUS_MUTATION_RATE); //$NON-NLS-1$
-			prefs.putInt("SEGMENT_COST_DIVISOR",SEGMENT_COST_DIVISOR); //$NON-NLS-1$
-			prefs.putDouble("ORGANIC_OBTAINED_ENERGY",ORGANIC_OBTAINED_ENERGY); //$NON-NLS-1$
-			prefs.putInt("GREEN_OBTAINED_ENERGY_DIVISOR",GREEN_OBTAINED_ENERGY_DIVISOR); //$NON-NLS-1$
-			prefs.putDouble("ORGANIC_SUBS_PRODUCED",ORGANIC_SUBS_PRODUCED); //$NON-NLS-1$
-			prefs.putDouble("RED_ENERGY_CONSUMPTION",RED_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("GREEN_ENERGY_CONSUMPTION",GREEN_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("BLUE_ENERGY_CONSUMPTION",BLUE_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("CYAN_ENERGY_CONSUMPTION",CYAN_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("WHITE_ENERGY_CONSUMPTION",WHITE_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("GRAY_ENERGY_CONSUMPTION",GRAY_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putDouble("YELLOW_ENERGY_CONSUMPTION",YELLOW_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			prefs.putInt("RED_PROB",RED_PROB); //$NON-NLS-1$
-			prefs.putInt("GREEN_PROB",GREEN_PROB); //$NON-NLS-1$
-			prefs.putInt("BLUE_PROB",BLUE_PROB); //$NON-NLS-1$
-			prefs.putInt("CYAN_PROB",CYAN_PROB); //$NON-NLS-1$
-			prefs.putInt("WHITE_PROB",WHITE_PROB); //$NON-NLS-1$
-			prefs.putInt("GRAY_PROB",GRAY_PROB); //$NON-NLS-1$
-			prefs.putInt("YELLOW_PROB",YELLOW_PROB); //$NON-NLS-1$
-			prefs.putInt("DRAIN_SUBS_DIVISOR",DRAIN_SUBS_DIVISOR); //$NON-NLS-1$
-			prefs.putInt("INITIAL_ENERGY",INITIAL_ENERGY); //$NON-NLS-1$
-			prefs.putDouble("MAX_VEL",MAX_VEL); //$NON-NLS-1$
-			prefs.putDouble("MAX_ROT",MAX_ROT); //$NON-NLS-1$
-			prefs.putDouble("ELASTICITY",ELASTICITY); //$NON-NLS-1$
-			prefs.putInt("DELAY",DELAY); //$NON-NLS-1$
-			prefs.putDouble("ZOOM_FACTOR",ZOOM_FACTOR); //$NON-NLS-1$
-			prefs.putBoolean("EFFICIENCY_MODE",EFFICIENCY_MODE); //$NON-NLS-1$
-			prefs.putInt("LOCAL_PORT",LOCAL_PORT); //$NON-NLS-1$
-			prefs.putBoolean("ACCEPT_CONNECTIONS",ACCEPT_CONNECTIONS); //$NON-NLS-1$
-			prefs.putBoolean("CONNECT_TO_SERVER",CONNECT_TO_SERVER); //$NON-NLS-1$
-			prefs.put("SERVER_ADDRESS",SERVER_ADDRESS); //$NON-NLS-1$
-			prefs.putInt("SERVER_PORT",SERVER_PORT); //$NON-NLS-1$
-			prefs.putInt("MAX_CONNECTIONS",MAX_CONNECTIONS); //$NON-NLS-1$
-			prefs.putInt("HARDWARE_ACCELERATION", HARDWARE_ACCELERATION); //$NON-NLS-1$
-			prefs.putDouble("DECAY_ENERGY", DECAY_ENERGY); //$NON-NLS-1$
+			for (Pref p : PREFS)
+				p.save(prefs);
 			prefs.put("LOCALE",Messages.getLanguage()); //$NON-NLS-1$
 		}
 		catch (SecurityException ex) {
 			// If we can't write, don't do it
 		}
 	}
-	/**
-	 * Read user preferences from disc
-	 */
-	public static final void readPreferences() {
+
+	/** Preference-node variant, for tests (production passes the user node). */
+	static void readPreferences(Preferences prefs) {
 		try {
-			Preferences prefs = Preferences.userNodeForPackage(Utils.class);
 			int previous_version = prefs.getInt("VERSION",0); //$NON-NLS-1$
 			if (previous_version != FILE_VERSION)
 				try {
@@ -805,54 +677,11 @@ public final class Utils {
 			WINDOW_WIDTH = prefs.getInt("WINDOW_WIDTH", DEF_WINDOW_WIDTH);
 			WINDOW_HEIGHT = prefs.getInt("WINDOW_HEIGHT", DEF_WINDOW_HEIGHT);
 			WINDOW_STATE = prefs.getInt("WINDOW_STATE", DEF_WINDOW_STATE);
-			INITIAL_ORGANISMS = prefs.getInt("INITIAL_ORGANISMS",DEF_INITIAL_ORGANISMS); //$NON-NLS-1$
-			INITIAL_O2 = prefs.getDouble("INITIAL_O2",DEF_INITIAL_O2); //$NON-NLS-1$
-			INITIAL_CO2 = prefs.getDouble("INITIAL_CO2",DEF_INITIAL_CO2); //$NON-NLS-1$
-			ORGANISMS_VECTOR_SIZE = prefs.getInt("ORGANISMS_VECTOR_SIZE",DEF_ORGANISMS_VECTOR_SIZE); //$NON-NLS-1$
-			WORLD_WIDTH = prefs.getInt("WORLD_WIDTH",DEF_WORLD_WIDTH); //$NON-NLS-1$
-			WORLD_HEIGHT = prefs.getInt("WORLD_HEIGHT",DEF_WORLD_HEIGHT); //$NON-NLS-1$
-			STRESS_RESISTANCE = prefs.getDouble("STRESS_RESISTANCE",DEF_STRESS_RESISTANCE); //$NON-NLS-1$
-			FRICTION = prefs.getDouble("FRICTION",DEF_FRICTION); //$NON-NLS-1$
-			MAJOR_MUTATION_RATE = prefs.getDouble("MAJOR_MUTATION_RATE",DEF_MAJOR_MUTATION_RATE); //$NON-NLS-1$
-			MINOR_MUTATION_RATE = prefs.getDouble("MINOR_MUTATION_RATE",DEF_MINOR_MUTATION_RATE); //$NON-NLS-1$
-			MINOR_MUTATION_AMPLITUDE = prefs.getDouble("MINOR_MUTATION_AMPLITUDE",DEF_MINOR_MUTATION_AMPLITUDE); //$NON-NLS-1$
-			SPONTANEOUS_MUTATION_RATE = prefs.getDouble("SPONTANEOUS_MUTATION_RATE",DEF_SPONTANEOUS_MUTATION_RATE); //$NON-NLS-1$
-			SEGMENT_COST_DIVISOR = prefs.getInt("SEGMENT_COST_DIVISOR",DEF_SEGMENT_COST_DIVISOR); //$NON-NLS-1$
-			ORGANIC_OBTAINED_ENERGY = prefs.getDouble("ORGANIC_OBTAINED_ENERGY",DEF_ORGANIC_OBTAINED_ENERGY); //$NON-NLS-1$
-			GREEN_OBTAINED_ENERGY_DIVISOR = prefs.getInt("GREEN_OBTAINED_ENERGY_DIVISOR",DEF_GREEN_OBTAINED_ENERGY_DIVISOR); //$NON-NLS-1$
-			ORGANIC_SUBS_PRODUCED = prefs.getDouble("ORGANIC_SUBS_PRODUCED",DEF_ORGANIC_SUBS_PRODUCED); //$NON-NLS-1$
-			RED_ENERGY_CONSUMPTION = prefs.getDouble("RED_ENERGY_CONSUMPTION",DEF_RED_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			GREEN_ENERGY_CONSUMPTION = prefs.getDouble("GREEN_ENERGY_CONSUMPTION",DEF_GREEN_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			BLUE_ENERGY_CONSUMPTION = prefs.getDouble("BLUE_ENERGY_CONSUMPTION",DEF_BLUE_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			CYAN_ENERGY_CONSUMPTION = prefs.getDouble("CYAN_ENERGY_CONSUMPTION",DEF_CYAN_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			WHITE_ENERGY_CONSUMPTION = prefs.getDouble("WHITE_ENERGY_CONSUMPTION",DEF_WHITE_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			GRAY_ENERGY_CONSUMPTION = prefs.getDouble("GRAY_ENERGY_CONSUMPTION",DEF_GRAY_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			YELLOW_ENERGY_CONSUMPTION = prefs.getDouble("YELLOW_ENERGY_CONSUMPTION",DEF_YELLOW_ENERGY_CONSUMPTION); //$NON-NLS-1$
-			RED_PROB = prefs.getInt("RED_PROB",DEF_RED_PROB); //$NON-NLS-1$
-			GREEN_PROB = prefs.getInt("GREEN_PROB",DEF_GREEN_PROB); //$NON-NLS-1$
-			BLUE_PROB = prefs.getInt("BLUE_PROB",DEF_BLUE_PROB); //$NON-NLS-1$
-			CYAN_PROB = prefs.getInt("CYAN_PROB",DEF_CYAN_PROB); //$NON-NLS-1$
-			WHITE_PROB = prefs.getInt("WHITE_PROB",DEF_WHITE_PROB); //$NON-NLS-1$
-			GRAY_PROB = prefs.getInt("GRAY_PROB",DEF_GRAY_PROB); //$NON-NLS-1$
-			YELLOW_PROB = prefs.getInt("YELLOW_PROB",DEF_YELLOW_PROB); //$NON-NLS-1$
-			DRAIN_SUBS_DIVISOR = prefs.getInt("DRAIN_SUBS_DIVISOR",DEF_DRAIN_SUBS_DIVISOR); //$NON-NLS-1$
-			INITIAL_ENERGY = prefs.getInt("INITIAL_ENERGY",DEF_INITIAL_ENERGY); //$NON-NLS-1$
-			MAX_VEL = prefs.getDouble("MAX_VEL",DEF_MAX_VEL); //$NON-NLS-1$
-			MAX_ROT = prefs.getDouble("MAX_ROT",DEF_MAX_ROT); //$NON-NLS-1$
-			ELASTICITY = prefs.getDouble("ELASTICITY",DEF_ELASTICITY); //$NON-NLS-1$
-			DELAY = prefs.getInt("DELAY",DEF_DELAY); //$NON-NLS-1$
+			for (Pref p : PREFS)
+				p.load(prefs);
 			// Legacy free-ms delays snap to the nearest sim-rate preset.
 			DELAY = delayForSimRate(nearestSimRate(DELAY));
-			ZOOM_FACTOR = prefs.getDouble("ZOOM_FACTOR",DEF_ZOOM_FACTOR); //$NON-NLS-1$
-			EFFICIENCY_MODE = prefs.getBoolean("EFFICIENCY_MODE",DEF_EFFICIENCY_MODE); //$NON-NLS-1$
-			LOCAL_PORT = prefs.getInt("LOCAL_PORT",DEF_LOCAL_PORT); //$NON-NLS-1$
-			MAX_CONNECTIONS = prefs.getInt("MAX_CONNECTIONS",DEF_MAX_CONNECTIONS); //$NON-NLS-1$
-			ACCEPT_CONNECTIONS = prefs.getBoolean("ACCEPT_CONNECTIONS",DEF_ACCEPT_CONNECTIONS); //$NON-NLS-1$
-			CONNECT_TO_SERVER = prefs.getBoolean("CONNECT_TO_SERVER",DEF_CONNECT_TO_SERVER); //$NON-NLS-1$
-			SERVER_ADDRESS = prefs.get("SERVER_ADDRESS",DEF_SERVER_ADDRESS); //$NON-NLS-1$
-			SERVER_PORT = prefs.getInt("SERVER_PORT",DEF_SERVER_PORT); //$NON-NLS-1$
-			DECAY_ENERGY = prefs.getDouble("DECAY_ENERGY", DEF_DECAY_ENERGY); //$NON-NLS-1$
-			setHardwareAcceleration(prefs.getInt("HARDWARE_ACCELERATION", DEF_HARDWARE_ACCELERATION)); //$NON-NLS-1$
+			setHardwareAcceleration(HARDWARE_ACCELERATION);
 			if (HARDWARE_ACCELERATION == 1 || HARDWARE_ACCELERATION == 4) {
 				prefs.putInt("HARDWARE_ACCELERATION", 0); //$NON-NLS-1$
 				HARDWARE_ACCELERATION += 1;

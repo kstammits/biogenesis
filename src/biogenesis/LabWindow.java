@@ -143,21 +143,13 @@ public class LabWindow {
 		});
 		general.add(symmetryCombo, 1, 1);
 		general.add(new Label(Messages.getString("T_MIRROR")), 2, 1); //$NON-NLS-1$
-		String[] noyesValues = {Messages.getString("T_NO"), Messages.getString("T_YES")}; //$NON-NLS-1$ //$NON-NLS-2$
-		mirrorCombo = new ComboBox<>();
-		mirrorCombo.getItems().addAll(noyesValues);
-		mirrorCombo.getSelectionModel().select(mirror);
-		mirrorCombo.setOnAction(evt -> {
-			mirror = mirrorCombo.getSelectionModel().getSelectedIndex();
+		mirrorCombo = noyesCombo(mirror, i -> {
+			mirror = i;
 			redraw();
 		});
 		general.add(mirrorCombo, 3, 1);
 		general.add(new Label(Messages.getString("T_DISPERSE_CHILDREN")), 4, 1); //$NON-NLS-1$
-		disperseCombo = new ComboBox<>();
-		disperseCombo.getItems().addAll(noyesValues);
-		disperseCombo.getSelectionModel().select(disperseChildren ? 1 : 0);
-		disperseCombo.setOnAction(evt ->
-			disperseChildren = disperseCombo.getSelectionModel().getSelectedIndex() != 0);
+		disperseCombo = noyesCombo(disperseChildren ? 1 : 0, i -> disperseChildren = i != 0);
 		general.add(disperseCombo, 5, 1);
 
 		genesGrid = new GridPane();
@@ -203,34 +195,23 @@ public class LabWindow {
 				} catch (SAXParseException ex) {
 					// Malformed XML or DTD mismatch: not a genetic-code file.
 					System.err.println(ex.getMessage());
-					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+					Fx.ownedError(stage, Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
 				} catch (SAXException ex) {
 					// Well-formed XML but bad content (numbers, colors...).
 					System.err.println(ex.getMessage());
-					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
+					Fx.ownedError(stage, Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 				} catch (IOException ex) {
 					System.err.println(ex.getMessage());
-					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
+					Fx.ownedError(stage, Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		} catch (SecurityException ex) {
 			System.err.println(ex.getMessage());
-			errorAlert(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
+			Fx.ownedError(stage, Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
-	private void errorAlert(String title, String message) {
-		javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
-				javafx.scene.control.Alert.AlertType.ERROR, message,
-				javafx.scene.control.ButtonType.OK);
-		alert.initOwner(stage);
-		alert.setTitle(title);
-		alert.setHeaderText(null);
-		alert.showAndWait();
-	}
-
-	private void onColorChanged(int index, ColorComboBox combo) {
-		genesList.get(index).setColor(combo.getSelectedColor());
+	private void onColorChanged(int index, ColorComboBox combo) {		genesList.get(index).setColor(combo.getSelectedColor());
 		redraw();
 	}
 
@@ -261,52 +242,66 @@ public class LabWindow {
 			final Gene gene = genesList.get(i);
 			final int index = i;
 			genesGrid.add(new Label(i + ": "), 0, i + 1); //$NON-NLS-1$
-
-			Spinner<Double> lengthSpinner = new Spinner<>(
-					new SpinnerValueFactory.DoubleSpinnerValueFactory(2.0, 18.0, gene.getLength(), 0.1));
-			lengthSpinner.setEditable(true);
-			lengthSpinner.setPrefWidth(80);
-			lengthSpinner.valueProperty().addListener((obs, was, is) -> {
-				gene.setLength(is);
-				redraw();
-			});
-			genesGrid.add(lengthSpinner, 1, i + 1);
-
-			int initialTheta = (int) Math.round(gene.getTheta() * 180.0 / Math.PI);
-			while (initialTheta < 0) initialTheta += 360;
-			while (initialTheta > 359) initialTheta -= 360;
-			SpinnerValueFactory.IntegerSpinnerValueFactory thetaFactory =
-					new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 359, initialTheta, 1);
-			thetaFactory.setWrapAround(true);
-			Spinner<Integer> thetaSpinner = new Spinner<>(thetaFactory);
-			thetaSpinner.setEditable(true);
-			thetaSpinner.setPrefWidth(70);
-			thetaSpinner.valueProperty().addListener((obs, was, is) -> {
-				gene.setTheta(is * Math.PI / 180.0);
-				redraw();
-			});
-			genesGrid.add(thetaSpinner, 2, i + 1);
+			genesGrid.add(lengthSpinner(gene), 1, i + 1);
+			genesGrid.add(thetaSpinner(gene), 2, i + 1);
 
 			ColorComboBox colorCombo = new ColorComboBox(gene.getColor());
 			colorCombo.setOnAction(evt -> onColorChanged(index, colorCombo));
 			genesGrid.add(colorCombo, 3, i + 1);
 
-			Button insertButton = new Button(Messages.getString("T_INSERT")); //$NON-NLS-1$
-			insertButton.setOnAction(evt -> onInsertGene(index));
-			genesGrid.add(insertButton, 4, i + 1);
-
-			Button deleteButton = new Button(Messages.getString("T_DELETE")); //$NON-NLS-1$
-			deleteButton.setOnAction(evt -> onDeleteGene(index));
-			genesGrid.add(deleteButton, 5, i + 1);
+			genesGrid.add(actionButton("T_INSERT", () -> onInsertGene(index)), 4, i + 1); //$NON-NLS-1$
+			genesGrid.add(actionButton("T_DELETE", () -> onDeleteGene(index)), 5, i + 1); //$NON-NLS-1$
 		}
-		Button addButton = new Button(Messages.getString("T_ADD")); //$NON-NLS-1$
-		addButton.setOnAction(evt -> onAddGene());
-		genesGrid.add(addButton, 0, genesList.size() + 1);
+		genesGrid.add(actionButton("T_ADD", this::onAddGene), 0, genesList.size() + 1); //$NON-NLS-1$
 
 		energy = 40 + 3 * symmetry * genesList.size();
 		energyLabel.setText(Integer.toString(energy));
 		segmentsLabel.setText(Integer.toString(genesList.size() * symmetry));
 		redraw();
+	}
+
+	private Spinner<Double> lengthSpinner(Gene gene) {
+		Spinner<Double> lengthSpinner = new Spinner<>(
+				new SpinnerValueFactory.DoubleSpinnerValueFactory(2.0, 18.0, gene.getLength(), 0.1));
+		lengthSpinner.setEditable(true);
+		lengthSpinner.setPrefWidth(80);
+		lengthSpinner.valueProperty().addListener((obs, was, is) -> {
+			gene.setLength(is);
+			redraw();
+		});
+		return lengthSpinner;
+	}
+
+	private Spinner<Integer> thetaSpinner(Gene gene) {
+		int initialTheta = (int) Math.round(gene.getTheta() * 180.0 / Math.PI);
+		while (initialTheta < 0) initialTheta += 360;
+		while (initialTheta > 359) initialTheta -= 360;
+		SpinnerValueFactory.IntegerSpinnerValueFactory thetaFactory =
+				new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 359, initialTheta, 1);
+		thetaFactory.setWrapAround(true);
+		Spinner<Integer> thetaSpinner = new Spinner<>(thetaFactory);
+		thetaSpinner.setEditable(true);
+		thetaSpinner.setPrefWidth(70);
+		thetaSpinner.valueProperty().addListener((obs, was, is) -> {
+			gene.setTheta(is * Math.PI / 180.0);
+			redraw();
+		});
+		return thetaSpinner;
+	}
+
+	private static Button actionButton(String key, Runnable onAction) {
+		Button b = new Button(Messages.getString(key));
+		b.setOnAction(evt -> onAction.run());
+		return b;
+	}
+
+	/** No/Yes combo reporting the selected index (0 = no, 1 = yes). */
+	private static ComboBox<String> noyesCombo(int selected, java.util.function.IntConsumer onSelect) {
+		ComboBox<String> combo = new ComboBox<>();
+		combo.getItems().addAll(Messages.getString("T_NO"), Messages.getString("T_YES")); //$NON-NLS-1$ //$NON-NLS-2$
+		combo.getSelectionModel().select(selected);
+		combo.setOnAction(evt -> onSelect.accept(combo.getSelectionModel().getSelectedIndex()));
+		return combo;
 	}
 
 	/** Preview the current gene list through the AWT renderer, converted for FX. */

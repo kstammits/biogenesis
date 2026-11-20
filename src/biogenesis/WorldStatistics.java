@@ -40,7 +40,6 @@ public class WorldStatistics implements Serializable {
 
 	private long minPopulationTime;
 
-	// private int lastTimePopulation;
 	private int massExtintions;
 
 	private int massExtintionState;
@@ -112,12 +111,6 @@ public class WorldStatistics implements Serializable {
 	private int beingMostInfectionsNumber;
 
 	private long beingMostInfectionsTime;
-
-	private GeneticCode lastBornBeing;
-
-	private GeneticCode lastDeadBeing;
-
-	private GeneticCode lastInfectedBeing;
 
 	private List<Double> populationList = new ArrayList<Double>(100);
 
@@ -281,18 +274,6 @@ public class WorldStatistics implements Serializable {
 		return beingMostInfectionsTime;
 	}
 
-	public GeneticCode getLastBornBeing() {
-		return lastBornBeing;
-	}
-
-	public GeneticCode getLastDeadBeing() {
-		return lastDeadBeing;
-	}
-
-	public GeneticCode getLastInfectedBeing() {
-		return lastInfectedBeing;
-	}
-
 	public List<Double> getPopulationList() {
 		return populationList;
 	}
@@ -332,7 +313,6 @@ public class WorldStatistics implements Serializable {
 	}
 
 	public void eventOrganismBorn(Organism newOrganism, Organism parent) {
-		lastBornBeing = newOrganism.getGeneticCode();
 		if (parent.getTotalChildren() > beingMostChildrenNumber) {
 			beingMostChildren = parent.getGeneticCode();
 			beingMostChildrenNumber = parent.getTotalChildren();
@@ -344,7 +324,6 @@ public class WorldStatistics implements Serializable {
 
 	public void eventOrganismDie(Organism dyingOrganism,
 			Organism killingOrganism) {
-		lastDeadBeing = dyingOrganism.getGeneticCode();
 		if (killingOrganism != null
 				&& killingOrganism.getTotalKills() > beingMostKillsNumber) {
 			beingMostKills = killingOrganism.getGeneticCode();
@@ -357,7 +336,6 @@ public class WorldStatistics implements Serializable {
 
 	public void eventOrganismInfects(Organism infectedOrganism,
 			Organism infectingOrganism) {
-		lastInfectedBeing = infectedOrganism.getGeneticCode();
 		if (infectingOrganism != null
 				&& infectingOrganism.getTotalInfected() > beingMostInfectionsNumber) {
 			beingMostInfections = infectingOrganism.getGeneticCode();
@@ -400,9 +378,6 @@ public class WorldStatistics implements Serializable {
 				break;
 			}
 		}
-		//System.out.println(deathLastTime + " " + getAverageDeaths() + " " +
-		//massExtintionState + " " + massExtintions);
-		// lastTimePopulation = population;
 		populationSum += population;
 
 		if (O2 > maxOxygen) {

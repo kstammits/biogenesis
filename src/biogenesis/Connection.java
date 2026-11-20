@@ -27,13 +27,9 @@ import java.util.TimerTask;
  * will remove them when it disconnects.
  */
 public class Connection {
-	/**
-	 * The IP address of the other host
-	 */
+	/** The IP address of the other host */
 	protected InetAddress remoteAddress;
-	/**
-	 * The port of the other host
-	 */
+	/** The port of the other host */
 	protected int remotePort;
 	/**
 	 * The state of the connection. Can be STATE_NOT_INITIALIZED for a new connection,
@@ -46,58 +42,40 @@ public class Connection {
 	 * to the same address. Useful to avoid confusion when connecting through NAT routers.
 	 */
 	protected int netCode;
-	/**
-	 * A reference to the main application in order to obtain some its information.
-	 */
+	/** A reference to the main application in order to obtain some its information. */
 	protected MainWindow mainWindow;
 	/**
 	 * The time that the connection will wait without receiving any signal from the
 	 * server on the other host before it tries to send a ping signal.
 	 */
 	private static final long CHECK_CONNECTION_TIME = 30000;
-	/**
-	 * The time when the last message from the server on the other host was received
-	 */
+	/** The time when the last message from the server on the other host was received */
 	private long time;
 	/**
 	 * A timer used to activate ping message to the server on the other host when
 	 * necessary
 	 */
 	private Timer timer;
-	/**
-	 * The biological corridor used to receive organism from the other host
-	 */
+	/** The biological corridor used to receive organism from the other host */
 	protected InCorridor inCorridor;
-	/**
-	 * The biological corridor used to send organism to the other host
-	 */
+	/** The biological corridor used to send organism to the other host */
 	protected OutCorridor outCorridor;
 	/**
 	 * State of the connection that indicates that the connection has just been created
 	 * and no attemp to connect to the other host has been done.
 	 */
 	public static final int STATE_DISCONNECTED = 50;
-	/**
-	 * State of the connection that indicates that the connection is active.
-	 */
+	/** State of the connection that indicates that the connection is active. */
 	public static final int STATE_CONNECTED = 51;
-	/**
-	 * State of the connection that indicates that the connection has been closed.
-	 */
+	/** State of the connection that indicates that the connection has been closed. */
 	public static final int STATE_NOT_INITIALIZED = 52;
-	/**
-	 * Return the IP address of the remote host
-	 * 
-	 * @return  the IP address of the remote host
-	 */
+	/** Return the IP address of the remote host
+	 * */
 	public InetAddress getRemoteAddress() {
 		return remoteAddress;
 	}
-	/**
-	 * Return the port of the remote host
-	 * 
-	 * @return  the port of the remote host
-	 */
+	/** Return the port of the remote host
+	 * */
 	public int getRemotePort() {
 		return remotePort;
 	}
@@ -135,9 +113,7 @@ public class Connection {
 		mainWindow = app;
 		createCorridors();	
 	}
-	/**
-	 * Create the pair of biological corridors, but don't add them to the world yet.
-	 */
+	/** Create the pair of biological corridors, but don't add them to the world yet. */
 	private void createCorridors() {
 		inCorridor = new InCorridor(mainWindow.getWorld());
 		outCorridor = new OutCorridor(mainWindow.getWorld(), this);
@@ -187,11 +163,8 @@ public class Connection {
 		}
 		state = newState;
 	}
-	/**
-	 * Returns the state of the connection.
-	 * 
-	 * @return  the state of the connection
-	 */
+	/** Returns the state of the connection.
+	 * */
 	public int getState() {
 		return state;
 	}

@@ -25,9 +25,7 @@ import java.util.List;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
@@ -136,22 +134,14 @@ public class NetConnectionsWindow {
 						connection.connect();
 					refreshConnectionsPanel();
 				} catch (UnknownHostException e) {
-					errorAlert(Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
+					Fx.ownedError(stage, Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
 							Messages.getString("T_CANT_STABLISH_CONNECTION")+e.getLocalizedMessage()); //$NON-NLS-1$
 				}
 			}
 		} catch (NumberFormatException e) {
-			errorAlert(Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
+			Fx.ownedError(stage, Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
 					Messages.getString("T_PORT_MUST_BE_A_NUMBER")); //$NON-NLS-1$
 		}
-	}
-
-	private void errorAlert(String title, String message) {
-		Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
-		alert.initOwner(stage);
-		alert.setTitle(title);
-		alert.setHeaderText(null);
-		alert.showAndWait();
 	}
 
 	protected void refreshConnectionsPanel() {

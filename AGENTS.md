@@ -145,7 +145,22 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 - Done: JUnit 4 suite — `SimMathTest` (pacing/clamp math), `DeterminismTest`
   (seed-12345 trace: pop 41), `GeneticCodeXmlTest` (round-trip + XXE
   internal-ok/external-blocked), `WorldSaveTest` (filter round-trip +
-  reject-all), `BundleParityTest` (358 keys × 6 locales). 12 tests green.
+  reject-all), `BundleParityTest` (232 keys × 6 locales, count pinned),
+  `PrefsRoundTripTest` (all 46 table prefs + geometry on a temp node).
+  13 tests green.
+- Done: shrink sweep — 123 unused bundle keys × 7 files purged (verified
+  no dynamic lookups besides the 7 color keys; parity test pins 232),
+  `T_MAGENTA/PINK/ORANGE` orphaned by the `colorToString` removal,
+  dead methods/fields/commented blocks gone, single-sentence javadocs
+  collapsed to one-liners, restating `@return`s dropped, actions to
+  `StdAction.of` + `allActions` loops (`MainWindow` 22 classes→2,
+  `VisibleWorld` 13→1, `Fx.menuItemFor/iconView` shared, write-only menu
+  fields dropped), `Utils` prefs mirror → `Pref` table with node-param
+  overloads, `ParamDialog` gene switch → arrays, `InfoToolbar`/
+  `StatisticsWindow` row helpers, `LabWindow` spinner/combo factories,
+  `Fx.ownedError` replaces both private alerts. `build.sh test` also passes
+  FX flags to FxLogicTest (its `ownedError(Stage)` signature forces FX
+  classes at load).
 ## Backlog (Karl's list — do NOT start unasked)
 - FPS limits: DONE via presets (governor kept as backoff-only under the preset
   ceiling, auto-pause past 1000ms kept as safety net).

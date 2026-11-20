@@ -55,13 +55,6 @@ public final class ImageFx {
 		return out;
 	}
 
-	/** Pure pixel copy, headless-testable (no FX toolkit needed). */
-	public static int[] toArgb(BufferedImage image) {
-		int w = image.getWidth();
-		int h = image.getHeight();
-		return image.getRGB(0, 0, w, h, null, 0, w);
-	}
-
 	/**
 	 * FX-thread-confined scratch buffer (all callers run via Fx.run/doRedraw
 	 * on the FX thread). Grows to the largest frame, never shrinks.

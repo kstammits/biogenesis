@@ -27,13 +27,9 @@ import java.awt.geom.*;
  * The body of the organism is drawn inside the Rectangle from which it inherits.
  */
 public class Organism extends Rectangle {
-	/**
-	 * The version of this class
-	 */
+	/** The version of this class */
 	private static final long serialVersionUID = Utils.FILE_VERSION;
-	/**
-	 * A reference to the genetic code of this organism
-	 */
+	/** A reference to the genetic code of this organism */
 	protected GeneticCode _geneticCode;
 	/**
 	 * If this organism has been infected by a white segment, here we have the
@@ -46,53 +42,29 @@ public class Organism extends Rectangle {
 	 * maximum of 8 and a minimum of 1.
 	 */
 	protected int _nChildren;
-	/**
-	 * Reference to the world where the organism lives.
-	 */
+	/** Reference to the world where the organism lives. */
 	protected World _world;
-	/**
-	 * Identification number of this organism's parent.
-	 */
+	/** Identification number of this organism's parent. */
 	protected int _parentID;
-	/**
-	 * Identification number of this organism.
-	 */
+	/** Identification number of this organism. */
 	protected int _ID;
-	/**
-	 * Generation number
-	 */
+	/** Generation number */
 	protected int _generation;
-	/**
-	 * Generation number for infections
-	 */
+	/** Generation number for infections */
 	protected int _infectedGeneration;
-	/**
-	 * Number of children it has produced.
-	 */
+	/** Number of children it has produced. */
 	protected int _nTotalChildren=0;
-	/**
-	 * Number of organism that has killed
-	 */
+	/** Number of organism that has killed */
 	protected int _nTotalKills=0;
-	/**
-	 * Number of organism that has infected
-	 */
+	/** Number of organism that has infected */
 	protected int _nTotalInfected=0;
-	/**
-	 * X coordinates of the starting point of each organism's segments.
-	 */
+	/** X coordinates of the starting point of each organism's segments. */
 	protected int[] _startPointX;
-	/**
-	 * Y coordinates of the starting point of each organism's segments.
-	 */
+	/** Y coordinates of the starting point of each organism's segments. */
 	protected int[] _startPointY;
-	/**
-	 * X coordinates of the ending point of each organism's segments.
-	 */
+	/** X coordinates of the ending point of each organism's segments. */
 	protected int[] _endPointX;
-	/**
-	 * Y coordinates of the ending point of each organism's segments.
-	 */
+	/** Y coordinates of the ending point of each organism's segments. */
 	protected int[] _endPointY;
 	/**
 	 * Precalculated distance from the origin to the starting point of each segment.
@@ -104,33 +76,19 @@ public class Organism extends Rectangle {
 	 * Used to calculate rotations.
 	 */
 	protected double[] _m2;
-	/**
-	 * Precalculated modulus of each segment.
-	 */
+	/** Precalculated modulus of each segment. */
 	protected double[] _m;
-	/**
-	 * X coordinate of this organim's center of gravity.
-	 */
+	/** X coordinate of this organim's center of gravity. */
 	protected int _centerX;
-	/**
-	 * Y coordinate of this organim's center of gravity.
-	 */
+	/** Y coordinate of this organim's center of gravity. */
 	protected int _centerY;
-	/**
-	 * Like _centerX but with double precision to be able to make movements slower than a pixel.
-	 */
+	/** Like _centerX but with double precision to be able to make movements slower than a pixel. */
 	protected double _dCenterX;
-	/**
-	 * Like _centerY but with double precision to be able to make movements slower than a pixel.
-	 */
+	/** Like _centerY but with double precision to be able to make movements slower than a pixel. */
 	protected double _dCenterY;
-	/**
-	 * Effective segment colors, taken from the genetic code if alive or brown if dead.
-	 */
+	/** Effective segment colors, taken from the genetic code if alive or brown if dead. */
 	protected Color[] _segColor;
-	/**
-	 * The total number of segments of the organism
-	 */
+	/** The total number of segments of the organism */
 	protected int _segments;
 	/**
 	 * Growth ratio of the organism. Used to calculate segments when the organism is not
@@ -142,13 +100,9 @@ public class Organism extends Rectangle {
 	 * Used to calculate the effect of collisions.
 	 */
 	protected double _mass = 0;
-	/**
-	 * Moment of inertia of this organism, used to calculate the effect of collisions.
-	 */
+	/** Moment of inertia of this organism, used to calculate the effect of collisions. */
 	protected double _I = 0;
-	/**
-	 * Chemical energy stored by this organism
-	 */
+	/** Chemical energy stored by this organism */
 	protected double _energy;
 	/**
 	 * X-Mod Slice 6: stress level 0..1 (0 = no stress). Replaces MAX_AGE
@@ -161,21 +115,13 @@ public class Organism extends Rectangle {
 	 */
 	protected double _minEnergy = 0;
 	protected double _comfortEnergy = 0;
-	/**
-	 * X-Mod: max stress allowed to reproduce.
-	 */
+	/** X-Mod: max stress allowed to reproduce. */
 	protected static double REPRODUCTION_MAX_STRESS_LEVEL = 0.05;
-	/**
-	 * X-Mod: max stress allowed to grow.
-	 */
+	/** X-Mod: max stress allowed to grow. */
 	protected static double GROW_MAX_STRESS_LEVEL = 0.1;
-	/**
-	 * X-Mod: fraction of reproduce energy bound in the body.
-	 */
+	/** X-Mod: fraction of reproduce energy bound in the body. */
 	protected static double BODY_BOUND_ENERGY_FRACTION = 0.3;
-	/**
-	 * X-Mod Slice 7: yellow-length influence on child energy split.
-	 */
+	/** X-Mod Slice 7: yellow-length influence on child energy split. */
 	protected static final double YELLOW_REPRODUCTION_INFLUENCE = 0.9;
 	/**
 	 * Organism size independent on its position in the world.
@@ -183,30 +129,20 @@ public class Organism extends Rectangle {
 	 * of p representation in the world.
 	 */
 	protected Rectangle _sizeRect = new Rectangle();
-	/**
-	 * Rotation angle that this organism has at a given moment.
-	 */
+	/** Rotation angle that this organism has at a given moment. */
 	protected double _theta;
 	/**
 	 * Last frame angle, used to avoid calculating point rotations when the angle doesn't
 	 * change between two consecutive frames.
 	 */
 	protected double _lastTheta = -1;
-	/**
-	 * Rotated segments of the last frame, to use when _theta == _lastTheta
-	 */
+	/** Rotated segments of the last frame, to use when _theta == _lastTheta */
 	protected int x1[],y1[],x2[],y2[];
-	/**
-	 * Speed. Variation applied to organism coordinates at every frame.
-	 */
+	/** Speed. Variation applied to organism coordinates at every frame. */
 	protected double dx=0d, dy=0d;
-	/**
-	 * Angular speed. Organism angle variation at every frame.
-	 */
+	/** Angular speed. Organism angle variation at every frame. */
 	protected double dtheta = 0d;
-	/**
-	 * Number of frames of life of this organism
-	 */
+	/** Number of frames of life of this organism */
 	protected int _age=0;
 	/**
 	 * Color used to draw the organism when a collision occurs. We save the color that
@@ -214,9 +150,7 @@ public class Organism extends Rectangle {
 	 * if frames is 0, each segment is shown in its color.
 	 */
 	protected Color _color;
-	/**
-	 * Number of frames in which the organism will be drawn in _color.
-	 */
+	/** Number of frames in which the organism will be drawn in _color. */
 	protected int _framesColor = 0;
 	/**
 	 * Number of frame that need to pass between two reproductions, even they are not
@@ -238,55 +172,35 @@ public class Organism extends Rectangle {
 	 * moves, this rectangle must be painted too.
 	 */
 	protected Rectangle lastFrame = new Rectangle();
-	/**
-	 * Indicates if the organism is alive.
-	 */
+	/** Indicates if the organism is alive. */
 	protected boolean alive = true;
-	/**
-	 * Returns true if this organism is alive, false otherwise.
-	 * 
-	 * @return  true if this organism is alive, false otherwise.
-	 */
+	/** Returns true if this organism is alive, false otherwise.
+	 * */
 	public boolean isAlive() {
 		return alive;
 	}
-	/**
-	 * Returns the amount of chemical energy stored by this organism.
-	 * 
-	 * @return  The amount of chemical energy stored by this organism.
-	 */
+	/** Returns the amount of chemical energy stored by this organism.
+	 * */
 	public double getEnergy() {
 		return _energy;
 	}
-	/**
-	 * Returns the identification number of this organism.
-	 * 
-	 * @return  The identification number of this organism.
-	 */
+	/** Returns the identification number of this organism.
+	 * */
 	public int getID() {
 		return _ID;
 	}
-	/**
-	 * Returns the identification number of this organism's parent.
-	 * 
-	 * @return  The identification number of this organism's parent.
-	 */
+	/** Returns the identification number of this organism's parent.
+	 * */
 	public int getParentID() {
 		return _parentID;
 	}
-	/**
-	 * Returns the generation number of this organism.
-	 * 
-	 * @return  The generation number of this organism.
-	 */
+	/** Returns the generation number of this organism.
+	 * */
 	public int getGeneration() {
 		return _generation;
 	}
-	/**
-	 * Returns the generation number of this organism for infections.
-	 * 
-	 * @return  The generation number of this organism for infections.
-	 */
+	/** Returns the generation number of this organism for infections.
+	 * */
 	public int getInfectedGeneration() {
 		return _infectedGeneration;
 	}
@@ -298,35 +212,23 @@ public class Organism extends Rectangle {
 	public int getAge() {
 		return _age;
 	}
-	/**
-	 * Returns the number of children that this organism produced.
-	 * 
-	 * @return  The number of children that this organism produced.
-	 */
+	/** Returns the number of children that this organism produced.
+	 * */
 	public int getTotalChildren() {
 		return _nTotalChildren;
 	}
-	/**
-	 * Returns the number of organisms killed by this organism.
-	 * 
-	 * @return  The number of organisms killed by this organism.
-	 */
+	/** Returns the number of organisms killed by this organism.
+	 * */
 	public int getTotalKills() {
 		return _nTotalKills;
 	}
-	/**
-	 * Returns the number of organisms infected by this organism.
-	 * 
-	 * @return  The number of organisms infected by this organism.
-	 */
+	/** Returns the number of organisms infected by this organism.
+	 * */
 	public int getTotalInfected() {
 		return _nTotalInfected;
 	}
-	/**
-	 * Returns a reference to this organism's genetic code.
-	 * 
-	 * @return  A reference to this organism's genetic code.
-	 */
+	/** Returns a reference to this organism's genetic code.
+	 * */
 	public GeneticCode getGeneticCode() {
 		return _geneticCode;
 	}
@@ -587,40 +489,6 @@ public class Organism extends Rectangle {
 		}
 	}
 	/**
-	 * Given a vector, calculates the resulting vector after a rotation, a scalation and possibly
-	 * after mirroring it.
-	 * The rotation degree and the mirroring is found using the Utils.degree array, where parameter
-	 * mirror is the row and step is the column. The step represents the repetition of this vector
-	 * following the organism symmetry.
-	 * The scalation is calculated using the Utils.scale coefficients, using the organism's
-	 * _growthRatio to find the appropriate value. 
-	 * 
-	 * @param p  The end point of the vector. The starting point is (0,0).
-	 * @param step  The repetition of the vectors pattern  we are calculating.
-	 * @param mirror  If mirroring is applied to this organism 1, otherwise 0.
-	 * @return  The translated vector.
-	 */
-/*	private Vector2D translate(Point p, int step, int mirror) {
-		if (p.x == 0 && p.y == 0)
-			return new Vector2D();
-
-		double px = p.x;
-		double py = p.y;
-
-		px /= Utils.scale[_growthRatio - 1];
-		py /= Utils.scale[_growthRatio - 1];
-
-		Vector2D v = new Vector2D(px,py);
-		v.addDegree(Utils.degree[mirror][step]);
-
-		if (Utils.invertX[mirror][step] != 0)
-			v.invertX();
-		if (Utils.invertY[mirror][step] != 0)
-			v.invertY();
-
-		return v;
-	}*/
-	/**
 	 * Tries to find a spare place in the world for this organism and place it.
 	 * It also generates an identification number for the organism if it can be placed
 	 * somewhere.
@@ -827,9 +695,7 @@ public class Organism extends Rectangle {
 		symmetric();
 		hasGrown = -1;
 	}
-	/**
-	 * X-Mod Slice 6: stress and body-energy helpers.
-	 */
+	/** X-Mod Slice 6: stress and body-energy helpers. */
 	public double getStressLevel() {
 		return _stressLevel;
 	}

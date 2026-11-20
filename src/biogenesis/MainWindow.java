@@ -32,14 +32,12 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -81,11 +79,6 @@ public class MainWindow {
 	protected StdAction zoomOutAction;
 
 	protected MenuBar menuBar;
-	protected MenuItem _menuStartStopGame;
-	protected Menu _menuGame;
-	protected Menu _menuWorld;
-	protected Menu _menuHelp;
-	protected Menu _menuNet;
 	protected NumberFormat _nf;
 	/** Locked-width status slots + trailing message, replacing the old
 	 * single concatenated label whose every segment shuffled on each tick. */
@@ -174,51 +167,74 @@ public class MainWindow {
 		Fx.ask(() -> new MainWindow());
 	}
 
-	private void createActions() {
-		newGameAction = new NewGameAction("T_NEW", "images/menu_new.png", //$NON-NLS-1$ //$NON-NLS-2$
-				"T_NEW_WORLD"); //$NON-NLS-1$
-		startStopAction = new StartStopAction("T_RESUME","T_PAUSE","images/menu_start.png",  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
-				"images/menu_stop.png","T_RESUME_PROCESS","T_PAUSE_PROCESS"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		saveGameAction = new SaveGameAction("T_SAVE", "images/menu_save.png",  //$NON-NLS-1$//$NON-NLS-2$
-				"T_SAVE_WORLD"); //$NON-NLS-1$
-		increaseCO2Action = new IncreaseCO2Action("T_INCREASE_CO2", "images/menu_increase_co2.png", //$NON-NLS-1$ //$NON-NLS-2$
-				"T_INCREASE_CO2"); //$NON-NLS-1$
-		decreaseCO2Action = new DecreaseCO2Action("T_DECREASE_CO2", "images/menu_decrease_co2.png", //$NON-NLS-1$ //$NON-NLS-2$
-				"T_DECREASE_CO2"); //$NON-NLS-1$
-		manageConnectionsAction = new ManageConnectionsAction("T_MANAGE_CONNECTIONS", "images/menu_manage_connections.png",  //$NON-NLS-1$//$NON-NLS-2$
-				"T_MANAGE_CONNECTIONS"); //$NON-NLS-1$
-		abortTrackingAction = new AbortTrackingAction("T_ABORT_TRACKING", "images/menu_stop_tracking.png",  //$NON-NLS-1$//$NON-NLS-2$
-				"T_ABORT_TRACKING"); //$NON-NLS-1$
-		openGameAction = new OpenGameAction("T_OPEN", null, "T_OPEN_WORLD");  //$NON-NLS-1$//$NON-NLS-2$
-		saveGameAsAction = new SaveGameAsAction("T_SAVE_AS", null, "T_SAVE_WORLD_AS");  //$NON-NLS-1$//$NON-NLS-2$
-		quitAction = new QuitAction("T_QUIT", null, "T_QUIT_PROGRAM"); //$NON-NLS-1$ //$NON-NLS-2$
-		statisticsAction = new StatisticsAction("T_STATISTICS", null, "T_WORLD_STATISTICS"); //$NON-NLS-1$ //$NON-NLS-2$
-		labAction = new LabAction("T_GENETIC_LABORATORY", null, "T_GENETIC_LABORATORY"); //$NON-NLS-1$ //$NON-NLS-2$
-		killAllAction = new KillAllAction("T_KILL_ALL", null, "T_KILL_ALL_ORGANISMS"); //$NON-NLS-1$ //$NON-NLS-2$
-		disperseAllAction = new DisperseAllAction("T_DISPERSE_ALL", null, "T_DISPERSE_ALL_DEAD_ORGANISMS"); //$NON-NLS-1$ //$NON-NLS-2$
-		parametersAction = new ParametersAction("T_PARAMETERS", null, "T_EDIT_PARAMETERS"); //$NON-NLS-1$ //$NON-NLS-2$
-		aboutAction = new AboutAction("T_ABOUT", null, "T_ABOUT");  //$NON-NLS-1$ //$NON-NLS-2$
-		manualAction = new ManualAction("T_USER_MANUAL", null, "T_USER_MANUAL");  //$NON-NLS-1$ //$NON-NLS-2$
-		checkLastVersionAction = new CheckLastVersionAction("T_CHECK_LAST_VERSION", null, "T_CHECK_LAST_VERSION"); //$NON-NLS-1$ //$NON-NLS-2$
-		netConfigAction = new NetConfigAction("T_CONFIGURE_NETWORK", null, "T_CONFIGURE_NETWORK"); //$NON-NLS-1$ //$NON-NLS-2$
-		toggleEfficiencyAction = new ToggleEfficiencyModeAction("T_EFFICIENCY_MODE", null, "T_EFFICIENCY_MODE_DESC"); //$NON-NLS-1$ //$NON-NLS-2$
-		zoomInAction = new ZoomInAction("T_ZOOM_IN", null, "T_ZOOM_IN"); //$NON-NLS-1$ //$NON-NLS-2$
-		zoomOutAction = new ZoomOutAction("T_ZOOM_OUT", null, "T_ZOOM_OUT"); //$NON-NLS-1$ //$NON-NLS-2$
+	private final List<StdAction> allActions = new ArrayList<>();
+
+	/** One-shot action that also joins the locale-refresh list. */
+	private StdAction action(String key, String icon, String desc, Runnable body) {
+		return register(StdAction.of(key, icon, desc, body));
 	}
 
-	/**
-	 * Loads an action's icon for FX controls. Null when the action has none.
-	 */
-	private static ImageView iconView(StdAction action) {
-		if (action.iconPath == null)
-			return null;
-		try (InputStream in = StdAction.class.getResourceAsStream(action.iconPath)) {
-			if (in == null)
-				return null;
-			return new ImageView(new Image(in));
-		} catch (IOException e) {
-			return null;
-		}
+	private StdAction action(String key, String icon, String desc, String acceleratorKey, Runnable body) {
+		return register(StdAction.of(key, icon, desc, acceleratorKey, body));
+	}
+
+	private <T extends StdAction> T register(T a) {
+		allActions.add(a);
+		return a;
+	}
+
+	private void createActions() {
+		newGameAction = action("T_NEW", "images/menu_new.png", "T_NEW_WORLD", () -> { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				_trackedOrganism = null;
+				_world.genesis();
+				scrollPane.setContent(_visibleWorld);
+				_isProcessActive = true;
+				startStopAction.setActive(true);
+				setStatusMessage(Messages.getString("T_NEW_WORLD_CREATED")); //$NON-NLS-1$
+			});
+		startStopAction = register(new StartStopAction("T_RESUME","T_PAUSE","images/menu_start.png",  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+				"images/menu_stop.png","T_RESUME_PROCESS","T_PAUSE_PROCESS")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		saveGameAction = action("T_SAVE", "images/menu_save.png", "T_SAVE_WORLD", "T_SAVE_ACCELERATOR", () -> { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				if (_gameFile != null)
+					saveObject(_world, _gameFile);
+				else
+					saveGameAs();
+			});
+		increaseCO2Action = action("T_INCREASE_CO2", "images/menu_increase_co2.png", "T_INCREASE_CO2", () -> _world.addCO2(500)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		decreaseCO2Action = action("T_DECREASE_CO2", "images/menu_decrease_co2.png", "T_DECREASE_CO2", () -> _world.decreaseCO2(500)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		manageConnectionsAction = action("T_MANAGE_CONNECTIONS", "images/menu_manage_connections.png", "T_MANAGE_CONNECTIONS", this::netConnectionsWindow); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		abortTrackingAction = action("T_ABORT_TRACKING", "images/menu_stop_tracking.png", "T_ABORT_TRACKING", () -> setTrackedOrganism(null)); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		openGameAction = action("T_OPEN", null, "T_OPEN_WORLD", this::openGame);  //$NON-NLS-1$//$NON-NLS-2$
+		saveGameAsAction = action("T_SAVE_AS", null, "T_SAVE_WORLD_AS", this::saveGameAs);  //$NON-NLS-1$//$NON-NLS-2$
+		quitAction = action("T_QUIT", null, "T_QUIT_PROGRAM", this::quit); //$NON-NLS-1$ //$NON-NLS-2$
+		statisticsAction = action("T_STATISTICS", null, "T_WORLD_STATISTICS", () -> { //$NON-NLS-1$ //$NON-NLS-2$
+				if (_statisticsWindow != null)
+					_statisticsWindow.close();
+				_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
+			});
+		labAction = action("T_GENETIC_LABORATORY", null, "T_GENETIC_LABORATORY", () -> new LabWindow(this)); //$NON-NLS-1$ //$NON-NLS-2$
+		killAllAction = action("T_KILL_ALL", null, "T_KILL_ALL_ORGANISMS", () -> _world.killAll()); //$NON-NLS-1$ //$NON-NLS-2$
+		disperseAllAction = action("T_DISPERSE_ALL", null, "T_DISPERSE_ALL_DEAD_ORGANISMS", () -> _world.disperseAll()); //$NON-NLS-1$ //$NON-NLS-2$
+		parametersAction = action("T_PARAMETERS", null, "T_EDIT_PARAMETERS", this::paramDialog); //$NON-NLS-1$ //$NON-NLS-2$
+		aboutAction = action("T_ABOUT", null, "T_ABOUT", this::about);  //$NON-NLS-1$ //$NON-NLS-2$
+		manualAction = action("T_USER_MANUAL", null, "T_USER_MANUAL", this::openManual);  //$NON-NLS-1$ //$NON-NLS-2$
+		checkLastVersionAction = action("T_CHECK_LAST_VERSION", null, "T_CHECK_LAST_VERSION", this::checkLastVersion); //$NON-NLS-1$ //$NON-NLS-2$
+		netConfigAction = action("T_CONFIGURE_NETWORK", null, "T_CONFIGURE_NETWORK", this::netConfig); //$NON-NLS-1$ //$NON-NLS-2$
+		toggleEfficiencyAction = action("T_EFFICIENCY_MODE", null, "T_EFFICIENCY_MODE_DESC", () -> { //$NON-NLS-1$ //$NON-NLS-2$
+				boolean on = Utils.toggleEFFICIENCY_MODE();
+				Utils.savePreferences();
+				setStatusMessage(on ? "Efficiency mode ON" : "Efficiency mode OFF"); //$NON-NLS-1$ //$NON-NLS-2$
+				if (_visibleWorld != null)
+					_visibleWorld.refresh();
+			});
+		zoomInAction = action("T_ZOOM_IN", null, "T_ZOOM_IN", () -> { //$NON-NLS-1$ //$NON-NLS-2$
+				if (_visibleWorld != null)
+					_visibleWorld.zoomIn();
+			});
+		zoomOutAction = action("T_ZOOM_OUT", null, "T_ZOOM_OUT", () -> { //$NON-NLS-1$ //$NON-NLS-2$
+				if (_visibleWorld != null)
+					_visibleWorld.zoomOut();
+			});
 	}
 
 	/**
@@ -246,7 +262,7 @@ public class MainWindow {
 		label.setMaxWidth(TOOLBAR_LABEL_WIDTH);
 		label.setAlignment(Pos.CENTER);
 		label.setTextAlignment(TextAlignment.CENTER);
-		ImageView icon = iconView(action);
+		ImageView icon = Fx.iconView(action);
 		VBox graphic = icon == null ? new VBox(label) : new VBox(icon, label);
 		graphic.setAlignment(Pos.CENTER);
 		graphic.setSpacing(button.getGraphicTextGap());
@@ -260,32 +276,18 @@ public class MainWindow {
 		return button;
 	}
 
-	/**
-	 * Wraps a command in an FX menu item (icons dropped where the actions
-	 * nulled them).
-	 */
-	private static MenuItem menuItemFor(StdAction action, boolean keepIcon) {
-		MenuItem item = new MenuItem(action.getName());
-		if (keepIcon)
-			item.setGraphic(iconView(action));
-		item.setDisable(!action.isEnabled());
-		KeyCombination acc = action.getAccelerator();
-		if (acc != null)
-			item.setAccelerator(acc);
-		item.setOnAction(evt -> action.perform());
-		return item;
+	private static void addItems(Menu menu, boolean keepIcon, StdAction... actions) {
+		for (StdAction a : actions)
+			menu.getItems().add(Fx.menuItemFor(a, keepIcon));
 	}
 
 	public void createToolBar() {
 		abortTrackingAction.setEnabled(_trackedOrganism != null);
-		toolBar.getItems().setAll(
-			toolButtonFor(newGameAction),
-			toolButtonFor(startStopAction),
-			toolButtonFor(saveGameAction),
-			toolButtonFor(increaseCO2Action),
-			toolButtonFor(decreaseCO2Action),
-			toolButtonFor(manageConnectionsAction),
-			toolButtonFor(abortTrackingAction));
+		toolBar.getItems().clear();
+		for (StdAction a : Arrays.asList(newGameAction, startStopAction,
+				saveGameAction, increaseCO2Action, decreaseCO2Action,
+				manageConnectionsAction, abortTrackingAction))
+			toolBar.getItems().add(toolButtonFor(a));
 	}
 
 	/**
@@ -303,37 +305,28 @@ public class MainWindow {
 	}
 
 	private Menu buildGameMenu() {
-		_menuGame = new Menu(Messages.getString("T_GAME")); //$NON-NLS-1$
-		_menuGame.getItems().add(menuItemFor(newGameAction, false));
-		_menuStartStopGame = menuItemFor(startStopAction, false);
-		_menuGame.getItems().add(_menuStartStopGame);
-		_menuGame.getItems().add(menuItemFor(openGameAction, true));
-		_menuGame.getItems().add(menuItemFor(saveGameAction, false));
-		_menuGame.getItems().add(menuItemFor(saveGameAsAction, true));
-		_menuGame.getItems().add(menuItemFor(quitAction, true));
-		return _menuGame;
+		Menu menu = new Menu(Messages.getString("T_GAME")); //$NON-NLS-1$
+		addItems(menu, false, newGameAction, startStopAction);
+		addItems(menu, true, openGameAction);
+		addItems(menu, false, saveGameAction);
+		addItems(menu, true, saveGameAsAction, quitAction);
+		return menu;
 	}
 
 	private Menu buildWorldMenu() {
-		_menuWorld = new Menu(Messages.getString("T_WORLD")); //$NON-NLS-1$
-		_menuWorld.getItems().add(menuItemFor(statisticsAction, true));
-		_menuWorld.getItems().add(menuItemFor(labAction, true));
-		_menuWorld.getItems().add(menuItemFor(increaseCO2Action, false));
-		_menuWorld.getItems().add(menuItemFor(decreaseCO2Action, false));
-		_menuWorld.getItems().add(menuItemFor(killAllAction, true));
-		_menuWorld.getItems().add(menuItemFor(disperseAllAction, true));
-		_menuWorld.getItems().add(menuItemFor(parametersAction, true));
-		_menuWorld.getItems().add(new SeparatorMenuItem());
-		_menuWorld.getItems().add(menuItemFor(toggleEfficiencyAction, true));
-		_menuWorld.getItems().add(menuItemFor(zoomInAction, true));
-		_menuWorld.getItems().add(menuItemFor(zoomOutAction, true));
-		return _menuWorld;
+		Menu menu = new Menu(Messages.getString("T_WORLD")); //$NON-NLS-1$
+		addItems(menu, true, statisticsAction, labAction);
+		addItems(menu, false, increaseCO2Action, decreaseCO2Action);
+		addItems(menu, true, killAllAction, disperseAllAction, parametersAction);
+		menu.getItems().add(new SeparatorMenuItem());
+		addItems(menu, true, toggleEfficiencyAction, zoomInAction, zoomOutAction);
+		return menu;
 	}
 
 	private Menu buildNetMenu() {
-		_menuNet = new Menu(Messages.getString("T_NETWORK")); //$NON-NLS-1$
-		_menuNet.getItems().add(menuItemFor(netConfigAction, true));
-		_menuNet.getItems().add(menuItemFor(manageConnectionsAction, false));
+		Menu menu = new Menu(Messages.getString("T_NETWORK")); //$NON-NLS-1$
+		addItems(menu, true, netConfigAction);
+		addItems(menu, false, manageConnectionsAction);
 		// Only enable file management menu options if at least there is
 		//permission to read user's home directory
 		// (Java 17: SecurityManager is deprecated for removal, probe property directly)
@@ -347,15 +340,13 @@ public class MainWindow {
 			netConfigAction.setEnabled(false);
 			manageConnectionsAction.setEnabled(false);
 		}
-		return _menuNet;
+		return menu;
 	}
 
 	private Menu buildHelpMenu() {
-		_menuHelp = new Menu(Messages.getString("T_HELP")); //$NON-NLS-1$
-		_menuHelp.getItems().add(menuItemFor(manualAction, true));
-		_menuHelp.getItems().add(menuItemFor(checkLastVersionAction, true));
-		_menuHelp.getItems().add(menuItemFor(aboutAction, true));
-		return _menuHelp;
+		Menu menu = new Menu(Messages.getString("T_HELP")); //$NON-NLS-1$
+		addItems(menu, true, manualAction, checkLastVersionAction, aboutAction);
+		return menu;
 	}
 
 	protected void checkLastVersion() {
@@ -399,21 +390,6 @@ public class MainWindow {
 		}
 	}
 
-	class NewGameAction extends StdAction {
-		public NewGameAction(String text_key, String icon_path, String desc) {
-			super(text_key, icon_path, desc);
-		}
-
-		public void perform() {
-			_trackedOrganism = null;
-			_world.genesis();
-			scrollPane.setContent(_visibleWorld);
-			_isProcessActive = true;
-			startStopAction.setActive(true);
-			setStatusMessage(Messages.getString("T_NEW_WORLD_CREATED")); //$NON-NLS-1$
-		}
-	}
-
 	class StartStopAction extends StdAction {
 		protected String name2;
 		protected String description2;
@@ -426,15 +402,13 @@ public class MainWindow {
 
 		public StartStopAction(String text1, String text2, String icon_path1,
 				String icon_path2, String desc1, String desc2) {
-			super(text1, icon_path1, desc1);
+			super(text1, icon_path1, desc1, "T_PAUSE_ACCELERATOR");
 			name2 = Messages.getString(text2);
 			description2 = Messages.getString(desc2);
 			iconPath2 = icon_path2;
 			name2_key = text2;
 			desc2_key = desc2;
 			active = false;
-
-			accelerator = keyCombinationFor(Messages.getString("T_PAUSE_ACCELERATOR"));
 		}
 
 		public void perform() {
@@ -463,7 +437,6 @@ public class MainWindow {
 			super.changeLocale();
 			name2 = Messages.getString(name2_key);
 			description2 = Messages.getString(desc2_key);
-			accelerator = keyCombinationFor(Messages.getString("T_PAUSE_ACCELERATOR"));
 		}
 
 		public void setActive(boolean newState) {
@@ -478,72 +451,47 @@ public class MainWindow {
 		}
 	}
 
-	class SaveGameAction extends StdAction {
-		public SaveGameAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-			accelerator = keyCombinationFor(Messages.getString("T_SAVE_ACCELERATOR"));
-		}
+	public void quit() {
+		Fx.Answer save = Fx.confirmYesNoCancel(Messages.getString("T_SAVE_WORLD"), Messages.getString("T_SAVE_BEFORE_QUIT")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		public void perform() {
-			if (_gameFile != null)
-				saveObject(_world, _gameFile);
-			else
-				saveGameAs();
-		}
-
-		@Override
-		public void changeLocale() {
-			super.changeLocale();
-			accelerator = keyCombinationFor(Messages.getString("T_SAVE_ACCELERATOR"));
-		}
-	}
-
-	class IncreaseCO2Action extends StdAction {
-		public IncreaseCO2Action(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			_world.addCO2(500);
+		if (save != Fx.Answer.CANCEL) {
+			if (save == Fx.Answer.YES) {
+				if (_gameFile != null)
+					saveObject(_world, _gameFile);
+				else
+					if (saveGameAs() == null)
+						return;
+			}
+			Utils.quitProgram(this);
+			if (serverThread != null)
+				serverThread.closeServer();
+			try {
+				System.exit(0);
+			} catch (SecurityException ex) {
+				stage.close();
+			}
 		}
 	}
 
-	class DecreaseCO2Action extends StdAction {
-		public DecreaseCO2Action(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			_world.decreaseCO2(500);
-		}
+	/** Geometry for Utils.quitProgram (prefs), read off the stage. */
+	public int getX() {
+		return (int) stage.getX();
+	}
+	public int getY() {
+		return (int) stage.getY();
+	}
+	public int getWidth() {
+		return (int) stage.getWidth();
+	}
+	public int getHeight() {
+		return (int) stage.getHeight();
+	}
+	public int getExtendedState() {
+		return stage.isMaximized() ? Utils.WINDOW_STATE_MAXIMIZED : Utils.WINDOW_STATE_NORMAL;
 	}
 
-	class ManageConnectionsAction extends StdAction {
-		public ManageConnectionsAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			netConnectionsWindow();
-		}
-	}
-
-	class AbortTrackingAction extends StdAction {
-		public AbortTrackingAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			setTrackedOrganism(null);
-		}
-	}
-
-	class OpenGameAction extends StdAction {
-		public OpenGameAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
+	/** Long bodies that survived as methods instead of action classes. */
+	private void openGame() {
 			boolean processState = _isProcessActive;
 			_isProcessActive = false;
 			try {
@@ -589,126 +537,9 @@ public class MainWindow {
 				Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			_isProcessActive = processState;
-		}
 	}
 
-	class SaveGameAsAction extends StdAction {
-		public SaveGameAsAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			saveGameAs();
-		}
-	}
-
-	class QuitAction extends StdAction {
-		public QuitAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			quit();
-		}
-	}
-
-	public void quit() {
-		Fx.Answer save = Fx.confirmYesNoCancel(Messages.getString("T_SAVE_WORLD"), Messages.getString("T_SAVE_BEFORE_QUIT")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		if (save != Fx.Answer.CANCEL) {
-			if (save == Fx.Answer.YES) {
-				if (_gameFile != null)
-					saveObject(_world, _gameFile);
-				else
-					if (saveGameAs() == null)
-						return;
-			}
-			Utils.quitProgram(this);
-			if (serverThread != null)
-				serverThread.closeServer();
-			try {
-				System.exit(0);
-			} catch (SecurityException ex) {
-				stage.close();
-			}
-		}
-	}
-
-	/** Geometry for Utils.quitProgram (prefs), read off the stage. */
-	public int getX() {
-		return (int) stage.getX();
-	}
-	public int getY() {
-		return (int) stage.getY();
-	}
-	public int getWidth() {
-		return (int) stage.getWidth();
-	}
-	public int getHeight() {
-		return (int) stage.getHeight();
-	}
-	public int getExtendedState() {
-		return stage.isMaximized() ? Utils.WINDOW_STATE_MAXIMIZED : Utils.WINDOW_STATE_NORMAL;
-	}
-
-	class StatisticsAction extends StdAction {
-		public StatisticsAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			if (_statisticsWindow != null)
-				_statisticsWindow.close();
-			_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
-		}
-	}
-
-	class LabAction extends StdAction {
-		public LabAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			new LabWindow(MainWindow.this);
-		}
-	}
-
-	class KillAllAction extends StdAction {
-		public KillAllAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			_world.killAll();
-		}
-	}
-
-	class DisperseAllAction extends StdAction {
-		public DisperseAllAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			_world.disperseAll();
-		}
-	}
-
-	class ParametersAction extends StdAction {
-		public ParametersAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			paramDialog();
-		}
-	}
-
-	class ManualAction extends StdAction {
-		public ManualAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
+	private void openManual() {
 		String DirNameManual = "/usr/share/doc/biogenesis/biogenesis_manual";
 		if ((new File(DirNameManual+"/manual_"+Messages.getLanguage()+".html")).exists()) {
 			BareBonesBrowserLaunch.openURL(DirNameManual+"/manual_"+Messages.getLanguage()+".html");
@@ -722,73 +553,6 @@ public class MainWindow {
 					BareBonesBrowserLaunch.openURL("http://biogenesis.sourceforge.net/manual.en.php"); //$NON-NLS-1$
 				}
 			}
-		}
-		}
-	}
-
-	class CheckLastVersionAction extends StdAction {
-		public CheckLastVersionAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			checkLastVersion();
-		}
-	}
-
-	class AboutAction extends StdAction {
-		public AboutAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			about();
-		}
-	}
-
-	class NetConfigAction extends StdAction {
-		public NetConfigAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			netConfig();
-		}
-	}
-
-	class ToggleEfficiencyModeAction extends StdAction {
-		public ToggleEfficiencyModeAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			boolean on = Utils.toggleEFFICIENCY_MODE();
-			Utils.savePreferences();
-			setStatusMessage(on ? "Efficiency mode ON" : "Efficiency mode OFF"); //$NON-NLS-1$ //$NON-NLS-2$
-			if (_visibleWorld != null)
-				_visibleWorld.refresh();
-		}
-	}
-
-	class ZoomInAction extends StdAction {
-		public ZoomInAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			if (_visibleWorld != null)
-				_visibleWorld.zoomIn();
-		}
-	}
-
-	class ZoomOutAction extends StdAction {
-		public ZoomOutAction(String text, String icon_path, String desc) {
-			super(text, icon_path, desc);
-		}
-
-		public void perform() {
-			if (_visibleWorld != null)
-				_visibleWorld.zoomOut();
 		}
 	}
 
@@ -1137,9 +901,7 @@ public class MainWindow {
 		return batch * 1000.0 / rate;
 	}
 
-	/**
-	 * Maps a content pixel offset to a 0..1 scroll fraction.
-	 */
+	/** Maps a content pixel offset to a 0..1 scroll fraction. */
 	private static double scrollTo(double center, double content, double viewport) {
 		if (content <= viewport)
 			return 0;
@@ -1325,24 +1087,8 @@ public class MainWindow {
 	}
 
 	public void changeLocale() {
-		newGameAction.changeLocale();
-		startStopAction.changeLocale();
-		openGameAction.changeLocale();
-		saveGameAction.changeLocale();
-		saveGameAsAction.changeLocale();
-		quitAction.changeLocale();
-		statisticsAction.changeLocale();
-		increaseCO2Action.changeLocale();
-		decreaseCO2Action.changeLocale();
-		parametersAction.changeLocale();
-		labAction.changeLocale();
-		killAllAction.changeLocale();
-		disperseAllAction.changeLocale();
-		manualAction.changeLocale();
-		checkLastVersionAction.changeLocale();
-		aboutAction.changeLocale();
-		netConfigAction.changeLocale();
-		manageConnectionsAction.changeLocale();
+		for (StdAction a : allActions)
+			a.changeLocale();
 		stage.setTitle(Messages.getString("T_BIOGENESIS")); //$NON-NLS-1$
 		refreshChrome();
 		_visibleWorld.changeLocale();

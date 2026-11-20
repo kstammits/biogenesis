@@ -25,8 +25,12 @@ import java.util.concurrent.FutureTask;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.FileChooser;
 
 /**
@@ -138,6 +142,47 @@ public final class Fx {
 	 */
 	public static void readError(String messageKey) {
 		error(Messages.getString("T_READ_ERROR"), Messages.getString(messageKey)); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	/**
+	 * Owned error alert for dialogs with a stage (stays composited over
+	 * fullscreen, unlike the unowned {@link #error}).
+	 */
+	public static void ownedError(javafx.stage.Stage owner, String title, String message) {
+		ask(() -> {
+			Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+			alert.initOwner(owner);
+			alert.setTitle(title);
+			alert.setHeaderText(null);
+			alert.showAndWait();
+			return null;
+		});
+	}
+
+	/** Loads an action's icon for FX controls. Null when the action has none. */
+	public static ImageView iconView(StdAction action) {
+		if (action.iconPath == null)
+			return null;
+		try (java.io.InputStream in = StdAction.class.getResourceAsStream(action.iconPath)) {
+			if (in == null)
+				return null;
+			return new ImageView(new Image(in));
+		} catch (java.io.IOException e) {
+			return null;
+		}
+	}
+
+	/** Wraps a command in an FX menu item, snapshotting live text/enabled state. */
+	public static MenuItem menuItemFor(StdAction action, boolean keepIcon) {
+		MenuItem item = new MenuItem(action.getName());
+		if (keepIcon)
+			item.setGraphic(iconView(action));
+		item.setDisable(!action.isEnabled());
+		KeyCombination acc = action.getAccelerator();
+		if (acc != null)
+			item.setAccelerator(acc);
+		item.setOnAction(evt -> action.perform());
+		return item;
 	}
 
 	/** Modal info alert, returned after dismissal. */

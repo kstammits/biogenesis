@@ -39,36 +39,28 @@ import javafx.scene.layout.Priority;
  */
 public class InfoToolbar extends GridPane {
 	protected Organism _selOrganism;
-	protected Label _lEnergy, _lID, _lGeneration, _lAge, _lChildren, _lKills, _lInfected, _lMass, _lReproduceEnergy;
 	protected Button _buttonGenes;
 	protected GeneticCodePanel _geneticCodePanel;
 	static private NumberFormat _nf = NumberFormat.getInstance();
 	protected MainWindow _mainWindow;
 
-	private Label _lT_REPRODUCTION;
-
-	private Label _lT_ID;
-
-	private Label _lT_GENERATION;
-
-	private Label _lT_AGE;
-
-	private Label _lT_ENERGY;
-
-	private Label _lT_CHILDREN;
-
-	private Label _lT_VICTIMS;
-
-	private Label _lT_INFECTED;
-
-	private Label _lT_MASS;
+	/** One row pair per stat: title key, grid position, value slot. */
+	private static final String[] TITLE_KEYS = {"T_ID", "T_GENERATION", "T_AGE", "T_ENERGY", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			"T_CHILDREN", "T_VICTIMS", "T_INFECTED", "T_MASS", "T_REPRODUCTION"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	/** Title columns; each value sits one column right. Row 0: ID/Gen/Age/Energy, row 1: Children/Victims/Infected/Mass, row 2: Reproduction. */
+	private static final int[] TITLE_COLS = {1, 3, 5, 7, 1, 3, 5, 7, 3};
+	private static final int[] TITLE_ROWS = {0, 0, 0, 0, 1, 1, 1, 1, 2};
+	private static final int I_ID = 0, I_GENERATION = 1, I_AGE = 2, I_ENERGY = 3,
+			I_CHILDREN = 4, I_KILLS = 5, I_INFECTED = 6, I_MASS = 7, I_REPRODUCE_ENERGY = 8;
+	private final Label[] titleLabels = new Label[TITLE_KEYS.length];
+	private final Label[] valueLabels = new Label[TITLE_KEYS.length];
 
 	public void setSelectedOrganism(Organism selectedOrganism) {
 		Fx.run(() -> {
 			_selOrganism = selectedOrganism;
-			_lID.setText(_selOrganism!=null?_nf.format(_selOrganism.getID()):"-1");
-			_lGeneration.setText(_selOrganism!=null?_nf.format(_selOrganism.getGeneration()):"0");
-			_lReproduceEnergy.setText(_selOrganism!=null?_nf.format(_selOrganism.getGeneticCode().getReproduceEnergy()):"0");
+			valueLabels[I_ID].setText(_selOrganism!=null?_nf.format(_selOrganism.getID()):"-1");
+			valueLabels[I_GENERATION].setText(_selOrganism!=null?_nf.format(_selOrganism.getGeneration()):"0");
+			valueLabels[I_REPRODUCE_ENERGY].setText(_selOrganism!=null?_nf.format(_selOrganism.getGeneticCode().getReproduceEnergy()):"0");
 			recalculateInner();
 			changeNChildrenInner();
 			changeNKillsInner();
@@ -85,9 +77,9 @@ public class InfoToolbar extends GridPane {
 	}
 
 	private void recalculateInner() {
-		_lEnergy.setText(_selOrganism!=null?_nf.format(_selOrganism.getEnergy()):"0"); //$NON-NLS-1$
-		_lAge.setText(_selOrganism!=null?_nf.format(_selOrganism.getAge()>>8):"0"); //$NON-NLS-1$
-		_lMass.setText(_selOrganism!=null?_nf.format(_selOrganism.getMass()):"0"); //$NON-NLS-1$
+		valueLabels[I_ENERGY].setText(_selOrganism!=null?_nf.format(_selOrganism.getEnergy()):"0"); //$NON-NLS-1$
+		valueLabels[I_AGE].setText(_selOrganism!=null?_nf.format(_selOrganism.getAge()>>8):"0"); //$NON-NLS-1$
+		valueLabels[I_MASS].setText(_selOrganism!=null?_nf.format(_selOrganism.getMass()):"0"); //$NON-NLS-1$
 	}
 
 	// Notify panel of important events
@@ -96,7 +88,7 @@ public class InfoToolbar extends GridPane {
 	}
 
 	private void changeNChildrenInner() {
-		_lChildren.setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalChildren()):"0"); //$NON-NLS-1$
+		valueLabels[I_CHILDREN].setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalChildren()):"0"); //$NON-NLS-1$
 	}
 
 	public void changeNKills() {
@@ -104,7 +96,7 @@ public class InfoToolbar extends GridPane {
 	}
 
 	private void changeNKillsInner() {
-		_lKills.setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalKills()):"0"); //$NON-NLS-1$
+		valueLabels[I_KILLS].setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalKills()):"0"); //$NON-NLS-1$
 	}
 
 	public void changeNInfected() {
@@ -112,7 +104,7 @@ public class InfoToolbar extends GridPane {
 	}
 
 	private void changeNInfectedInner() {
-		_lInfected.setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalInfected()):"0"); //$NON-NLS-1$
+		valueLabels[I_INFECTED].setText(_selOrganism!=null?_nf.format(_selOrganism.getTotalInfected()):"0"); //$NON-NLS-1$
 	}
 
 	public InfoToolbar(Organism selectedOrganism, MainWindow mainWindow) {
@@ -142,56 +134,18 @@ public class InfoToolbar extends GridPane {
 	    add(_geneticCodePanel, 0, 0);
 	    GridPane.setRowSpan(_geneticCodePanel, 3);
 
-	    _lT_ID = centeredLabel(Messages.getString("T_ID")); //$NON-NLS-1$
-		add(_lT_ID, 1, 0);
-		_lID = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getID()):"-1"); //$NON-NLS-1$
-		add(_lID, 2, 0);
-		// Generation
-		_lT_GENERATION = centeredLabel(Messages.getString("T_GENERATION")); //$NON-NLS-1$
-		add(_lT_GENERATION, 3, 0);
-		_lGeneration = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getGeneration()):"0"); //$NON-NLS-1$
-		add(_lGeneration, 4, 0);
-		// Age
-		_lT_AGE = centeredLabel(Messages.getString("T_AGE")); //$NON-NLS-1$
-		add(_lT_AGE, 5, 0);
-		_lAge = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getAge()>>8):"0"); //$NON-NLS-1$
-		add(_lAge, 6, 0);
-		// Energy
-		_lT_ENERGY = centeredLabel(Messages.getString("T_ENERGY")); //$NON-NLS-1$
-		add(_lT_ENERGY, 7, 0);
-		_lEnergy = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getEnergy()):"0"); //$NON-NLS-1$
-		add(_lEnergy, 8, 0);
-		// Number of sons
-		_lT_CHILDREN = centeredLabel(Messages.getString("T_CHILDREN")); //$NON-NLS-1$
-		add(_lT_CHILDREN, 1, 1);
-		_lChildren = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getTotalChildren()):"0"); //$NON-NLS-1$
-		add(_lChildren, 2, 1);
-		// Number of killed organisms
-		_lT_VICTIMS = centeredLabel(Messages.getString("T_VICTIMS")); //$NON-NLS-1$
-		add(_lT_VICTIMS, 3, 1);
-		_lKills = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getTotalKills()):"0"); //$NON-NLS-1$
-		add(_lKills, 4, 1);
-		// Number of infected organisms
-		_lT_INFECTED = centeredLabel(Messages.getString("T_INFECTED")); //$NON-NLS-1$
-		add(_lT_INFECTED, 5, 1);
-		_lInfected = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getTotalInfected()):"0"); //$NON-NLS-1$
-		add(_lInfected, 6, 1);
-		// Total mass
-		_lT_MASS = centeredLabel(Messages.getString("T_MASS")); //$NON-NLS-1$
-		add(_lT_MASS, 7, 1);
-		_lMass = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getMass()):"0"); //$NON-NLS-1$
-		add(_lMass, 8, 1);
+	    for (int i = 0; i < TITLE_KEYS.length; i++) {
+			titleLabels[i] = centeredLabel(Messages.getString(TITLE_KEYS[i]));
+			valueLabels[i] = centeredLabel(i == I_ID ? "-1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$
+			add(titleLabels[i], TITLE_COLS[i], TITLE_ROWS[i]);
+			add(valueLabels[i], TITLE_COLS[i] + 1, TITLE_ROWS[i]);
+	    }
 		// Button to view genes
 		_buttonGenes = new Button(Messages.getString("T_EXAMINE_GENES")); //$NON-NLS-1$
 		_buttonGenes.setOnAction(evt -> new LabWindow(_mainWindow, _selOrganism.getGeneticCode()));
 		_buttonGenes.setDisable(_selOrganism == null);
 		add(_buttonGenes, 1, 2);
 		GridPane.setColumnSpan(_buttonGenes, 2);
-		// Reproduce energy
-		_lT_REPRODUCTION = centeredLabel(Messages.getString("T_REPRODUCTION")); //$NON-NLS-1$
-		add(_lT_REPRODUCTION, 3, 2);
-		_lReproduceEnergy = centeredLabel(_selOrganism!=null?_nf.format(_selOrganism.getGeneticCode().getReproduceEnergy()):"0");
-		add(_lReproduceEnergy, 4, 2);
 
 		setVisible(_selOrganism != null);
 	}
@@ -205,16 +159,9 @@ public class InfoToolbar extends GridPane {
 
 	public void changeLocale() {
 		Fx.run(() -> {
-			_lT_ID.setText(Messages.getString("T_ID")); //$NON-NLS-1$
-			_lT_GENERATION.setText(Messages.getString("T_GENERATION")); //$NON-NLS-1$
-			_lT_AGE.setText(Messages.getString("T_AGE"));  //$NON-NLS-1$
-			_lT_ENERGY.setText(Messages.getString("T_ENERGY"));  //$NON-NLS-1$
-			_lT_CHILDREN.setText(Messages.getString("T_CHILDREN"));  //$NON-NLS-1$
-			_lT_VICTIMS.setText(Messages.getString("T_VICTIMS"));  //$NON-NLS-1$
-			_lT_INFECTED.setText(Messages.getString("T_INFECTED"));  //$NON-NLS-1$
-			_lT_MASS.setText(Messages.getString("T_MASS"));  //$NON-NLS-1$
+			for (int i = 0; i < TITLE_KEYS.length; i++)
+				titleLabels[i].setText(Messages.getString(TITLE_KEYS[i]));
 			_buttonGenes.setText(Messages.getString("T_EXAMINE_GENES")); //$NON-NLS-1$
-			_lT_REPRODUCTION.setText(Messages.getString("T_REPRODUCTION"));  //$NON-NLS-1$
 		});
 	}
 }

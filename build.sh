@@ -94,10 +94,11 @@ if [[ "$1" == "test" ]]; then
   "$JAVAC" -nowarn --release 17 -cp "$OUT:$LIB:$JUNIT:$HAMCREST" "${FX_FLAGS[@]}" -d "$smoke" \
     "$ROOT"/test/SimSmoke.java "$ROOT"/test/biogenesis/*.java
   "$JAVA" -Djava.awt.headless=true -cp "$smoke:$OUT:$LIB" SimSmoke "${@:2}"
-  "$JAVA" -Djava.awt.headless=true -cp "$smoke:$OUT:$LIB" biogenesis.FxLogicTest
+  "$JAVA" -Djava.awt.headless=true "${FX_FLAGS[@]}" -cp "$smoke:$OUT:$LIB" biogenesis.FxLogicTest
   "$JAVA" -Djava.awt.headless=true "${FX_FLAGS[@]}" -cp "$smoke:$OUT:$LIB:$JUNIT:$HAMCREST" \
     org.junit.runner.JUnitCore biogenesis.SimMathTest biogenesis.DeterminismTest \
-    biogenesis.GeneticCodeXmlTest biogenesis.WorldSaveTest biogenesis.BundleParityTest
+    biogenesis.GeneticCodeXmlTest biogenesis.WorldSaveTest biogenesis.BundleParityTest \
+    biogenesis.PrefsRoundTripTest
   rc=$?
   rm -rf "$smoke"
   exit $rc

@@ -45,8 +45,6 @@ import javafx.stage.Stage;
 
 
 public class StatisticsWindow {
-	private Button updateButton;
-	private Button closeButton;
 	private Stage stage;
 
 	private World world;
@@ -100,27 +98,17 @@ public class StatisticsWindow {
 
 
 		// Population statistics
-		VBox popStatsPanel = new VBox();
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AVERAGE_POPULATION")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getAveragePopulation())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AVERAGE_BIRTH_RATE")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getAverageBirths())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AVERAGE_MORTALITY_RATE")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getAverageDeaths())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AVERAGE_INFECTIONS_RATE")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getAverageInfections())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_GENERATED_ORGANISMS")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getCreatedOrganisms())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_MAXIMUM_POPULATION")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getMaxPopulation())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getMaxPopulationTime())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_MINIMUM_POPULATION")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getMinPopulation())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getMinPopulationTime())));
-		popStatsPanel.getChildren().add(new Label(Messages.getString("T_MASS_EXTINTIONS")+ //$NON-NLS-1$
-				nf.format(worldStatistics.getMassExtintions())));
+		VBox popStatsPanel = new VBox(
+			stat("T_AVERAGE_POPULATION", nf.format(worldStatistics.getAveragePopulation())), //$NON-NLS-1$
+			stat("T_AVERAGE_BIRTH_RATE", nf.format(worldStatistics.getAverageBirths())), //$NON-NLS-1$
+			stat("T_AVERAGE_MORTALITY_RATE", nf.format(worldStatistics.getAverageDeaths())), //$NON-NLS-1$
+			stat("T_AVERAGE_INFECTIONS_RATE", nf.format(worldStatistics.getAverageInfections())), //$NON-NLS-1$
+			stat("T_GENERATED_ORGANISMS", nf.format(worldStatistics.getCreatedOrganisms())), //$NON-NLS-1$
+			stat("T_MAXIMUM_POPULATION", nf.format(worldStatistics.getMaxPopulation())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMaxPopulationTime())), //$NON-NLS-1$
+			stat("T_MINIMUM_POPULATION", nf.format(worldStatistics.getMinPopulation())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMinPopulationTime())), //$NON-NLS-1$
+			stat("T_MASS_EXTINTIONS", nf.format(worldStatistics.getMassExtintions()))); //$NON-NLS-1$
 
 		// Population = population graph + population stats
 		VBox populationPanel = new VBox(populationGraphPanel, popStatsPanel);
@@ -135,17 +123,16 @@ public class StatisticsWindow {
 		atmosphereGraphPanel.updateLegend();
 
 		//Atmosphere statistics
-		VBox atmosphereStatsPanel = new VBox();
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_MAXIMUM_CARBON_DIOXIDE")+nf.format(worldStatistics.getMaxCarbonDioxide()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+nf.format(worldStatistics.getMaxCarbonDioxideTime()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_MINIMUM_CARBON_DIOXIDE")+nf.format(worldStatistics.getMinCarbonDioxide()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+nf.format(worldStatistics.getMinCarbonDioxideTime()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_MAXIMUM_OXYGEN")+nf.format(worldStatistics.getMaxOxygen()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+nf.format(worldStatistics.getMaxOxygenTime()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_MINIMUM_OXYGEN")+nf.format(worldStatistics.getMinOxygenTime()))); //$NON-NLS-1$
-		atmosphereStatsPanel.getChildren().add(new Label(Messages.getString("T_AT_TIME")+nf.format(worldStatistics.getMinOxygenTime()))); //$NON-NLS-1$
+		VBox atmosphereStatsPanel = new VBox(
+			stat("T_MAXIMUM_CARBON_DIOXIDE", nf.format(worldStatistics.getMaxCarbonDioxide())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMaxCarbonDioxideTime())), //$NON-NLS-1$
+			stat("T_MINIMUM_CARBON_DIOXIDE", nf.format(worldStatistics.getMinCarbonDioxide())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMinCarbonDioxideTime())), //$NON-NLS-1$
+			stat("T_MAXIMUM_OXYGEN", nf.format(worldStatistics.getMaxOxygen())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMaxOxygenTime())), //$NON-NLS-1$
+			stat("T_MINIMUM_OXYGEN", nf.format(worldStatistics.getMinOxygen())), //$NON-NLS-1$
+			stat("T_AT_TIME", nf.format(worldStatistics.getMinOxygenTime()))); //$NON-NLS-1$
 
-//		 Population = population graph + population stats
 		VBox atmospherePanel = new VBox(atmosphereGraphPanel, atmosphereStatsPanel);
 		TitledPane atmospherePane = titled(Messages.getString("T_ATMOSPHERE"), atmospherePanel); //$NON-NLS-1$
 
@@ -156,11 +143,11 @@ public class StatisticsWindow {
 		// Current state
 		GridPane currentStatePanel = new GridPane();
 		currentStatePanel.setHgap(8);
-		currentStatePanel.add(new Label(Messages.getString("T_TIME")+world.getTime()), 0, 0); //$NON-NLS-1$
-		currentStatePanel.add(new Label(Messages.getString("T_OXYGEN2")+nf.format(world.getO2())), 1, 0); //$NON-NLS-1$
-		currentStatePanel.add(new Label(Messages.getString("T_POPULATION2")+world.getPopulation()), 0, 1); //$NON-NLS-1$
-		currentStatePanel.add(new Label(Messages.getString("T_CARBON_DIOXIDE2")+nf.format(world.getCO2())), 1, 1); //$NON-NLS-1$
-		currentStatePanel.add(new Label(Messages.getString("T_REMAINS_OF_BEINGS")+world.getNCorpses()), 0, 2); //$NON-NLS-1$
+		currentStatePanel.add(stat("T_TIME", Long.toString(world.getTime())), 0, 0); //$NON-NLS-1$
+		currentStatePanel.add(stat("T_OXYGEN2", nf.format(world.getO2())), 1, 0); //$NON-NLS-1$
+		currentStatePanel.add(stat("T_POPULATION2", Integer.toString(world.getPopulation())), 0, 1); //$NON-NLS-1$
+		currentStatePanel.add(stat("T_CARBON_DIOXIDE2", nf.format(world.getCO2())), 1, 1); //$NON-NLS-1$
+		currentStatePanel.add(stat("T_REMAINS_OF_BEINGS", Integer.toString(world.getNCorpses())), 0, 2); //$NON-NLS-1$
 		currentStatePanel.add(new Label(Messages.getString("T_COLOR_PROPORTION")), 0, 3); //$NON-NLS-1$
 		ColorPanel colorPanel = createColorPanel();
 		currentStatePanel.add(colorPanel, 1, 3);
@@ -170,45 +157,27 @@ public class StatisticsWindow {
 		worldStatistics.findBestAliveBeings(organisms);
 		GridPane notableBeingsPanel = new GridPane();
 		notableBeingsPanel.setHgap(8);
-		notableBeingsPanel.add(new Label(Messages.getString("T_ALIVE_BEING_HAVING_THE_MOST_CHILDREN")), 0, 0); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_BEING_HAVING_THE_MOST_CHILDREN")), 1, 0); //$NON-NLS-1$
-		GeneticCodePanel aliveMostChildrenPanel = new GeneticCodePanel(worldStatistics.getAliveBeingMostChildren(),
-				visibleWorld);
-		notableBeingsPanel.add(aliveMostChildrenPanel, 0, 1);
-		GeneticCodePanel mostChildrenPanel = new GeneticCodePanel(worldStatistics.getBeingMostChildren(),
-				visibleWorld);
-		notableBeingsPanel.add(mostChildrenPanel, 1, 1);
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_CHILDREN")+worldStatistics.getAliveBeingMostChildrenNumber()), 0, 2); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_CHILDREN")+worldStatistics.getBeingMostChildrenNumber()), 1, 2); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_TIME")+worldStatistics.getBeingMostChildrenTime()), 1, 3); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_ALIVE_BEING_HAVING_THE_MOST_VICTIMS")), 0, 4); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_BEING_HAVING_THE_MOST_VICTIMS")), 1, 4); //$NON-NLS-1$
-		GeneticCodePanel aliveMostKillsPanel = new GeneticCodePanel(worldStatistics.getAliveBeingMostKills(),
-				visibleWorld);
-		notableBeingsPanel.add(aliveMostKillsPanel, 0, 5);
-		GeneticCodePanel mostKillsPanel = new GeneticCodePanel(worldStatistics.getBeingMostKills(),
-				visibleWorld);
-		notableBeingsPanel.add(mostKillsPanel, 1, 5);
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_VICTIMS")+worldStatistics.getAliveBeingMostKillsNumber()), 0, 6);		 //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_VICTIMS")+worldStatistics.getBeingMostKillsNumber()), 1, 6); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_TIME")+worldStatistics.getBeingMostKillsTime()), 1, 7);		 //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_ALIVE_BEING_HAVING_THE_MOST_INFECTED")), 0, 8); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_BEING_HAVING_THE_MOST_INFECTED")), 1, 8); //$NON-NLS-1$
-		GeneticCodePanel aliveMostInfectionsPanel = new GeneticCodePanel(worldStatistics.getAliveBeingMostInfections(),
-				visibleWorld);
-		notableBeingsPanel.add(aliveMostInfectionsPanel, 0, 9);
-		GeneticCodePanel mostInfectionsPanel = new GeneticCodePanel(worldStatistics.getBeingMostInfections(),
-				visibleWorld);
-		notableBeingsPanel.add(mostInfectionsPanel, 1, 9);
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_INFECTED")+worldStatistics.getAliveBeingMostInfectionsNumber()), 0, 10);		 //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_NUMBER_OF_INFECTED")+worldStatistics.getBeingMostInfectionsNumber()), 1, 10); //$NON-NLS-1$
-		notableBeingsPanel.add(new Label(Messages.getString("T_TIME")+worldStatistics.getBeingMostInfectionsTime()), 1, 11); //$NON-NLS-1$
+		addNotablePair(notableBeingsPanel, 0,
+				"T_ALIVE_BEING_HAVING_THE_MOST_CHILDREN", "T_BEING_HAVING_THE_MOST_CHILDREN", //$NON-NLS-1$ //$NON-NLS-2$
+				worldStatistics.getAliveBeingMostChildren(), worldStatistics.getBeingMostChildren(),
+				"T_NUMBER_OF_CHILDREN", worldStatistics.getAliveBeingMostChildrenNumber(), //$NON-NLS-1$
+				worldStatistics.getBeingMostChildrenNumber(), worldStatistics.getBeingMostChildrenTime());
+		addNotablePair(notableBeingsPanel, 4,
+				"T_ALIVE_BEING_HAVING_THE_MOST_VICTIMS", "T_BEING_HAVING_THE_MOST_VICTIMS", //$NON-NLS-1$ //$NON-NLS-2$
+				worldStatistics.getAliveBeingMostKills(), worldStatistics.getBeingMostKills(),
+				"T_NUMBER_OF_VICTIMS", worldStatistics.getAliveBeingMostKillsNumber(), //$NON-NLS-1$
+				worldStatistics.getBeingMostKillsNumber(), worldStatistics.getBeingMostKillsTime());
+		addNotablePair(notableBeingsPanel, 8,
+				"T_ALIVE_BEING_HAVING_THE_MOST_INFECTED", "T_BEING_HAVING_THE_MOST_INFECTED", //$NON-NLS-1$ //$NON-NLS-2$
+				worldStatistics.getAliveBeingMostInfections(), worldStatistics.getBeingMostInfections(),
+				"T_NUMBER_OF_INFECTED", worldStatistics.getAliveBeingMostInfectionsNumber(), //$NON-NLS-1$
+				worldStatistics.getBeingMostInfectionsNumber(), worldStatistics.getBeingMostInfectionsTime());
 		TitledPane notableBeingsPane = titled(Messages.getString("T_REMARKABLE_ORGANISMS"), notableBeingsPanel); //$NON-NLS-1$
 
 
 		// Buttons
-		updateButton = new Button(Messages.getString("T_UPDATE")); //$NON-NLS-1$
-		closeButton = new Button(Messages.getString("T_CLOSE")); //$NON-NLS-1$
+		Button updateButton = new Button(Messages.getString("T_UPDATE")); //$NON-NLS-1$
+		Button closeButton = new Button(Messages.getString("T_CLOSE")); //$NON-NLS-1$
 		updateButton.setDefaultButton(true);
 		closeButton.setCancelButton(true);
 		updateButton.setOnAction(evt -> {
@@ -230,8 +199,26 @@ public class StatisticsWindow {
 	private static TitledPane titled(String title, Parent content) {
 		TitledPane pane = new TitledPane(title, content);
 		pane.setCollapsible(false);
-		pane.setAnimated(false);
 		return pane;
+	}
+
+	/** One "prefix: value" stat line. */
+	private static Label stat(String key, String value) {
+		return new Label(Messages.getString(key) + value);
+	}
+
+	/** One alive/all-time notable pair: headers, gene pies, counts, time. */
+	private void addNotablePair(GridPane grid, int row,
+			String aliveTitleKey, String allTimeTitleKey,
+			GeneticCode alive, GeneticCode allTime,
+			String countKey, int aliveCount, int allTimeCount, long allTimeTime) {
+		grid.add(new Label(Messages.getString(aliveTitleKey)), 0, row);
+		grid.add(new Label(Messages.getString(allTimeTitleKey)), 1, row);
+		grid.add(new GeneticCodePanel(alive, visibleWorld), 0, row + 1);
+		grid.add(new GeneticCodePanel(allTime, visibleWorld), 1, row + 1);
+		grid.add(new Label(Messages.getString(countKey) + aliveCount), 0, row + 2);
+		grid.add(new Label(Messages.getString(countKey) + allTimeCount), 1, row + 2);
+		grid.add(new Label(Messages.getString("T_TIME") + allTimeTime), 1, row + 3); //$NON-NLS-1$
 	}
 
 	private ColorPanel createColorPanel() {

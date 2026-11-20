@@ -29,9 +29,7 @@ import java.awt.*;
  * and the organism's symmetry and mirroring.
  */
 public class Gene implements Cloneable, Serializable {
-	/**
-	 * The version number of this class
-	 */
+	/** The version number of this class */
 	private static final long serialVersionUID = Utils.FILE_VERSION;
 	/**
 	 * X-Mod: segment length bounds. randomizeLength() already generates
@@ -41,14 +39,10 @@ public class Gene implements Cloneable, Serializable {
 	static final double MAX_LENGTH = 16.0;
 	private double _length = 0;
 	private double _theta = 0;
-	/**
-	 * Segment's color
-	 */
+	/** Segment's color */
 	private Color _color;
 
-	/**
-	 * Void constructor. Creates the gene but leave it uninitialized.
-	 */
+	/** Void constructor. Creates the gene but leave it uninitialized. */
 	public Gene() {
 	}
 
@@ -116,8 +110,7 @@ public class Gene implements Cloneable, Serializable {
 
 	/**
 	 * X-Mod: small additive length tweak, accepted only in range
-	 * (keeps the move reversible). Not called yet — plumbing for
-	 * GeneticCode minor-mutation port.
+	 * (keeps the move reversible). Used by GeneticCode minor mutations.
 	 */
 	public void alterLength() {
 		double newLength = _length + Utils.minorMutationModifier() * MAX_LENGTH;
@@ -127,7 +120,7 @@ public class Gene implements Cloneable, Serializable {
 
 	/**
 	 * X-Mod: small additive angle tweak, wrapped to [0, 2*PI).
-	 * Not called yet — plumbing for GeneticCode minor-mutation port.
+	 * Used by GeneticCode minor mutations.
 	 */
 	public void alterTheta() {
 		_theta = _theta + Utils.minorMutationModifier() * Math.PI;
@@ -150,9 +143,7 @@ public class Gene implements Cloneable, Serializable {
 		randomizeColor();
 	}
 
-	/**
-	 * Return an exact copy of this gene.
-	 */
+	/** Return an exact copy of this gene. */
 	@Override
 	public Gene clone() {
 		Gene newGen = null;

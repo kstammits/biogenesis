@@ -145,9 +145,7 @@ public class ParamDialog {
 		return items;
 	}
 
-	/**
-	 * Combo index for a rate: preset position, or the trailing uncapped entry.
-	 */
+	/** Combo index for a rate: preset position, or the trailing uncapped entry. */
 	private static int simRateIndex(int rate) {
 		for (int i = 0; i < Utils.SIM_RATE_PRESETS.length; i++) {
 			if (Utils.SIM_RATE_PRESETS[i] == rate)
@@ -161,9 +159,7 @@ public class ParamDialog {
 			simRateCombo.getSelectionModel().select(simRateIndex(rate));
 	}
 
-	/**
-	 * Rate behind the current combo selection, or uncapped for the trailing entry.
-	 */
+	/** Rate behind the current combo selection, or uncapped for the trailing entry. */
 	private int selectedSimRate() {
 		int idx = simRateCombo.getSelectionModel().getSelectedIndex();
 		if (idx >= 0 && idx < Utils.SIM_RATE_PRESETS.length)
@@ -380,51 +376,29 @@ public class ParamDialog {
 		cost.setAlignment(Pos.CENTER);
 		genes.addRow(0, header, prob, cost);
 		String[] colors = {"RED", "GREEN", "BLUE", "CYAN", "WHITE", "GRAY", "YELLOW"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		int[] probs = {Utils.RED_PROB, Utils.GREEN_PROB, Utils.BLUE_PROB, Utils.CYAN_PROB,
+				Utils.WHITE_PROB, Utils.GRAY_PROB, Utils.YELLOW_PROB};
+		double[] costs = {Utils.RED_ENERGY_CONSUMPTION, Utils.GREEN_ENERGY_CONSUMPTION,
+				Utils.BLUE_ENERGY_CONSUMPTION, Utils.CYAN_ENERGY_CONSUMPTION,
+				Utils.WHITE_ENERGY_CONSUMPTION, Utils.GRAY_ENERGY_CONSUMPTION,
+				Utils.YELLOW_ENERGY_CONSUMPTION};
+		TextField[] probFields = new TextField[colors.length];
+		TextField[] costFields = new TextField[colors.length];
 		for (int i = 0; i < colors.length; i++) {
 			Label name = new Label(Messages.getString("T_" + colors[i])); //$NON-NLS-1$
 			name.setMaxWidth(Double.MAX_VALUE);
 			name.setAlignment(Pos.CENTER);
-			TextField probF = numField("");
-			TextField costF = numField("");
-			genes.addRow(i + 1, name, probF, costF);
-			switch (colors[i]) {
-			case "RED": //$NON-NLS-1$
-				redprobText = probF; redcostText = costF;
-				redprobText.setText(Integer.toString(Utils.RED_PROB));
-				redcostText.setText(Double.toString(Utils.RED_ENERGY_CONSUMPTION));
-				break;
-			case "GREEN": //$NON-NLS-1$
-				greenprobText = probF; greencostText = costF;
-				greenprobText.setText(Integer.toString(Utils.GREEN_PROB));
-				greencostText.setText(Double.toString(Utils.GREEN_ENERGY_CONSUMPTION));
-				break;
-			case "BLUE": //$NON-NLS-1$
-				blueprobText = probF; bluecostText = costF;
-				blueprobText.setText(Integer.toString(Utils.BLUE_PROB));
-				bluecostText.setText(Double.toString(Utils.BLUE_ENERGY_CONSUMPTION));
-				break;
-			case "CYAN": //$NON-NLS-1$
-				cyanprobText = probF; cyancostText = costF;
-				cyanprobText.setText(Integer.toString(Utils.CYAN_PROB));
-				cyancostText.setText(Double.toString(Utils.CYAN_ENERGY_CONSUMPTION));
-				break;
-			case "WHITE": //$NON-NLS-1$
-				whiteprobText = probF; whitecostText = costF;
-				whiteprobText.setText(Integer.toString(Utils.WHITE_PROB));
-				whitecostText.setText(Double.toString(Utils.WHITE_ENERGY_CONSUMPTION));
-				break;
-			case "GRAY": //$NON-NLS-1$
-				grayprobText = probF; graycostText = costF;
-				grayprobText.setText(Integer.toString(Utils.GRAY_PROB));
-				graycostText.setText(Double.toString(Utils.GRAY_ENERGY_CONSUMPTION));
-				break;
-			case "YELLOW": //$NON-NLS-1$
-				yellowprobText = probF; yellowcostText = costF;
-				yellowprobText.setText(Integer.toString(Utils.YELLOW_PROB));
-				yellowcostText.setText(Double.toString(Utils.YELLOW_ENERGY_CONSUMPTION));
-				break;
-			}
+			probFields[i] = numField(Integer.toString(probs[i]));
+			costFields[i] = numField(Double.toString(costs[i]));
+			genes.addRow(i + 1, name, probFields[i], costFields[i]);
 		}
+		redprobText = probFields[0]; redcostText = costFields[0];
+		greenprobText = probFields[1]; greencostText = costFields[1];
+		blueprobText = probFields[2]; bluecostText = costFields[2];
+		cyanprobText = probFields[3]; cyancostText = costFields[3];
+		whiteprobText = probFields[4]; whitecostText = costFields[4];
+		grayprobText = probFields[5]; graycostText = costFields[5];
+		yellowprobText = probFields[6]; yellowcostText = costFields[6];
 		return genes;
 	}
 

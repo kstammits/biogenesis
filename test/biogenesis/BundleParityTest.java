@@ -41,8 +41,12 @@ public class BundleParityTest {
 			ResourceBundle b = ResourceBundle.getBundle("biogenesis.messages.messages",
 					new java.util.Locale(LANGS[i]));
 			Set<String> keys = b.keySet();
-			if (base == null)
+			if (base == null) {
 				base = keys;
+				// Dead keys (unused Swing/file-chooser/gene-model strings) were
+				// purged; pin the count so re-added strays fail the gate.
+				assertEquals(232, base.size());
+			}
 			Set<String> missing = new TreeSet<>(base);
 			missing.removeAll(keys);
 			Set<String> extra = new TreeSet<>(keys);

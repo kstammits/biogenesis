@@ -28,26 +28,16 @@ import java.util.ResourceBundle;
  * A class used to translate messages in the appropriate language.
  */
 public class Messages {
-	/**
-	 * The root name of files containing localized messages.
-	 */
+	/** The root name of files containing localized messages. */
 	private static final String BUNDLE_NAME = "biogenesis/messages/messages"; //$NON-NLS-1$
-	/**
-	 * The selected locale to be used.
-	 */
+	/** The selected locale to be used. */
 	private static Locale currentLocale = Locale.getDefault();
-	/**
-	 * The ResourceBundle used to access localized messages
-	 */
+	/** The ResourceBundle used to access localized messages */
 	private static ResourceBundle appResourceBundle = 
 		ResourceBundle.getBundle(BUNDLE_NAME, currentLocale);
-	/**
-	 * The names of all supported languages
-	 */
+	/** The names of all supported languages */
 	private static final String[] supportedLocalesNames = new String[6];
-	/**
-	 * The standard codes of all supported languages
-	 */
+	/** The standard codes of all supported languages */
 	private static final String[] supportedLocalesCodes = {"en","es","ca","de","pt","ru"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	/**
 	 * The default locale index in supportedLocalesCodes when the system language is
@@ -83,39 +73,6 @@ public class Messages {
 		return getString(key).replace("$1", param1); //$NON-NLS-1$
 	}
 	/**
-	 * Translate key message into the current selected language.
-	 * Key message is looked up the corresponding message file and
-	 * the translation retreived. The $1 token is substitued by the
-	 * string param1 in the translated string and $2 by param2.
-	 * 
-	 * @param key  The key string to find
-	 * @param param1  The string that substitute $1 on the translated string
-	 * @param param2  The string that substitute $2 on the translated string 
-	 * @return  The translated String or the string !key! if it is not found
-	 */
-	public static String getString(String key, String param1, String param2) {
-		return getString(key, param1).replace("$2", param2); //$NON-NLS-1$
-	}
-	/**
-	 * Translate key message into the current selected language.
-	 * Key message is looked up the corresponding message file and
-	 * the translation retreived. $i tokens, where i is an integer are
-	 * substitued by string params[i-1] in the translated string.
-	 * 
-	 * @param key  The key string to find
-	 * @param params  The strings that substitue $i on the translated string
-	 * @return  The translated String or the string !key! if it is not found
-	 */
-	public static String getString(String key, String[] params) { 
-		String string = getString(key);
-		String replacedString;
-		for (int i=1; i<=params.length; i++) { 
-			replacedString = "$"+i; //$NON-NLS-1$
-			string = string.replace(replacedString, params[i-1]);
-		}
-		return string;
-	}
-	/**
 	 * Getter for the list of supported locales
 	 * 
 	 * @return  An array of strings containing the names of all
@@ -147,21 +104,10 @@ public class Messages {
 		appResourceBundle = ResourceBundle.getBundle(BUNDLE_NAME, currentLocale);
 		changeLocale();
 	}
-	/**
-	 * Return the language code of the current locale
-	 * 
-	 * @return  The language code of the current locale
-	 */
+	/** Return the language code of the current locale
+	 * */
 	public static String getLanguage() {
 		return currentLocale.getLanguage();
-	}
-	/**
-	 * Return the current locale
-	 * 
-	 * @return  The current locale
-	 */
-	public static Locale getLocale() {
-		return currentLocale;
 	}
 	/**
 	 * Return the current locale index in the supported language list

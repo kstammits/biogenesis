@@ -36,17 +36,11 @@ import java.awt.*;
  * organisms and substances.
  */
 public class World implements Serializable{
-	/**
-	 * Version number of the class
-	 */
+	/** Version number of the class */
 	private static final long serialVersionUID = Utils.FILE_VERSION;
-	/**
-	 * World width
-	 */
+	/** World width */
 	protected int _width;
-	/**
-	 * World height
-	 */
+	/** World height */
 	protected int _height;
 	/**
 	 * A list of the organisms in the world, even dead ones.
@@ -68,9 +62,7 @@ public class World implements Serializable{
 	 * manually synchronize when iterating over it.
 	 */
 	transient protected List<OutCorridor> outCorridors;
-	/**
-	 * Number of living organisms in the world
-	 */
+	/** Number of living organisms in the world */
 	protected int _population = 0;
 	/**
 	 * The next identification number that will be assigned to an organism
@@ -90,17 +82,11 @@ public class World implements Serializable{
 	 * time and to trigger some window updating at regular intervals.
 	 */
 	private int nFrames;
-	/**
-	 * The amount of O2 in the atmosphere of this world. 
-	 */
+	/** The amount of O2 in the atmosphere of this world. */
 	protected double _O2;
-	/**
-	 * The amount of CO2 in the atmosphere of this world.
-	 */
+	/** The amount of CO2 in the atmosphere of this world. */
 	protected double _CO2;
-	/**
-	 * Reference to the object that keeps track of all world statistics. 
-	 */
+	/** Reference to the object that keeps track of all world statistics. */
 	protected WorldStatistics worldStatistics;
 	/**
 	 * Called by the JRE when an instance of this class is read from a file
@@ -153,19 +139,13 @@ public class World implements Serializable{
 		}
 		return deadOrganism;
 	}
-	/**
-	 * Returns the world's width.
-	 * 
-	 * @return  The world's width.
-	 */
+	/** Returns the world's width.
+	 * */
 	public int getWidth() {
 		return _width;
 	}
-	/**
-	 * Returns the world's height.
-	 * 
-	 * @return  The world's height.
-	 */
+	/** Returns the world's height.
+	 * */
 	public int getHeight() {
 		return _height;
 	}
@@ -177,11 +157,8 @@ public class World implements Serializable{
 	public int getNewId() {
 		return NEXT_ID++;
 	}
-	/**
-	 * Returns the actual time.
-	 * 
-	 * @return  The actual time.
-	 */
+	/** Returns the actual time.
+	 * */
 	public long getTime() {
 		return worldStatistics.getTime();
 	}
@@ -224,19 +201,13 @@ public class World implements Serializable{
 		_population--;
 		worldStatistics.eventPopulationDecrease(_population);
 	}
-	/**
-	 * Returns the amount of O2 that exist in the atmosphere.
-	 * 
-	 * @return  The amount of O2.
-	 */
+	/** Returns the amount of O2 that exist in the atmosphere.
+	 * */
 	public double getO2() {
 		return _O2;
 	}
-	/**
-	 * Returns the amount of CO2 that exist in the atmosphere.
-	 * 
-	 * @return  The amount of CO2.
-	 */
+	/** Returns the amount of CO2 that exist in the atmosphere.
+	 * */
 	public double getCO2() {
 		return _CO2;
 	}
@@ -377,9 +348,7 @@ public class World implements Serializable{
 			}
 		}
 	}
-	/**
-	 * Kill all organisms in the world.
-	 */
+	/** Kill all organisms in the world. */
 	public void killAll() {
 		Organism org;
 		synchronized (_organisms) {

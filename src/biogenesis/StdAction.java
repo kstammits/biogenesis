@@ -25,7 +25,7 @@ import javafx.scene.input.KeyCombination;
 /**
  * Plain FX command object holding a menu/toolbar action's live state:
  * just data + an abstract {@link #perform()} body. FX wrappers ({@code toolButtonFor},
- * {@code menuItemFor}, {@code itemFor}) read the getters when rebuilding
+ * {@code Fx.menuItemFor}) read the getters when rebuilding
  * chrome via {@code refreshChrome()} / {@code createToolBar()}.
  */
 public abstract class StdAction {
@@ -39,20 +39,49 @@ public abstract class StdAction {
 	protected String iconPath;
 	protected String name;
 	protected String description;
+	/** Messages key for a single-letter accelerator, re-derived on locale change. Null for none. */
+	protected String acceleratorKey;
 	protected KeyCombination accelerator;
 	private boolean enabled = true;
 
 	public void changeLocale() {
 		name = Messages.getString(name_key);
 		description = Messages.getString(desc_key);
+		if (acceleratorKey != null)
+			accelerator = keyCombinationFor(Messages.getString(acceleratorKey));
 	}
 
 	public StdAction(String key, String icon_path, String desc) {
+		this(key, icon_path, desc, null);
+	}
+
+	public StdAction(String key, String icon_path, String desc, String acceleratorKey) {
 		name_key = key;
 		desc_key = desc;
 		iconPath = icon_path;
 		name = Messages.getString(key);
 		description = Messages.getString(desc);
+		this.acceleratorKey = acceleratorKey;
+		if (acceleratorKey != null)
+			accelerator = keyCombinationFor(Messages.getString(acceleratorKey));
+	}
+
+	/** One-shot command: no subclass needed for a plain body. */
+	public static StdAction of(String key, String icon_path, String desc, Runnable body) {
+		return new StdAction(key, icon_path, desc) {
+			public void perform() {
+				body.run();
+			}
+		};
+	}
+
+	/** One-shot command with a locale-sensitive accelerator. */
+	public static StdAction of(String key, String icon_path, String desc, String acceleratorKey, Runnable body) {
+		return new StdAction(key, icon_path, desc, acceleratorKey) {
+			public void perform() {
+				body.run();
+			}
+		};
 	}
 
 	public String getName() {

@@ -47,9 +47,7 @@ import java.util.List;
  * Eigth repetition is like the septh one with opposite y coordinate.
  */
 public class GeneticCode implements Cloneable, Serializable {
-	/**
-	 * The version of this class
-	 */
+	/** The version of this class */
 	private static final long serialVersionUID = Utils.FILE_VERSION;
 	/**
 	 * X-Mod scaffolding (Slice 1): segment/symmetry bounds and mutation
@@ -138,23 +136,16 @@ public class GeneticCode implements Cloneable, Serializable {
 	public Gene getGene(int i) {
 		return _genes[i];
 	}
-	/**
-	 * Return the number of genes of this code
-	 * 
-	 * @return  The number of genes
-	 */
+	/** Return the number of genes of this code
+	 * */
 	public int getNGenes() {
 		return _genes.length;
 	}
-	/**
-	 * Gives mirror a random value (0 or 1)
-	 */
+	/** Gives mirror a random value (0 or 1) */
 	private void randomMirror() {
 		_mirror = Utils.random.nextInt(2);
 	}
-	/**
-	 * Gives symmetry a random value (2, 4 or 8)
-	 */
+	/** Gives symmetry a random value (2, 4 or 8) */
 	private void randomSymmetry() {
 		_symmetry = Utils.random.nextInt(8)+1;
 	}
@@ -196,9 +187,7 @@ public class GeneticCode implements Cloneable, Serializable {
 		calculateReproduceEnergy();
 		calculateCurrentGeneLengthLimits();
 	}
-	/**
-	 * X-Mod Slice 1: cache shortest/longest gene length.
-	 */
+	/** X-Mod Slice 1: cache shortest/longest gene length. */
 	private void calculateCurrentGeneLengthLimits() {
 		minCurrentGeneLength = Double.MAX_VALUE;
 		maxCurrentGeneLength = 0d;
@@ -229,9 +218,7 @@ public class GeneticCode implements Cloneable, Serializable {
 		}
 		return total;
 	}
-	/**
-	 * X-Mod Slice 1: average length of genes with the given color.
-	 */
+	/** X-Mod Slice 1: average length of genes with the given color. */
 	protected double calculateAverageLength(Color color) {
 		double total = 0d;
 		int n = 0;
@@ -258,9 +245,7 @@ public class GeneticCode implements Cloneable, Serializable {
 				* Math.sqrt((2 * Gene.MAX_LENGTH - l) * (2 * Gene.MAX_LENGTH + l)
 						/ ((p * p + 4 * y * y) * (q * q + 4 * y * y)));
 	}
-	/**
-	 * Creates a new random genetic code.
-	 */
+	/** Creates a new random genetic code. */
 	public GeneticCode() {
 		randomMirror(); 
 		randomSymmetry();
@@ -326,9 +311,7 @@ public class GeneticCode implements Cloneable, Serializable {
 		update();
 	}
 
-	/**
-	 * X-Mod: alter symmetry by +-1 if segment counts stay valid.
-	 */
+	/** X-Mod: alter symmetry by +-1 if segment counts stay valid. */
 	private void alterSymmetry() {
 		int newSymmetry = _symmetry + 2 * Utils.random.nextInt(2) - 1;
 		if (newSymmetry >= MIN_SYMMETRY && newSymmetry <= MAX_SYMMETRY
