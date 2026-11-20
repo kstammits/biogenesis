@@ -47,7 +47,7 @@ public class ParamDialog {
 	private ComboBox<String> localeCombo = null;
 	private TextField widthText = null;
 	private TextField heightText = null;
-	private TextField delayText = null;
+	private ComboBox<String> simRateCombo = null;
 	protected RadioButton hardwareNoneRadio = null;
 	protected RadioButton hardwareOpenGLRadio = null;
 	protected CheckBox hardwareFBObjectCheck = null;
@@ -133,6 +133,44 @@ public class ParamDialog {
 		return f;
 	}
 
+	/**
+	 * Sim-rate preset items: "10".."500" plus the uncapped entry. Index
+	 * {@link Utils#SIM_RATE_PRESETS}.length is uncapped.
+	 */
+	private static java.util.List<String> simRateItems() {
+		java.util.List<String> items = new java.util.ArrayList<>();
+		for (int r : Utils.SIM_RATE_PRESETS)
+			items.add(String.valueOf(r));
+		items.add(Messages.getString("T_UNCAPPED")); //$NON-NLS-1$
+		return items;
+	}
+
+	/**
+	 * Combo index for a rate: preset position, or the trailing uncapped entry.
+	 */
+	private static int simRateIndex(int rate) {
+		for (int i = 0; i < Utils.SIM_RATE_PRESETS.length; i++) {
+			if (Utils.SIM_RATE_PRESETS[i] == rate)
+				return i;
+		}
+		return Utils.SIM_RATE_PRESETS.length;
+	}
+
+	private void selectSimRate(int rate) {
+		if (simRateCombo != null)
+			simRateCombo.getSelectionModel().select(simRateIndex(rate));
+	}
+
+	/**
+	 * Rate behind the current combo selection, or uncapped for the trailing entry.
+	 */
+	private int selectedSimRate() {
+		int idx = simRateCombo.getSelectionModel().getSelectedIndex();
+		if (idx >= 0 && idx < Utils.SIM_RATE_PRESETS.length)
+			return Utils.SIM_RATE_PRESETS[idx];
+		return Utils.SIM_RATE_UNCAPPED;
+	}
+
 	private static GridPane grid() {
 		GridPane g = new GridPane();
 		g.setHgap(8);
@@ -143,7 +181,7 @@ public class ParamDialog {
 	protected void defaultPreferences() {
 		widthText.setText(String.valueOf(Utils.DEF_WORLD_WIDTH));
 		heightText.setText(String.valueOf(Utils.DEF_WORLD_HEIGHT));
-		delayText.setText(String.valueOf(Utils.DEF_DELAY));
+		selectSimRate(Utils.nearestSimRate(Utils.DEF_DELAY));
 		frictionText.setText(String.valueOf(Utils.DEF_FRICTION));
 		elasticityText.setText(String.valueOf(Utils.DEF_ELASTICITY));
 		initialnumberText.setText(String.valueOf(Utils.DEF_INITIAL_ORGANISMS));
@@ -206,11 +244,13 @@ public class ParamDialog {
 		localeCombo.getSelectionModel().select(Messages.getLocaleIndex());
 		lang.setAlignment(Pos.CENTER_LEFT);
 		general.getChildren().add(lang);
-		// Frames per second
-		delayText = numField(Integer.toString(Utils.DELAY));
+		// Simulation speed preset (ticks/sec, or uncapped)
+		simRateCombo = new ComboBox<>();
+		simRateCombo.getItems().addAll(simRateItems());
+		simRateCombo.getSelectionModel().select(simRateIndex(Utils.nearestSimRate(Utils.DELAY)));
 		HBox delay = new HBox(8,
-				new Label(Messages.getString("T_TIME_PER_FRAME")), delayText, //$NON-NLS-1$
-				new Label(Messages.getString("T_MILLISECONDS"))); //$NON-NLS-1$
+				new Label(Messages.getString("T_SIM_RATE")), simRateCombo, //$NON-NLS-1$
+				new Label(Messages.getString("T_TICKS_PER_SECOND"))); //$NON-NLS-1$
 		delay.setAlignment(Pos.CENTER_LEFT);
 		general.getChildren().add(delay);
 		// OpenGL
@@ -407,13 +447,11 @@ public class ParamDialog {
 		} catch (NumberFormatException ex) {
 			// Keep old value if there is a problem
 		}
-		try {
-			i = Integer.parseInt(delayText.getText());
-			if (i > 0) {
-				Utils.DELAY = i;
-			}
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
+		int selectedRate = selectedSimRate();
+		int newDelay = Utils.delayForSimRate(selectedRate);
+		if (newDelay != Utils.DELAY) {
+			Utils.DELAY = newDelay;
+			mainWindow.applySimDelay();
 		}
 		try {
 			d = Double.parseDouble(initialO2Text.getText());

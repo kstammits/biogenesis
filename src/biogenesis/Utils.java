@@ -409,6 +409,15 @@ public final class Utils {
 	 */
 	static int DELAY = DEF_DELAY;
 	/**
+	 * Sim-rate presets in ticks/sec, offered in the parameters dialog.
+	 * Uncapped ({@link #SIM_RATE_UNCAPPED}) runs every 1ms: with fixed-delay
+	 * scheduling each tick fires 1ms after the previous one finished, so the
+	 * rate self-limits to whatever the FX thread can turn.
+	 */
+	static final int[] SIM_RATE_PRESETS = {10, 30, 60, 120, 240, 500};
+	/** Sentinel sim rate meaning uncapped (timer floor of 1ms). */
+	static final int SIM_RATE_UNCAPPED = -1;
+	/**
 	 * Efficiency: run with reduced rendering (visible-only cull path in
 	 * VisibleWorld/World). Default off — no behavior change until toggled.
 	 */
@@ -600,6 +609,30 @@ public final class Utils {
 		return Math.max(Math.min(max, value), min);
 	}
 	/**
+	 * Timer delay in ms behind a sim-rate preset. Uncapped maps to the 1ms
+	 * timer floor (see {@link #SIM_RATE_PRESETS}).
+	 */
+	public static final int delayForSimRate(int rate) {
+		if (rate <= 0)
+			return 1;
+		return Math.max(1, Math.round(1000f / rate));
+	}
+	/**
+	 * Nearest preset for a raw delay in ms, for snapping legacy values.
+	 * Delays at or below the timer floor read back as uncapped.
+	 */
+	public static final int nearestSimRate(int delayMs) {
+		if (delayMs <= 1)
+			return SIM_RATE_UNCAPPED;
+		float rate = 1000f / delayMs;
+		int best = SIM_RATE_PRESETS[0];
+		for (int r : SIM_RATE_PRESETS) {
+			if (Math.abs(r - rate) < Math.abs(best - rate))
+				best = r;
+		}
+		return best;
+	}
+	/**
 	 * X-Mod: check if at least one mutation occurs during reproduction.
 	 * Uses major+minor rates with detailed-balance form p/(1+p).
 	 */
@@ -788,6 +821,8 @@ public final class Utils {
 			MAX_ROT = prefs.getDouble("MAX_ROT",DEF_MAX_ROT); //$NON-NLS-1$
 			ELASTICITY = prefs.getDouble("ELASTICITY",DEF_ELASTICITY); //$NON-NLS-1$
 			DELAY = prefs.getInt("DELAY",DEF_DELAY); //$NON-NLS-1$
+			// Legacy free-ms delays snap to the nearest sim-rate preset.
+			DELAY = delayForSimRate(nearestSimRate(DELAY));
 			ZOOM_FACTOR = prefs.getDouble("ZOOM_FACTOR",DEF_ZOOM_FACTOR); //$NON-NLS-1$
 			EFFICIENCY_MODE = prefs.getBoolean("EFFICIENCY_MODE",DEF_EFFICIENCY_MODE); //$NON-NLS-1$
 			LOCAL_PORT = prefs.getInt("LOCAL_PORT",DEF_LOCAL_PORT); //$NON-NLS-1$

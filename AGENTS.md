@@ -95,14 +95,32 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   with ellipsis, port/Disconnect pinned to pref (long hostnames clipped
   Disconnect off-panel). All dialogs + all 5 param tabs verified via throwaway
   snapshot harness (`/tmp/dbg/.../ShotAll`). SimSmoke + FxLogicTest green.
-- Next: Karl's backlog (FPS limits, zooms, bg color, branching saves — sim-speed
-  decoupling done). SimSmoke green each time.
-
+- Done: sim-rate presets — `Utils.SIM_RATE_PRESETS` (10/30/60/120/240/500 +
+  uncapped→1ms floor), `ParamDialog` dropdown replaces raw ms field, legacy
+  DELAY snaps to nearest on load, `applySimDelay` retargets a running sim,
+  render locked at `MAX_RENDER_FPS=30`, governor backoff guard can't spin at
+  1-2ms. Ticks-per-fire batching (`batchSizeForDelay`: 1:1 up to 60fps, ~16ms
+  of sim per FX round-trip above) — uncapped holds 1000tps headful with no
+  backoff. Deadline pacing (self-rearming one-shot chain, EWMA overhead
+  compensation, rate-derived nominals: batch rule round(25/delay)) — 60/120/240
+  hold 59/120/238 headful; FPS readout smoothed + computed over >=250ms.
+  New keys `T_SIM_RATE`/`T_TICKS_PER_SECOND`/`T_UNCAPPED` in all 7 locales
+  (byte-exact edit, ISO-8859 preserved). RATECHECK (mapping + all-locale keys) +
+  SimSmoke + FxLogicTest green; General tab snapshotted.
+- Done: chrome fixes — `InfoToolbar` binds managed to visible (invisible panel
+  reserved 64px under the world, floating the scrollbar; now collapses to 0),
+  `T_MANAGE_CONNECTIONS` shortened to `Connections...` in all 7 locales
+  (toolbar row 122→105px, buttons uniform; DE `Verfolgung abbrechen` still
+  wraps — accepted residual), status bar rebuilt as `HBox` of locked-width
+  right-aligned slots (FPS/Time/Pop/O2/CO2 re-measured per locale) + hgrow
+  message tail. EN+DE snapshot-verified at 59/1240fps (`/tmp/dbg/.../ShotChrome`).
+- Next: Karl's backlog (bg color, fit-window zoom, branching saves). SimSmoke
+  green each time.
 ## Backlog (Karl's list — do NOT start unasked)
-- FPS limits: governor (`MainWindow.currentDelay`, auto-pause past 1000ms) trips
-  on cold starts; revisit caps/floor once the shell is FX.
-- Window zooms: `zoomFactor`/`Utils.ZOOM_FACTOR` plumbing is in, but UX (zoom to
-  cursor, fit-window, persisted per-world) is unfinished.
+- FPS limits: DONE via presets (governor kept as backoff-only under the preset
+  ceiling, auto-pause past 1000ms kept as safety net).
+- Window zooms: continuous Ctrl/Cmd+wheel + pinch to cursor done; remaining:
+  fit-window, persisted per-world.
 - Background color: world canvas is hardcoded black (`VisibleWorld`, panels);
   make it a preference.
 - Sim-speed target (decoupled FPS): sim ticks are currently locked to the paint

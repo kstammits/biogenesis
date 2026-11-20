@@ -118,6 +118,10 @@ public class InfoToolbar extends GridPane {
 	public InfoToolbar(Organism selectedOrganism, MainWindow mainWindow) {
 		_selOrganism = selectedOrganism;
 		_mainWindow = mainWindow;
+		// Collapse layout space when hidden: an invisible-but-managed node
+		// still reserves its rows in MainWindow's bottom VBox, leaving a
+		// blank gap that makes the world scrollbar look floating.
+		managedProperty().bind(visibleProperty());
 		// Prepare number format
 		_nf.setMaximumFractionDigits(1);
 		setAlignment(Pos.CENTER);

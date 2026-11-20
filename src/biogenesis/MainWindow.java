@@ -39,7 +39,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
@@ -82,7 +85,11 @@ public class MainWindow {
 	protected Menu _menuHelp;
 	protected Menu _menuNet;
 	protected NumberFormat _nf;
-	protected Label _statusLabel;
+	/** Locked-width status slots + trailing message, replacing the old
+	 * single concatenated label whose every segment shuffled on each tick. */
+	protected HBox _statusBar;
+	protected Label _fpsSlot, _timeSlot, _popSlot, _o2Slot, _co2Slot;
+	protected Label _statusMessageLabel;
 	protected ToolBar toolBar;
 
 	protected InfoToolbar infoToolbar;
@@ -90,7 +97,6 @@ public class MainWindow {
 	protected Stage stage;
 
 	private String statusMessage=""; //$NON-NLS-1$
-	private StringBuilder statusLabelText = new StringBuilder(100);
 	protected Organism _trackedOrganism = null;
 
 	protected transient NetServerThread serverThread = null;
@@ -896,8 +902,16 @@ public class MainWindow {
 
 		infoToolbar = new InfoToolbar(null, this);
 
-		_statusLabel = new Label(" "); //$NON-NLS-1$
-		_statusLabel.setStyle("-fx-border-color: grey; -fx-padding: 2;"); //$NON-NLS-1$
+		_fpsSlot = statusSlot(Messages.getString("T_FPS"), "8888"); //$NON-NLS-1$ //$NON-NLS-2$
+		_timeSlot = statusSlot(Messages.getString("T_TIME"), "888888"); //$NON-NLS-1$ //$NON-NLS-2$
+		_popSlot = statusSlot(Messages.getString("T_CURRENT_POPULATION"), "88888"); //$NON-NLS-1$ //$NON-NLS-2$
+		_o2Slot = statusSlot(Messages.getString("T_O2"), "88888.8"); //$NON-NLS-1$ //$NON-NLS-2$
+		_co2Slot = statusSlot(Messages.getString("T_CO2"), "88888.8"); //$NON-NLS-1$ //$NON-NLS-2$
+		_statusMessageLabel = new Label(" "); //$NON-NLS-1$
+		_statusMessageLabel.setMaxWidth(Double.MAX_VALUE);
+		_statusBar = new HBox(8, _fpsSlot, _timeSlot, _popSlot, _o2Slot, _co2Slot, _statusMessageLabel);
+		HBox.setHgrow(_statusMessageLabel, Priority.ALWAYS);
+		_statusBar.setStyle("-fx-border-color: grey; -fx-padding: 2;"); //$NON-NLS-1$
 		_nf = NumberFormat.getInstance();
 		_nf.setMaximumFractionDigits(1);
 
@@ -905,10 +919,40 @@ public class MainWindow {
 		VBox top = new VBox(menuBar, toolBar);
 		root.setTop(top);
 		root.setCenter(scrollPane);
-		VBox bottom = new VBox(infoToolbar, _statusLabel);
+		VBox bottom = new VBox(infoToolbar, _statusBar);
 		root.setBottom(bottom);
 		stage.setScene(new Scene(root));
     }
+
+	/**
+	 * One locked-width numeric slot of the status bar. Min+pref are sized
+	 * to the widest expected sample (right-aligned), so per-tick number
+	 * changes repaint inside the slot instead of shoving every downstream
+	 * segment sideways. Label text starts at a zero value; the first
+	 * {@link #updateStatusLabel} fills in live numbers.
+	 */
+	private static Label statusSlot(String prefix, String widestValue) {
+		Label slot = new Label(prefix + "0"); //$NON-NLS-1$
+		slot.setAlignment(Pos.CENTER_RIGHT);
+		sizeSlot(slot, prefix, widestValue);
+		return slot;
+	}
+
+	/** Re-locks a slot's width for the current locale's prefix. */
+	private static void sizeSlot(Label slot, String prefix, String widestValue) {
+		double w = new Text(prefix + widestValue).getLayoutBounds().getWidth() + 6;
+		slot.setMinWidth(w);
+		slot.setPrefWidth(w);
+	}
+
+	/** Re-locks all status slots for the current locale (prefixes changed). */
+	private void sizeStatusSlots() {
+		sizeSlot(_fpsSlot, Messages.getString("T_FPS"), "8888"); //$NON-NLS-1$ //$NON-NLS-2$
+		sizeSlot(_timeSlot, Messages.getString("T_TIME"), "888888"); //$NON-NLS-1$ //$NON-NLS-2$
+		sizeSlot(_popSlot, Messages.getString("T_CURRENT_POPULATION"), "88888"); //$NON-NLS-1$ //$NON-NLS-2$
+		sizeSlot(_o2Slot, Messages.getString("T_O2"), "88888.8"); //$NON-NLS-1$ //$NON-NLS-2$
+		sizeSlot(_co2Slot, Messages.getString("T_CO2"), "88888.8"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 	public File saveObjectAs(Object obj) {
 		File resultFile = null;
@@ -977,24 +1021,12 @@ public class MainWindow {
 
 	public void updateStatusLabel() {
 		Fx.run(() -> {
-			statusLabelText.setLength(0);
-			statusLabelText.append(Messages.getString("T_FPS")); //$NON-NLS-1$
-			statusLabelText.append(getFPS());
-			statusLabelText.append("     "); //$NON-NLS-1$
-			statusLabelText.append(Messages.getString("T_TIME")); //$NON-NLS-1$
-			statusLabelText.append(_world.getTime());
-			statusLabelText.append("     "); //$NON-NLS-1$
-			statusLabelText.append(Messages.getString("T_CURRENT_POPULATION")); //$NON-NLS-1$
-			statusLabelText.append(_world.getPopulation());
-			statusLabelText.append("     "); //$NON-NLS-1$
-			statusLabelText.append(Messages.getString("T_O2")); //$NON-NLS-1$
-			statusLabelText.append(_nf.format(_world.getO2()));
-			statusLabelText.append("     "); //$NON-NLS-1$
-			statusLabelText.append(Messages.getString("T_CO2")); //$NON-NLS-1$
-			statusLabelText.append(_nf.format(_world.getCO2()));
-			statusLabelText.append("     "); //$NON-NLS-1$
-			statusLabelText.append(getStatusMessage());
-			_statusLabel.setText(statusLabelText.toString());
+			_fpsSlot.setText(Messages.getString("T_FPS") + getFPS()); //$NON-NLS-1$
+			_timeSlot.setText(Messages.getString("T_TIME") + _world.getTime()); //$NON-NLS-1$
+			_popSlot.setText(Messages.getString("T_CURRENT_POPULATION") + _world.getPopulation()); //$NON-NLS-1$
+			_o2Slot.setText(Messages.getString("T_O2") + _nf.format(_world.getO2())); //$NON-NLS-1$
+			_co2Slot.setText(Messages.getString("T_CO2") + _nf.format(_world.getCO2())); //$NON-NLS-1$
+			_statusMessageLabel.setText(getStatusMessage());
 		});
 	}
 	/**
@@ -1011,11 +1043,12 @@ public class MainWindow {
 	}
 
 	/**
-	 * Decoupled render target: sim ticks run every {@link #currentDelay} ms,
-	 * repaints happen at most this often. Keeps a 200Hz sim from paying a
-	 * full-world blit per tick.
+	 * Render cap: the app never paints above this, whatever the sim rate.
+	 * Sim ticks run every {@link #currentDelay} ms, repaints happen at most
+	 * this often. Keeps a 500Hz sim from paying a full-world blit per tick.
 	 */
-	protected int renderIntervalMs = 33;
+	protected static final int MAX_RENDER_FPS = 30;
+	protected int renderIntervalMs = 1000 / MAX_RENDER_FPS;
 	protected long lastRenderMs = 0;
 	/** Measured ticks/sec state, sampled on the FX thread in lifeProcess. */
 	protected int measuredFps = -1;
@@ -1024,7 +1057,10 @@ public class MainWindow {
 
 	final transient Runnable lifeProcess = new Runnable() {
 	    public void run() {
-	    	if (_isProcessActive) {
+	    	// Batched ticks: one FX round-trip runs several sim ticks at fast
+	    	// rates (slow rates stay 1:1). Pause still bites mid-batch.
+	    	int batch = batchSizeForDelay(currentDelay);
+	    	for (int t = 0; t < batch && _isProcessActive; t++) {
 	    		// executa un torn
 	    		_world.time();
 	    		nFrames++;
@@ -1036,10 +1072,18 @@ public class MainWindow {
 	    			//if (_statisticsWindow != null)
 	    			//	_statisticsWindow.recalculate();
 	    			long elapsed = nowMs - fpsWindowStartMs;
-	    			if (elapsed > 0)
-	    				measuredFps = (int) Math.round(fpsWindowFrames * 1000.0 / elapsed);
-	    			fpsWindowStartMs = nowMs;
-	    			fpsWindowFrames = 0;
+	    			// Compute over >=250ms so batched fires and ms-clock
+	    			// quantization average out; status text still refreshes
+	    			// every 20 ticks.
+	    			if (elapsed >= 250) {
+	    				// Smooth the readout: per-window instants still
+	    				// jitter a few percent at high rates.
+	    				int instant = (int) Math.round(fpsWindowFrames * 1000.0 / elapsed);
+	    				measuredFps = measuredFps <= 0 ? instant
+	    					: (int) Math.round(0.3 * instant + 0.7 * measuredFps);
+	    				fpsWindowStartMs = nowMs;
+	    				fpsWindowFrames = 0;
+	    			}
 	    			updateStatusLabel();
 	    		}
 	    		// dibuixa de nou si cal — throttled: sim runs free, paint
@@ -1070,6 +1114,42 @@ public class MainWindow {
 	};
 
 	/**
+	 * Ticks per timer fire for a per-tick delay in ms. Slow rates stay 1:1
+	 * (behavior unchanged); 25ms is the anchor because 120/240/500 all
+	 * divide it exactly. Pure math, headless-testable.
+	 */
+	static int batchSizeForDelay(int delay) {
+		if (delay <= 0)
+			return 1;
+		return Utils.between((int) Math.round(25.0 / delay), 1, 16);
+	}
+
+	/**
+	 * Sim ticks/sec the timer paces to: the preset rate itself at target
+	 * (exact — 120.0, not 1000/8), the delay's own rate under governor
+	 * backoff, infinity for uncapped (no pacing). Pure math.
+	 */
+	static double effectiveRate(int currentDelay, int targetDelay) {
+		if (currentDelay != targetDelay)
+			return 1000.0 / currentDelay;
+		int preset = Utils.nearestSimRate(targetDelay);
+		return preset <= 0 ? Double.POSITIVE_INFINITY : preset;
+	}
+
+	/**
+	 * Nominal ms between fire starts: batch ticks at the effective rate.
+	 * For uncapped this is just batch × delay (governor bands only —
+	 * pacing itself is as-fast-as-possible). Pure math.
+	 */
+	static double nominalPeriodMs(int currentDelay, int targetDelay) {
+		int batch = batchSizeForDelay(currentDelay);
+		double rate = effectiveRate(currentDelay, targetDelay);
+		if (Double.isInfinite(rate))
+			return (double) batch * currentDelay;
+		return batch * 1000.0 / rate;
+	}
+
+	/**
 	 * Maps a content pixel offset to a 0..1 scroll fraction.
 	 */
 	private static double scrollTo(double center, double content, double viewport) {
@@ -1092,9 +1172,9 @@ public class MainWindow {
 			startServer();
 	}
 	/**
-	 * Number of milliseconds between two invocations to the lifeProcess invocation.
-	 * It starts as the user's preference DELAY but is adapted to the current situation
-	 * in the world and the machine speed.
+	 * Number of milliseconds between two sim ticks. It starts as the user's
+	 * sim-rate preset (Utils.DELAY) but the governor adapts it under load.
+	 * The timer fires every batchSizeForDelay(currentDelay) ticks.
 	 */
 	protected int currentDelay = Utils.DELAY;
 	/**
@@ -1104,72 +1184,149 @@ public class MainWindow {
 	 */
 	protected int failedTime=0;
 	/**
-	 * The moment when the last painting of this visual world started. Used to control
-	 * the program's speed.
+	 * The moment of the last timer fire, in nanoTime. Used both for the
+	 * governor's interval check and the pacing EWMA. Zero until the first
+	 * fire after a (re)start, which is treated as exactly on schedule.
 	 */
-	protected long lastPaintTime;
+	protected long lastFireNanos;
 	/**
-	 * Settle-down ticks after a (re)start before the governor may adapt the
+	 * Settle-down fires after a (re)start before the governor may adapt the
 	 * delay again. Covers cold-start JIT/warmup (where the first deltas are
-	 * meaningless — lastPaintTime starts at 0) and damps backoff oscillation.
+	 * meaningless) and damps backoff oscillation.
 	 */
 	protected int delayCooldown = 0;
+	/**
+	 * Timer generation: guards the self-rearming chain — a fire only
+	 * schedules its successor while its generation is still current, so a
+	 * governor/preset restart mid-fire can't fork a duplicate chain.
+	 */
+	protected long timerGen = 0;
+	/**
+	 * Smoothed per-fire overhead in ms (Fx.ask handoff + timer slack beyond
+	 * the nominal period), subtracted from the next wait. Reset on every
+	 * (re)start; frozen while paused, cooling down, or adapting.
+	 */
+	protected double smoothedCostMs = 0;
+	/**
+	 * Retarget a running sim at the current {@link Utils#DELAY} (e.g. after
+	 * the parameters dialog changes the sim-rate preset). Restarts the
+	 * timer with the settle-down cooldown so the governor doesn't trip on
+	 * the transition. No-op when already at the target delay.
+	 */
+	public void applySimDelay() {
+		if (currentDelay != Utils.DELAY) {
+			currentDelay = Utils.DELAY;
+			failedTime = 0;
+			startLifeProcess(currentDelay);
+		}
+	}
 	public void startLifeProcess(int delay) {
 		if (updateTask != null)
 			updateTask.cancel();
+		timerGen++;
 		delayCooldown = 40;
+		smoothedCostMs = 0;
+		lastFireNanos = 0;
+		scheduleNext(delay, timerGen);
+	}
+	/**
+	 * One link of the self-rearming timer chain: waits, fires a batch,
+	 * folds the fire's overhead into the pacing EWMA, and schedules the
+	 * next wait from nominal-minus-cost (uncapped: nominal as-is, i.e.
+	 * as-fast-as-possible). Re-arms only while its generation is current.
+	 */
+	private void scheduleNext(long waitMs, long gen) {
 		updateTask = new TimerTask() {
 		    @Override
 			public void run() {
-		    	try {
-					Fx.ask(() -> {
-						lifeProcess.run();
-						return null;
-					});
-					/**
-					 * Checks the actual drawing speed and increases or decreases the speed
-					 * of the program in order to keep it running smoothly.
-					 * Skipped while delayCooldown runs (startup + after each
-					 * adaptation) so one slow frame can't cascade the delay up.
-					 */
-					long actualTime = System.currentTimeMillis();
-					if (delayCooldown > 0) {
-						delayCooldown--;
-						failedTime = 0;
-					} else if (actualTime - lastPaintTime > currentDelay*1.5 || currentDelay < Utils.DELAY) {
-		    			// We can't run so fast
-		    			failedTime=Math.max(failedTime+1, 0);
-		    			if (failedTime >= 2) {
-		    				failedTime = 0;
-		    				currentDelay*=1.5;
-		    				startLifeProcess(currentDelay);
-		    			}
-					} else {
-		    			// Symmetric 1.5x hysteresis for both directions: with
-		    			// FX overhead the interval sits a little above the
-		    			// delay, and a tighter recover threshold wedges the
-		    			// governor one step up (cooldown + resets never clear).
-		    			if (actualTime - lastPaintTime < currentDelay*1.5 && currentDelay > Utils.DELAY) {
-		    				// We can run faster
-		    				failedTime=Math.min(failedTime-1, 0);
-		    				if (failedTime <= -10) {
-		    					currentDelay = Math.max(Utils.DELAY, currentDelay-1);
-		    					startLifeProcess(currentDelay);
-		    				}
-		    			} else
-		    				// Normal situation: we run at the expected speed
-		    				failedTime = 0;
-		    		}
-		    		if (currentDelay > 1000) {
-		    			pauseGame();
-		    		}
-		    		lastPaintTime = actualTime;
+				try {
+					doFire(waitMs);
 				} catch (RuntimeException e) {
 					e.printStackTrace();
+				} finally {
+					if (gen == timerGen)
+						scheduleNext(computeWaitMs(), gen);
 				}
 		    }
 		};
-		_timer.schedule(updateTask, delay, delay);
+		_timer.schedule(updateTask, Math.max(0, waitMs));
+	}
+	/**
+	 * Next wait in ms: nominal fire period minus smoothed overhead (never
+	 * below 1ms; uncapped skips compensation — there is no target to hold).
+	 */
+	private long computeWaitMs() {
+		if (Double.isInfinite(effectiveRate(currentDelay, Utils.DELAY)))
+			return (long) batchSizeForDelay(currentDelay) * currentDelay;
+		double nominal = nominalPeriodMs(currentDelay, Utils.DELAY);
+		return Math.max(1L, Math.round(nominal - smoothedCostMs));
+	}
+	/**
+	 * Runs one batched fire (on the FX thread via Fx.ask), adapts the
+	 * governor delay on sustained over/underruns, and folds this fire's
+	 * overhead into the pacing EWMA (steady state only — frozen while
+	 * paused, cooling down, or adapting so the two loops can't fight).
+	 *
+	 * @param askedMs  the wait that preceded this fire, for the EWMA.
+	 */
+	private void doFire(long askedMs) {
+		Fx.ask(() -> {
+			lifeProcess.run();
+			return null;
+		});
+		/**
+		 * Checks the actual drawing speed and increases or decreases the speed
+		 * of the program in order to keep it running smoothly. Compares
+		 * against the nominal fire interval (rate-derived, fractional).
+		 * Skipped while delayCooldown runs (startup + after each
+		 * adaptation) so one slow frame can't cascade the delay up.
+		 */
+		long fireEnd = System.nanoTime();
+		double expectedMs = nominalPeriodMs(currentDelay, Utils.DELAY);
+		double actualMs = lastFireNanos == 0 ? expectedMs : (fireEnd - lastFireNanos) / 1e6;
+		if (delayCooldown > 0) {
+			delayCooldown--;
+			failedTime = 0;
+		} else if (actualMs > expectedMs*1.5 || currentDelay < Utils.DELAY) {
+			// We can't run so fast
+			failedTime=Math.max(failedTime+1, 0);
+			if (failedTime >= 2) {
+				failedTime = 0;
+				// +1 floor guarantees progress at 1-2ms delays
+				// (uncapped/500fps), where int-truncated ×1.5
+				// would spin restarting the timer at the same delay.
+				currentDelay = Math.max(currentDelay + 1, (int) (currentDelay * 1.5));
+				startLifeProcess(currentDelay);
+				return;
+			}
+		} else {
+			// Symmetric 1.5x hysteresis for both directions: with
+			// FX overhead the interval sits a little above the
+			// delay, and a tighter recover threshold wedges the
+			// governor one step up (cooldown + resets never clear).
+			if (actualMs < expectedMs*1.5 && currentDelay > Utils.DELAY) {
+				// We can run faster
+				failedTime=Math.min(failedTime-1, 0);
+				if (failedTime <= -10) {
+					currentDelay = Math.max(Utils.DELAY, currentDelay-1);
+					startLifeProcess(currentDelay);
+					return;
+				}
+			} else
+				// Normal situation: we run at the expected speed
+				failedTime = 0;
+		}
+		if (currentDelay > 1000) {
+			pauseGame();
+		}
+		if (lastFireNanos != 0 && delayCooldown == 0 && failedTime == 0 && _isProcessActive
+				&& !Double.isInfinite(effectiveRate(currentDelay, Utils.DELAY))) {
+			double cost = actualMs - askedMs;
+			smoothedCostMs += 0.1 * (cost - smoothedCostMs);
+			if (smoothedCostMs < 0)
+				smoothedCostMs = 0;
+		}
+		lastFireNanos = fireEnd;
 	}
 
 	public void changeLocale() {
@@ -1195,5 +1352,9 @@ public class MainWindow {
 		refreshChrome();
 		_visibleWorld.changeLocale();
 		infoToolbar.changeLocale();
+		Fx.run(() -> {
+			sizeStatusSlots();
+			updateStatusLabel();
+		});
 	}
 }
