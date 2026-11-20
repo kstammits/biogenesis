@@ -49,6 +49,7 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 
 ## State (update as you go)
 - Done: Phase 0 seam, Phase 1 FX toolchain, Phase 2 net windows, dialog sweep,
-  `ParamDialog`, `LabWindow`+`ColorComboBox`, headless test gate.
-- Next: `StatisticsWindow` → `InfoToolbar`+`GeneticCodePanel` → `VisibleWorld`
-  canvas → `MainWindow` shell. One window per commit, SimSmoke green each time.
+  `ParamDialog`, `LabWindow`+`ColorComboBox`, headless test gate,
+  `StatisticsWindow`+`InfoToolbar`+`GeneticCodePanel` (FX, JFXPanel-hosted toolbar).
+- Next: `VisibleWorld` canvas → `MainWindow` shell. One window per commit,
+  SimSmoke green each time.

@@ -769,9 +769,11 @@ public class MainWindow extends JFrame {
         setExtendedState(Utils.WINDOW_STATE);
         getContentPane().setLayout(new BorderLayout());
         
-        infoToolbar = new InfoToolbar(null, this);
+        infoToolbar = Fx.ask(() -> new InfoToolbar(null, this));
+        javafx.embed.swing.JFXPanel infoPanel = new javafx.embed.swing.JFXPanel();
+        infoPanel.setScene(Fx.ask(() -> new javafx.scene.Scene(infoToolbar)));
         centralPanel.add(scrollPane, BorderLayout.CENTER);
-        centralPanel.add(infoToolbar, BorderLayout.SOUTH);
+        centralPanel.add(infoPanel, BorderLayout.SOUTH);
         
         getContentPane().add(centralPanel, BorderLayout.CENTER);
         
