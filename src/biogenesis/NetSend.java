@@ -50,6 +50,7 @@ public class NetSend extends Thread {
 			socket = new Socket(address,port);
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
+			ois.setObjectInputFilter(Utils.SERIAL_FILTER);
 			System.out.println("->"+NetServerThread.messageToString(message)); //$NON-NLS-1$
 			switch (message) {
 			case NetServerThread.CONNECT:

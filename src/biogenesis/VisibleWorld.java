@@ -27,6 +27,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
@@ -52,7 +53,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	/**
 	 * The version of this class
 	 */
-	private static final long serialVersionUID = Utils.FILE_VERSION;
 	/**
 	 * A reference to the {@link MainWindow} where the VisibleWorld is.
 	 */
@@ -189,7 +189,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	//transient protected InfoWindow _infoWindow = null;
 
 	class TrackAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		protected String name_key2;
 		protected String desc_key2;
 
@@ -213,17 +212,14 @@ public class VisibleWorld extends Pane implements WorldView {
 			if (isTracking) {
 				name = Messages.getString(name_key2);
 				description = Messages.getString(desc_key2);
-				mnemonic = Messages.getMnemonic(name_key2);
 			} else {
 				name = Messages.getString(name_key);
 				description = Messages.getString(desc_key);
-				mnemonic = Messages.getMnemonic(name_key);
 			}
 		}
 	}
 
 	class FeedAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public FeedAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -240,7 +236,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class WeakenAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public WeakenAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -254,7 +249,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class KillAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public KillAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -268,7 +262,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class CopyAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public CopyAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -282,7 +275,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class SaveImageAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public SaveImageAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -325,7 +317,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class ReviveAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ReviveAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -345,7 +336,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class DisperseAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public DisperseAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -359,7 +349,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class ReproduceAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ReproduceAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -373,7 +362,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class RejuvenateAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public RejuvenateAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -387,7 +375,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class ExportAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ExportAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -401,7 +388,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class PasteAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public PasteAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -414,7 +400,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class RandomCreateAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public RandomCreateAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -428,7 +413,6 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 
 	class ImportAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ImportAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -450,12 +434,17 @@ public class VisibleWorld extends Pane implements WorldView {
     					newBiot = new Organism(_mainWindow.getWorld(), g);
     					if (newBiot.pasteOrganism(mouseX, mouseY))
     						_mainWindow.getWorld().addOrganism(newBiot, null);
-    				} catch (SAXException ex) {
+    				} catch (SAXParseException ex) {
+    					// Malformed XML or DTD mismatch: not a genetic-code file.
     					System.err.println(ex.getMessage());
-    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+    					Fx.readError("T_WRONG_FILE_VERSION"); //$NON-NLS-1$
+    				} catch (SAXException ex) {
+    					// Well-formed XML but bad content (numbers, colors...).
+    					System.err.println(ex.getMessage());
+    					Fx.readError("T_CANT_READ_FILE"); //$NON-NLS-1$
     				} catch (IOException ex) {
     					System.err.println(ex.getMessage());
-    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
+    					Fx.readError("T_CANT_READ_FILE"); //$NON-NLS-1$
 					}
     			}
     		} catch (SecurityException ex) {
@@ -599,15 +588,15 @@ public class VisibleWorld extends Pane implements WorldView {
 	}
 	/**
 	 * Explicit content refresh for the two MainWindow call sites that used
-	 * repaint(). The canvas redraw is coalesced; the JFXPanel repaints itself
-	 * when the scene changes.
+	 * to call repaint(). The canvas redraw is coalesced; JavaFX repaints
+	 * the scene when it changes.
 	 */
 	public void refresh() {
 		requestRedraw();
 	}
 	/**
 	 * Queue a frame render on the FX thread, coalescing bursts.
-	 * Safe to call from any thread (sim, EDT, FX).
+	 * Safe to call from any thread (sim, net, FX).
 	 *
 	 * <p>Note: when already on the FX thread the render MUST go through
 	 * {@code runLater}, not run inline. The sim loop calls this once per
@@ -627,7 +616,7 @@ public class VisibleWorld extends Pane implements WorldView {
 	 * Renders the world through the AWT pipeline into a reused BufferedImage
 	 * and blits it to the canvas. Runs on the FX thread. Frame buffers are
 	 * reused across ticks; only a canvas resize reallocates. In efficiency
-	 * mode only the scrolled-visible region is drawn (the old paintComponent
+	 * mode only the scrolled-visible region is drawn (the efficiency-mode
 	 * culling path); otherwise the full world is drawn.
 	 */
 	private void doRedraw() {

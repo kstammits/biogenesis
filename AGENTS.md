@@ -10,6 +10,10 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 - Vendored: `lib/jts-core-1.15.0.jar`, `lib/javafx/javafx-*-21-mac-aarch64.jar`
   (base, graphics, controls). mac-aarch64 only.
 - `FX_MODULES=javafx.controls,javafx.graphics`.
+- Tests: `lib/junit-4.13.2.jar` + `lib/hamcrest-core-1.3.jar` vendored (JUnit 4,
+  single-jar; JUnit 5's multi-jar is overkill here). `build.sh test` runs
+  SimSmoke + FxLogicTest mains, then `JUnitCore` with the `test/biogenesis/*Test`
+  suite (headless; FX modules stay on the path because tests touch FX classes).
 
 ## Commands (`build.sh` is canonical)
 - `./build.sh` — incremental compile (skips when up to date)
@@ -116,6 +120,32 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   message tail. EN+DE snapshot-verified at 59/1240fps (`/tmp/dbg/.../ShotChrome`).
 - Next: Karl's backlog (bg color, fit-window zoom, branching saves). SimSmoke
   green each time.
+- Done: cleanup sweep 1 (safety) — `InCorridor` single-monitor queue,
+  `Organism.symmetric` method-local scratch, `World.addOrganism` + net-list
+  mutations under their documented locks (check-then-act atomic,
+  `closeServer` clears in place so the lock object never swaps),
+  `startLifeProcess`/`scheduleNext` synchronized + volatile `timerGen`.
+- Done: cleanup sweep 2 (persistence) — XXE-hardened `BioXMLParser`
+  (internal DTD kept, external entities/XInclude/DTD/schema blocked),
+  `Utils.SERIAL_FILTER` allow-list on all three `ObjectInputStream` sites,
+  atomic `.bgw` writes (temp + rename), try-with-resources on load/save/XML,
+  `colDetTree` transient + rebuilt in `readObject`, SAXParse-vs-content
+  error mapping. Round-trip + reject-all verified headless.
+- Done: cleanup sweep 3 (dead weight) — ~37 meaningless `serialVersionUID`s
+  removed (sim classes keep `FILE_VERSION`: save compat), mnemonics retired
+  (`StdAction` field, `Messages.getMnemonic`, ~343 bundle keys), dead
+  `T_BACKUP_*`/`T_GENES3`/`T_NODE`/`T_COLONYPLUS` keys removed (all 7 bundles
+  at 358-key parity, runtime-verified), `Fx.parseIntOrKeep/parseDoubleOrKeep`
+  for the 35 keep-old-value catches, `Fx.readError` for unowned load errors
+  (LabWindow keeps its owned alert), stale Swing comments swept,
+  `BareBonesBrowserLaunch` reduced to `Desktop` (no Application subclass, so
+  no HostServices), `StatisticsWindow.dispose()` → `close()`.
+  `BioXMLParser.colorToString` kept but renamed to `colorToXmlToken`: it emits
+  file-format tokens, not display names like `Utils.colorToString`.
+- Done: JUnit 4 suite — `SimMathTest` (pacing/clamp math), `DeterminismTest`
+  (seed-12345 trace: pop 41), `GeneticCodeXmlTest` (round-trip + XXE
+  internal-ok/external-blocked), `WorldSaveTest` (filter round-trip +
+  reject-all), `BundleParityTest` (358 keys × 6 locales). 12 tests green.
 ## Backlog (Karl's list — do NOT start unasked)
 - FPS limits: DONE via presets (governor kept as backoff-only under the preset
   ceiling, auto-pause past 1000ms kept as safety net).

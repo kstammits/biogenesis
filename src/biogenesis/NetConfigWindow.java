@@ -105,20 +105,9 @@ public class NetConfigWindow {
 	}
 
 	void checkParams() {
-		int i;
 		mainWindow.setAcceptConnections(acceptConnections);
 
-		try {
-			i = Integer.parseInt(localPortText.getText());
-			if (i>=0) Utils.LOCAL_PORT = i;
-		} catch (NumberFormatException e) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(maxConnectionsText.getText());
-			if (i>=0) Utils.MAX_CONNECTIONS = i;
-		} catch (NumberFormatException e) {
-			// Keep old value if there is a problem
-		}
+		Fx.parseIntOrKeep(localPortText, v -> v>=0, v -> Utils.LOCAL_PORT = v);
+		Fx.parseIntOrKeep(maxConnectionsText, v -> v>=0, v -> Utils.MAX_CONNECTIONS = v);
 	}
 }

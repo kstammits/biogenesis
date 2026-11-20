@@ -65,7 +65,7 @@ public class StatisticsWindow {
 	}
 
 	/** Close the window, e.g. when MainWindow opens a fresh one. */
-	public void dispose() {
+	public void close() {
 		Fx.run(() -> {
 			if (stage != null)
 				stage.close();
@@ -219,7 +219,6 @@ public class StatisticsWindow {
 		HBox buttonsPanel = new HBox(8, updateButton, closeButton);
 		buttonsPanel.setAlignment(Pos.CENTER);
 
-		// Add all components to the content pane
 		VBox leftPanel = new VBox(8, currentStatePane, notableBeingsPane);
 		VBox rightPanel = new VBox(8, worldHistoryPane, buttonsPanel);
 

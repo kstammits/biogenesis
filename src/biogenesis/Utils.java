@@ -18,6 +18,7 @@
 package biogenesis;
 
 
+import java.io.ObjectInputFilter;
 import java.util.*;
 import java.util.prefs.*;
 import java.awt.*;
@@ -36,6 +37,25 @@ public final class Utils {
 	 */
 	static final int FILE_VERSION = 800; // X-Mod: save/net format bump, old saves incompatible
 	static final int VERSION = 902; // 0.9.2 unified (0.9 vanilla + X-Mod + Efficiency, FX shell); used for net compat gate
+
+	/**
+	 * Allow-list for Java deserialization (.bgw saves + inbound net objects).
+	 * Accepts our own classes, the JTS index that ships inside saves, and
+	 * core JDK types (collections, awt geometry, strings, numbers, arrays).
+	 * Everything else is rejected before it can reach a gadget chain.
+	 */
+	static final ObjectInputFilter SERIAL_FILTER = info -> {
+		Class<?> c = info.serialClass();
+		if (c == null)
+			return ObjectInputFilter.Status.ALLOWED;
+		String n = c.getName();
+		if (n.startsWith("biogenesis.") //$NON-NLS-1$
+				|| n.startsWith("java.") //$NON-NLS-1$
+				|| n.startsWith("org.locationtech.jts.") //$NON-NLS-1$
+				|| n.startsWith("[")) //$NON-NLS-1$
+			return ObjectInputFilter.Status.ALLOWED;
+		return ObjectInputFilter.Status.REJECTED;
+	};
 
 	// Default values for parameters
 	final static int DEF_WINDOW_X = 0;

@@ -429,217 +429,50 @@ public class ParamDialog {
 	}
 
 	void checkParams() {
-		int i;
-		double d;
 		if (Messages.getLocaleIndex() != localeCombo.getSelectionModel().getSelectedIndex()) {
 			Messages.setLocale(localeCombo.getSelectionModel().getSelectedIndex());
 			mainWindow.changeLocale();
 		}
-		try {
-			i = Integer.parseInt(widthText.getText());
-			if (i > 0) Utils.WORLD_WIDTH = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(heightText.getText());
-			if (i > 0) Utils.WORLD_HEIGHT = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
+		Fx.parseIntOrKeep(widthText, v -> v > 0, v -> Utils.WORLD_WIDTH = v);
+		Fx.parseIntOrKeep(heightText, v -> v > 0, v -> Utils.WORLD_HEIGHT = v);
 		int selectedRate = selectedSimRate();
 		int newDelay = Utils.delayForSimRate(selectedRate);
 		if (newDelay != Utils.DELAY) {
 			Utils.DELAY = newDelay;
 			mainWindow.applySimDelay();
 		}
-		try {
-			d = Double.parseDouble(initialO2Text.getText());
-			if (d >= 0) Utils.INITIAL_O2 = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(initialCO2Text.getText());
-			if (d >= 0) Utils.INITIAL_CO2 = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(frictionText.getText());
-			if (d >= 0 && d <= 1) Utils.FRICTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(elasticityText.getText());
-			if (d >= 0 && d <= 1) Utils.ELASTICITY = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(initialnumberText.getText());
-			if (i >= 0) Utils.INITIAL_ORGANISMS = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(initialenergyText.getText());
-			if (i > 0) Utils.INITIAL_ENERGY = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(stressresistanceText.getText());
-			if (d > 0) Utils.STRESS_RESISTANCE = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(majormutationrateText.getText());
-			if (d >= 0) Utils.MAJOR_MUTATION_RATE = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(minormutationrateText.getText());
-			if (d >= 0) Utils.MINOR_MUTATION_RATE = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(minormutationamplitudeText.getText());
-			if (d >= 0 && d <= 1) Utils.MINOR_MUTATION_AMPLITUDE = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(spontaneousmutationrateText.getText());
-			if (d >= 0) Utils.SPONTANEOUS_MUTATION_RATE = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(redcostText.getText());
-			if (d >= 0) Utils.RED_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(greencostText.getText());
-			if (d >= 0) Utils.GREEN_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(bluecostText.getText());
-			if (d >= 0) Utils.BLUE_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(cyancostText.getText());
-			if (d >= 0) Utils.CYAN_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(whitecostText.getText());
-			if (d >= 0) Utils.WHITE_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(graycostText.getText());
-			if (d >= 0) Utils.GRAY_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(yellowcostText.getText());
-			if (d >= 0) Utils.YELLOW_ENERGY_CONSUMPTION = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(redprobText.getText());
-			if (i >= 0) Utils.RED_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(greenprobText.getText());
-			if (i > 0) Utils.GREEN_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(blueprobText.getText());
-			if (i >= 0) Utils.BLUE_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(cyanprobText.getText());
-			if (i >= 0) Utils.CYAN_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(whiteprobText.getText());
-			if (i >= 0) Utils.WHITE_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(grayprobText.getText());
-			if (i >= 0) Utils.GRAY_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(yellowprobText.getText());
-			if (i >= 0) Utils.YELLOW_PROB = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(segmentcostText.getText());
-			if (i > 0) Utils.SEGMENT_COST_DIVISOR = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			i = Integer.parseInt(drainText.getText());
-			if (i > 0) Utils.DRAIN_SUBS_DIVISOR = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
+		Fx.parseDoubleOrKeep(initialO2Text, v -> v >= 0, v -> Utils.INITIAL_O2 = v);
+		Fx.parseDoubleOrKeep(initialCO2Text, v -> v >= 0, v -> Utils.INITIAL_CO2 = v);
+		Fx.parseDoubleOrKeep(frictionText, v -> v >= 0 && v <= 1, v -> Utils.FRICTION = v);
+		Fx.parseDoubleOrKeep(elasticityText, v -> v >= 0 && v <= 1, v -> Utils.ELASTICITY = v);
+		Fx.parseIntOrKeep(initialnumberText, v -> v >= 0, v -> Utils.INITIAL_ORGANISMS = v);
+		Fx.parseIntOrKeep(initialenergyText, v -> v > 0, v -> Utils.INITIAL_ENERGY = v);
+		Fx.parseDoubleOrKeep(stressresistanceText, v -> v > 0, v -> Utils.STRESS_RESISTANCE = v);
+		Fx.parseDoubleOrKeep(majormutationrateText, v -> v >= 0, v -> Utils.MAJOR_MUTATION_RATE = v);
+		Fx.parseDoubleOrKeep(minormutationrateText, v -> v >= 0, v -> Utils.MINOR_MUTATION_RATE = v);
+		Fx.parseDoubleOrKeep(minormutationamplitudeText, v -> v >= 0 && v <= 1, v -> Utils.MINOR_MUTATION_AMPLITUDE = v);
+		Fx.parseDoubleOrKeep(spontaneousmutationrateText, v -> v >= 0, v -> Utils.SPONTANEOUS_MUTATION_RATE = v);
+		Fx.parseDoubleOrKeep(redcostText, v -> v >= 0, v -> Utils.RED_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(greencostText, v -> v >= 0, v -> Utils.GREEN_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(bluecostText, v -> v >= 0, v -> Utils.BLUE_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(cyancostText, v -> v >= 0, v -> Utils.CYAN_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(whitecostText, v -> v >= 0, v -> Utils.WHITE_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(graycostText, v -> v >= 0, v -> Utils.GRAY_ENERGY_CONSUMPTION = v);
+		Fx.parseDoubleOrKeep(yellowcostText, v -> v >= 0, v -> Utils.YELLOW_ENERGY_CONSUMPTION = v);
+		Fx.parseIntOrKeep(redprobText, v -> v >= 0, v -> Utils.RED_PROB = v);
+		Fx.parseIntOrKeep(greenprobText, v -> v > 0, v -> Utils.GREEN_PROB = v);
+		Fx.parseIntOrKeep(blueprobText, v -> v >= 0, v -> Utils.BLUE_PROB = v);
+		Fx.parseIntOrKeep(cyanprobText, v -> v >= 0, v -> Utils.CYAN_PROB = v);
+		Fx.parseIntOrKeep(whiteprobText, v -> v >= 0, v -> Utils.WHITE_PROB = v);
+		Fx.parseIntOrKeep(grayprobText, v -> v >= 0, v -> Utils.GRAY_PROB = v);
+		Fx.parseIntOrKeep(yellowprobText, v -> v >= 0, v -> Utils.YELLOW_PROB = v);
+		Fx.parseIntOrKeep(segmentcostText, v -> v > 0, v -> Utils.SEGMENT_COST_DIVISOR = v);
+		Fx.parseIntOrKeep(drainText, v -> v > 0, v -> Utils.DRAIN_SUBS_DIVISOR = v);
 
-		try {
-			i = Integer.parseInt(greenenergyText.getText());
-			if (i > 0) Utils.GREEN_OBTAINED_ENERGY_DIVISOR = i;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(organicenergyText.getText());
-			if (d >= 0) Utils.ORGANIC_OBTAINED_ENERGY = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(organicsubsText.getText());
-			if (d >= 0 && d <= 1) Utils.ORGANIC_SUBS_PRODUCED = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
-		try {
-			d = Double.parseDouble(decayenergyText.getText());
-			if (d >= 0) Utils.DECAY_ENERGY = d;
-		} catch (NumberFormatException ex) {
-			// Keep old value if there is a problem
-		}
+		Fx.parseIntOrKeep(greenenergyText, v -> v > 0, v -> Utils.GREEN_OBTAINED_ENERGY_DIVISOR = v);
+		Fx.parseDoubleOrKeep(organicenergyText, v -> v >= 0, v -> Utils.ORGANIC_OBTAINED_ENERGY = v);
+		Fx.parseDoubleOrKeep(organicsubsText, v -> v >= 0 && v <= 1, v -> Utils.ORGANIC_SUBS_PRODUCED = v);
+		Fx.parseDoubleOrKeep(decayenergyText, v -> v >= 0, v -> Utils.DECAY_ENERGY = v);
 		if (hardwareNoneRadio.isSelected()) {
 			Utils.setHardwareAcceleration(0);
 		}

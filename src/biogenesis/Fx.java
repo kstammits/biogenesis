@@ -25,6 +25,7 @@ import java.util.concurrent.FutureTask;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.stage.FileChooser;
 
@@ -35,7 +36,7 @@ import javafx.stage.FileChooser;
 public final class Fx {
 	private Fx() {}
 	private static volatile boolean started = false;
-	/** Last directory used, mirroring the old JFileChooser behavior. */
+	/** Last directory used by the file choosers. */
 	private static File lastDir = new File(System.getProperty("user.dir")); //$NON-NLS-1$
 
 	public static void ensureStarted() {
@@ -60,6 +61,34 @@ public final class Fx {
 			r.run();
 		else
 			Platform.runLater(r);
+	}
+
+	/**
+	 * Parses a dialog field, applying the value only when it parses and the
+	 * validator accepts it. Otherwise the old value is silently kept (the
+	 * ParamDialog/NetConfigWindow contract).
+	 */
+	public static void parseIntOrKeep(TextField field,
+			java.util.function.IntPredicate valid, java.util.function.IntConsumer apply) {
+		try {
+			int v = Integer.parseInt(field.getText());
+			if (valid.test(v))
+				apply.accept(v);
+		} catch (NumberFormatException ex) {
+			// Keep old value if there is a problem
+		}
+	}
+
+	/** Double-valued variant of {@link #parseIntOrKeep}. */
+	public static void parseDoubleOrKeep(TextField field,
+			java.util.function.DoublePredicate valid, java.util.function.DoubleConsumer apply) {
+		try {
+			double v = Double.parseDouble(field.getText());
+			if (valid.test(v))
+				apply.accept(v);
+		} catch (NumberFormatException ex) {
+			// Keep old value if there is a problem
+		}
 	}
 
 	/**
@@ -90,7 +119,7 @@ public final class Fx {
 		}
 	}
 
-	/** Modal error alert. Null title shows no title, like the old calls. */
+	/** Modal error alert. Null title shows no title. */
 	public static void error(String title, String message) {
 		ask(() -> {
 			Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
@@ -100,6 +129,15 @@ public final class Fx {
 			alert.showAndWait();
 			return null;
 		});
+	}
+
+	/**
+	 * Standard file-load failure dialog (title {@code T_READ_ERROR}).
+	 * For owned contexts (dialogs with a stage) use an owned alert instead —
+	 * this one is unowned, like {@link #error}.
+	 */
+	public static void readError(String messageKey) {
+		error(Messages.getString("T_READ_ERROR"), Messages.getString(messageKey)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/** Modal info alert, returned after dismissal. */
@@ -115,7 +153,7 @@ public final class Fx {
 
 	public enum Answer { YES, NO, CANCEL }
 
-	/** Modal yes/no/cancel question, like JOptionPane YES_NO_CANCEL_OPTION. */
+	/** Modal yes/no/cancel question. */
 	public static Answer confirmYesNoCancel(String title, String message) {
 		return ask(() -> {
 			Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message,
@@ -131,7 +169,7 @@ public final class Fx {
 		});
 	}
 
-	/** Modal yes/no question, like JOptionPane YES_NO_OPTION. */
+	/** Modal yes/no question. */
 	public static boolean confirmYesNo(String title, String message) {
 		return ask(() -> {
 			Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message,
@@ -178,7 +216,7 @@ public final class Fx {
 	/**
 	 * Modal save-file dialog with a single extension filter. Appends the
 	 * extension when missing (unless {@code autoAppendExt} is false, e.g.
-	 * for PNG snapshots where the old code kept the name as typed).
+	 * for PNG snapshots where the name is kept as typed).
 	 * Null if cancelled.
 	 */
 	public static File showSaveFile(String titleKey, String descKey, String ext, boolean autoAppendExt) {

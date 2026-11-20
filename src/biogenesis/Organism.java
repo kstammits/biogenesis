@@ -242,7 +242,6 @@ public class Organism extends Rectangle {
 	 * Indicates if the organism is alive.
 	 */
 	protected boolean alive = true;
-	private static transient Vector2D v = new Vector2D();
 	/**
 	 * Returns true if this organism is alive, false otherwise.
 	 * 
@@ -512,6 +511,9 @@ public class Organism extends Rectangle {
 		int left=0, right=0, top=0, bottom=0;
 		int centerX, centerY;
 		double cx, cy;
+		// Method-local scratch: the old static field corrupted endpoints
+		// under any concurrent symmetric() call.
+		Vector2D v = new Vector2D();
 
 		for (i=0; i<symmetry; i++) {
 			for (j=0; j<sequence; j++,segment++) {

@@ -53,21 +53,7 @@ public class Messages {
 	 * The default locale index in supportedLocalesCodes when the system language is
 	 * not supported by the program. The default language is English.
 	 */
-	private static final int DEFAULT_LOCALE_INDEX = 1;
-	/**
-	 * Obtains mnemonic for key message in the current selected language.
-	 * This mnemonic should appear in the message file as key_MNEMONIC.
-	 * 
-	 * @param key  The key string to find
-	 * @return  The mnemonic for this key or the first letter in the key if it is not found
-	 */
-	public static Integer getMnemonic(String key) {
-		try {
-			return Integer.valueOf(appResourceBundle.getString(key+"_MNEMONIC").codePointAt(0)); //$NON-NLS-1$
-		} catch (MissingResourceException e) {
-			return Integer.valueOf(key.codePointAt(0));
-		}
-	}
+	private static final int DEFAULT_LOCALE_INDEX = 0;
 	/**
 	 * Translate key message into the current selected language.
 	 * Key message is looked up the corresponding message file and

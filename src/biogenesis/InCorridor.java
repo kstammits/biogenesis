@@ -33,8 +33,12 @@ public class InCorridor extends Corridor {
 		super(w);
 	}
 
-	public synchronized void receiveOrganism(GeneticCode code) {
-		pendingOrganisms.add(code);
+	public void receiveOrganism(GeneticCode code) {
+		// Same monitor as frame()'s poll: locking on `this` here would
+		// leave add vs poll racing on the plain LinkedList.
+		synchronized (pendingOrganisms) {
+			pendingOrganisms.add(code);
+		}
 	}
 	
 	public void frame() {

@@ -39,14 +39,12 @@ public abstract class StdAction {
 	protected String iconPath;
 	protected String name;
 	protected String description;
-	protected int mnemonic;
 	protected KeyCombination accelerator;
 	private boolean enabled = true;
 
 	public void changeLocale() {
 		name = Messages.getString(name_key);
 		description = Messages.getString(desc_key);
-		mnemonic = Messages.getMnemonic(name_key);
 	}
 
 	public StdAction(String key, String icon_path, String desc) {
@@ -55,7 +53,6 @@ public abstract class StdAction {
 		iconPath = icon_path;
 		name = Messages.getString(key);
 		description = Messages.getString(desc);
-		mnemonic = Messages.getMnemonic(key);
 	}
 
 	public String getName() {
@@ -64,10 +61,6 @@ public abstract class StdAction {
 
 	public String getDescription() {
 		return description;
-	}
-
-	public int getMnemonic() {
-		return mnemonic;
 	}
 
 	public KeyCombination getAccelerator() {

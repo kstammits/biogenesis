@@ -95,27 +95,33 @@ public class NetServerThread extends Thread {
 	public Connection newConnection(InetAddress remoteAddress, int remotePort) {
 		address = remoteAddress;
 		port = remotePort;
-		Connection c = checkConnectionDuplicity();
-		if (c == null) {
+		// Check-then-add must be atomic: the server thread can be
+		// accepting the same peer while the FX thread adds it manually.
+		synchronized (connections) {
+			Connection c = checkConnectionDuplicity();
+			if (c != null)
+				return null;
 			c = new Connection(mainWindow, remoteAddress, remotePort);
 			connections.add(c);
-		} else 
-			return null;
-		return c;
+			return c;
+		}
 	}
 	
 	private Connection newConnection() {
-		Connection c = checkConnectionDuplicity();
-		if (c == null) {
+		synchronized (connections) {
+			Connection c = checkConnectionDuplicity();
+			if (c != null)
+				return null;
 			c = new Connection(mainWindow, address, port, netCode);
 			connections.add(c);
-		} else
-			return null;
-		return c;
+			return c;
+		}
 	}
 	
 	public void removeConnection(Connection c) {
-		connections.remove(c);
+		synchronized (connections) {
+			connections.remove(c);
+		}
 	}
 
 	public void closeServer() {
@@ -128,8 +134,10 @@ public class NetServerThread extends Thread {
 				c.send(DISCONNECT);
 				c.setState(DISCONNECTED);
 			}
+			// Clear in place: reassigning the list would swap the lock
+			// object out from under threads holding the old reference.
+			connections.clear();
 		}
-		connections = Collections.synchronizedList(new ArrayList<Connection>());
 	}
 	
 	@Override
@@ -149,6 +157,7 @@ public class NetServerThread extends Thread {
 			try {
 				listenSocket = serverSocket.accept();
 				ois = new ObjectInputStream(listenSocket.getInputStream());
+				ois.setObjectInputFilter(Utils.SERIAL_FILTER);
 				oos = new ObjectOutputStream(listenSocket.getOutputStream());
 				receivedMessage = ois.readInt();
 				System.out.println(messageToString(receivedMessage));

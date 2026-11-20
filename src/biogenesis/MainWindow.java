@@ -19,7 +19,9 @@ package biogenesis;
 
 
 import java.io.*;
-
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -230,7 +232,7 @@ public class MainWindow {
 	/**
 	 * Wraps a command in an FX toolbar button, snapshotting its live text,
 	 * icon, tooltip and enabled state. Chrome rebuilds via refreshChrome().
-	 * Icon above wrapped text (like the old Swing toolbar) to keep the row
+	 * Icon above wrapped text (like the old toolbar) to keep the row
 	 * condensed. The label lives in a VBox graphic because Button's own text
 	 * layout single-lines (and ellipsizes) under a ToolBar.
 	 */
@@ -259,8 +261,8 @@ public class MainWindow {
 	}
 
 	/**
-	 * Wraps a command in an FX menu item, keeping the icon policy of the
-	 * old menu (icons dropped where the actions nulled them).
+	 * Wraps a command in an FX menu item (icons dropped where the actions
+	 * nulled them).
 	 */
 	private static MenuItem menuItemFor(StdAction action, boolean keepIcon) {
 		MenuItem item = new MenuItem(action.getName());
@@ -398,7 +400,6 @@ public class MainWindow {
 	}
 
 	class NewGameAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public NewGameAction(String text_key, String icon_path, String desc) {
 			super(text_key, icon_path, desc);
 		}
@@ -414,10 +415,8 @@ public class MainWindow {
 	}
 
 	class StartStopAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		protected String name2;
 		protected String description2;
-		protected int mnemonic2;
 		protected String iconPath2;
 
 		protected String name2_key;
@@ -431,7 +430,6 @@ public class MainWindow {
 			name2 = Messages.getString(text2);
 			description2 = Messages.getString(desc2);
 			iconPath2 = icon_path2;
-			mnemonic2 = Messages.getMnemonic(text2);
 			name2_key = text2;
 			desc2_key = desc2;
 			active = false;
@@ -457,9 +455,6 @@ public class MainWindow {
 			aux = iconPath;
 			iconPath = iconPath2;
 			iconPath2 = aux;
-			int auxmnemonic = mnemonic;
-			mnemonic = mnemonic2;
-			mnemonic2 = auxmnemonic;
 			active = !active;
 		}
 
@@ -468,7 +463,6 @@ public class MainWindow {
 			super.changeLocale();
 			name2 = Messages.getString(name2_key);
 			description2 = Messages.getString(desc2_key);
-			mnemonic2 = Messages.getMnemonic(name2_key);
 			accelerator = keyCombinationFor(Messages.getString("T_PAUSE_ACCELERATOR"));
 		}
 
@@ -485,7 +479,6 @@ public class MainWindow {
 	}
 
 	class SaveGameAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public SaveGameAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 			accelerator = keyCombinationFor(Messages.getString("T_SAVE_ACCELERATOR"));
@@ -506,7 +499,6 @@ public class MainWindow {
 	}
 
 	class IncreaseCO2Action extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public IncreaseCO2Action(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -517,7 +509,6 @@ public class MainWindow {
 	}
 
 	class DecreaseCO2Action extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public DecreaseCO2Action(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -528,7 +519,6 @@ public class MainWindow {
 	}
 
 	class ManageConnectionsAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ManageConnectionsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -539,7 +529,6 @@ public class MainWindow {
 	}
 
 	class AbortTrackingAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public AbortTrackingAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -550,7 +539,6 @@ public class MainWindow {
 	}
 
 	class OpenGameAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public OpenGameAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -563,16 +551,14 @@ public class MainWindow {
 				if (f != null) {
 					// Elimina les finestres antigues
 					if (_statisticsWindow != null) {
-						_statisticsWindow.dispose();
+						_statisticsWindow.close();
 						_statisticsWindow = null;
 					}
 					//_world.clean();
-					ObjectInputStream inputStream;
-					try {
-						FileInputStream fileStream = new FileInputStream(f);
-						inputStream = new ObjectInputStream(fileStream);
+					try (FileInputStream fileStream = new FileInputStream(f);
+							ObjectInputStream inputStream = new ObjectInputStream(fileStream)) {
+						inputStream.setObjectInputFilter(Utils.SERIAL_FILTER);
 						_world = (World) inputStream.readObject();
-						inputStream.close();
 						_gameFile = f;
 						_trackedOrganism = null;
 						processState = true;
@@ -581,16 +567,16 @@ public class MainWindow {
 						// Serial version mismatch (e.g. pre-800 save): report as
 						// wrong version, not generic read failure.
 						System.err.println(ex.getMessage());
-						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.readError("T_WRONG_FILE_VERSION"); //$NON-NLS-1$
 					} catch (IOException ex) {
 						System.err.println(ex.getMessage());
-						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.readError("T_CANT_READ_FILE"); //$NON-NLS-1$
 					} catch (ClassNotFoundException ex) {
 						System.err.println(ex.getMessage());
-						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_TYPE")); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.readError("T_WRONG_FILE_TYPE"); //$NON-NLS-1$
 					} catch (ClassCastException ex) {
 						System.err.println(ex.getMessage());
-						Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+						Fx.readError("T_WRONG_FILE_VERSION"); //$NON-NLS-1$
 					}
 					// Torna a assignar els valors dels camps no guardats a l'objecte world
 					_world.init(_visibleWorld);
@@ -607,7 +593,6 @@ public class MainWindow {
 	}
 
 	class SaveGameAsAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public SaveGameAsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -618,7 +603,6 @@ public class MainWindow {
 	}
 
 	class QuitAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public QuitAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -668,20 +652,18 @@ public class MainWindow {
 	}
 
 	class StatisticsAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public StatisticsAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
 
 		public void perform() {
 			if (_statisticsWindow != null)
-				_statisticsWindow.dispose();
+				_statisticsWindow.close();
 			_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
 		}
 	}
 
 	class LabAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public LabAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -692,7 +674,6 @@ public class MainWindow {
 	}
 
 	class KillAllAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public KillAllAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -703,7 +684,6 @@ public class MainWindow {
 	}
 
 	class DisperseAllAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public DisperseAllAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -714,7 +694,6 @@ public class MainWindow {
 	}
 
 	class ParametersAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ParametersAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -725,7 +704,6 @@ public class MainWindow {
 	}
 
 	class ManualAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ManualAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -749,7 +727,6 @@ public class MainWindow {
 	}
 
 	class CheckLastVersionAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public CheckLastVersionAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -760,7 +737,6 @@ public class MainWindow {
 	}
 
 	class AboutAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public AboutAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -771,7 +747,6 @@ public class MainWindow {
 	}
 
 	class NetConfigAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public NetConfigAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -782,7 +757,6 @@ public class MainWindow {
 	}
 
 	class ToggleEfficiencyModeAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ToggleEfficiencyModeAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -797,7 +771,6 @@ public class MainWindow {
 	}
 
 	class ZoomInAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ZoomInAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -809,7 +782,6 @@ public class MainWindow {
 	}
 
 	class ZoomOutAction extends StdAction {
-		private static final long serialVersionUID = 1L;
 		public ZoomOutAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
 		}
@@ -972,10 +944,12 @@ public class MainWindow {
 				}
 				if (canWrite) {
 					if (obj instanceof GeneticCode) {
-						try {
-							BioXMLParser.writeGeneticCode(new PrintStream(f),(GeneticCode)obj);
+						try (PrintStream ps = new PrintStream(f, "UTF-8")) { //$NON-NLS-1$
+							BioXMLParser.writeGeneticCode(ps, (GeneticCode)obj);
 							resultFile = f;
 						} catch (FileNotFoundException ex) {
+							System.err.println(ex.getLocalizedMessage());
+						} catch (java.io.UnsupportedEncodingException ex) {
 							System.err.println(ex.getLocalizedMessage());
 						}
 					} else
@@ -992,23 +966,37 @@ public class MainWindow {
 	}
 
 	public boolean saveObject(Object obj, File f) {
-		ObjectOutputStream outputStream;
-		try {
-			FileOutputStream fileStream = new FileOutputStream(f);
-			outputStream = new ObjectOutputStream(fileStream);
+		// Atomic write: serialize to a temp sibling, then move it over the
+		// target — a crash mid-write must not destroy the only good copy.
+		File tmp = new File(f.getParent(), f.getName() + ".tmp"); //$NON-NLS-1$
+		try (FileOutputStream fileStream = new FileOutputStream(tmp);
+				ObjectOutputStream outputStream = new ObjectOutputStream(fileStream)) {
 			outputStream.writeObject(obj);
-			outputStream.close();
-			setStatusMessage(Messages.getString("T_WRITING_COMPLETED")); //$NON-NLS-1$
-			return true;
 		} catch (FileNotFoundException e) {
 			System.err.println(e.getMessage());
+			return false;
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
+			return false;
 		} catch (SecurityException ex) {
 			System.err.println(ex.getMessage());
 			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
 		}
-		return false;
+		try {
+			try {
+				Files.move(tmp.toPath(), f.toPath(),
+						StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			} catch (AtomicMoveNotSupportedException e) {
+				Files.move(tmp.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			tmp.delete();
+			return false;
+		}
+		setStatusMessage(Messages.getString("T_WRITING_COMPLETED")); //$NON-NLS-1$
+		return true;
 	}
 
 	public void configureApp() {
@@ -1199,8 +1187,10 @@ public class MainWindow {
 	 * Timer generation: guards the self-rearming chain — a fire only
 	 * schedules its successor while its generation is still current, so a
 	 * governor/preset restart mid-fire can't fork a duplicate chain.
+	 * Volatile: bumped on the FX thread (preset change), read on the
+	 * timer thread (re-arm check).
 	 */
-	protected long timerGen = 0;
+	protected volatile long timerGen = 0;
 	/**
 	 * Smoothed per-fire overhead in ms (Fx.ask handoff + timer slack beyond
 	 * the nominal period), subtracted from the next wait. Reset on every
@@ -1220,7 +1210,12 @@ public class MainWindow {
 			startLifeProcess(currentDelay);
 		}
 	}
-	public void startLifeProcess(int delay) {
+	/**
+	 * (Re)starts the sim timer. Synchronized: the governor calls it from
+	 * the timer thread while preset changes call it from the FX thread —
+	 * cancel/schedule must not interleave.
+	 */
+	public synchronized void startLifeProcess(int delay) {
 		if (updateTask != null)
 			updateTask.cancel();
 		timerGen++;
@@ -1235,7 +1230,7 @@ public class MainWindow {
 	 * next wait from nominal-minus-cost (uncapped: nominal as-is, i.e.
 	 * as-fast-as-possible). Re-arms only while its generation is current.
 	 */
-	private void scheduleNext(long waitMs, long gen) {
+	private synchronized void scheduleNext(long waitMs, long gen) {
 		updateTask = new TimerTask() {
 		    @Override
 			public void run() {

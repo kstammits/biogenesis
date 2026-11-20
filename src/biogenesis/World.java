@@ -114,6 +114,9 @@ public class World implements Serializable{
 		in.defaultReadObject();
 		inCorridors = Collections.synchronizedList(new ArrayList<InCorridor>());
 		outCorridors = Collections.synchronizedList(new ArrayList<OutCorridor>());
+		// Rebuilt from scratch on the first time() after load; never
+		// trust (or ship) a deserialized spatial index.
+		colDetTree = new STRtree();
 	}
 	/**
 	 * Returns a new StatisticsWindow refering to this world.
@@ -389,7 +392,8 @@ public class World implements Serializable{
 	}
 	/**
 	 * Draws all visible components of the world to a graphic context.
-	 * This includes organisms and corridors. Called from {@link biogenesis.VisibleWorld.paintComponents}.
+	 * This includes organisms and corridors. Called from VisibleWorld's
+	 * frame render.
 	 * 
 	 * @param g  The graphic context to draw to.
 	 */
@@ -587,7 +591,9 @@ public class World implements Serializable{
 		return null;
 	}
 	
-	public STRtree colDetTree = new STRtree();
+	/** Collision index, rebuilt on every time(): transient so saves
+	 * don't drag the whole JTS structure through the serial stream. */
+	public transient STRtree colDetTree = new STRtree();
 	
 	/**
 	 * Checks if an organism hits another organism.
@@ -624,7 +630,11 @@ public class World implements Serializable{
 	 * @param parent  The parent of the added organism, or null if there is no parent.
 	 */
 	public void addOrganism(Organism child, Organism parent) {
-		_organisms.add(child);
+		// _organisms is a synchronizedList whose iterations elsewhere lock
+		// on it explicitly; the add must take the same monitor.
+		synchronized (_organisms) {
+			_organisms.add(child);
+		}
 		if (parent == _view.getSelectedOrganism())
 			_view.organismReproduced();
 		if (parent != null) {

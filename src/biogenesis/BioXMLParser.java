@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -43,7 +44,17 @@ public class BioXMLParser implements ErrorHandler {
 	public BioXMLParser() {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setValidating(true);
+		// XXE hardening: our .bgg files carry an inline internal DTD, so
+		// DOCTYPE stays allowed — but no external entity, DTD, XInclude
+		// or stylesheet resolution, from any source.
 		try {
+			factory.setXIncludeAware(false);
+			factory.setExpandEntityReferences(false);
+			factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false); //$NON-NLS-1$
+			factory.setFeature("http://xml.org/sax/features/external-general-entities", false); //$NON-NLS-1$
+			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); //$NON-NLS-1$
+			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); //$NON-NLS-1$
+			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); //$NON-NLS-1$
 			builder = factory.newDocumentBuilder();
 			builder.setErrorHandler(this);
 		} catch (ParserConfigurationException e) {
@@ -75,7 +86,7 @@ public class BioXMLParser implements ErrorHandler {
 	public static void writeGene(PrintStream ps, Gene gene) {
 		ps.println("\t<gene length=\""+Double.toString(gene.getLength())+"\" theta=\""+ //$NON-NLS-1$ //$NON-NLS-2$
 				Double.toString(gene.getTheta())+"\" color=\""+ //$NON-NLS-1$
-				colorToString(gene.getColor())+"\" />"); //$NON-NLS-1$
+				colorToXmlToken(gene.getColor())+"\" />"); //$NON-NLS-1$
 	}
 	
 	public GeneticCode parseGeneticCode(File f) throws SAXException, IOException {
@@ -83,6 +94,8 @@ public class BioXMLParser implements ErrorHandler {
 		boolean disperse;
 		List<Gene> genes = new ArrayList<Gene>();
 		String s;
+		if (builder == null)
+			throw new SAXException("XML parser is not available."); //$NON-NLS-1$
 		doc = builder.parse(f);
 		Element geneticCode = doc.getDocumentElement();
 		if (geneticCode.getNodeName().equals("genetic_code")) { //$NON-NLS-1$
@@ -159,7 +172,7 @@ public class BioXMLParser implements ErrorHandler {
 		throw new IllegalArgumentException();
 	}
 	
-	private static String colorToString(Color c) {
+	private static String colorToXmlToken(Color c) {
 		if (c.equals(Color.RED)) return "red"; //$NON-NLS-1$
 		if (c.equals(Color.GREEN)) return "green"; //$NON-NLS-1$
 		if (c.equals(Color.BLUE)) return "blue"; //$NON-NLS-1$

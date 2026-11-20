@@ -42,6 +42,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 
 /**
@@ -199,9 +200,14 @@ public class LabWindow {
 					genesList.clear();
 					importGeneticCode(g);
 					refreshGenesPanel();
-				} catch (SAXException ex) {
+				} catch (SAXParseException ex) {
+					// Malformed XML or DTD mismatch: not a genetic-code file.
 					System.err.println(ex.getMessage());
 					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+				} catch (SAXException ex) {
+					// Well-formed XML but bad content (numbers, colors...).
+					System.err.println(ex.getMessage());
+					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 				} catch (IOException ex) {
 					System.err.println(ex.getMessage());
 					errorAlert(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
