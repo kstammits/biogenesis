@@ -23,8 +23,10 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -38,6 +40,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class MainWindow {
@@ -211,11 +214,36 @@ public class MainWindow {
 	}
 
 	/**
+	 * Fixed label width inside toolbar buttons, so labels wrap under the icon
+	 * at word boundaries (e.g. "Manage" / "connections"). Must be min+prefs
+	 * +max: a wrapping Label measured at its min width inside a VBox reports
+	 * a huge pref height and blows the toolbar row out.
+	 */
+	private static final double TOOLBAR_LABEL_WIDTH = 88;
+
+	/**
 	 * Wraps a command in an FX toolbar button, snapshotting its live text,
 	 * icon, tooltip and enabled state. Chrome rebuilds via refreshChrome().
+	 * Icon above wrapped text (like the old Swing toolbar) to keep the row
+	 * condensed. The label lives in a VBox graphic because Button's own text
+	 * layout single-lines (and ellipsizes) under a ToolBar.
 	 */
 	Button toolButtonFor(StdAction action) {
-		Button button = new Button(action.getName(), iconView(action));
+		Button button = new Button();
+		button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+		Label label = new Label(action.getName());
+		label.setWrapText(true);
+		label.setMinWidth(TOOLBAR_LABEL_WIDTH);
+		label.setPrefWidth(TOOLBAR_LABEL_WIDTH);
+		label.setMaxWidth(TOOLBAR_LABEL_WIDTH);
+		label.setAlignment(Pos.CENTER);
+		label.setTextAlignment(TextAlignment.CENTER);
+		ImageView icon = iconView(action);
+		VBox graphic = icon == null ? new VBox(label) : new VBox(icon, label);
+		graphic.setAlignment(Pos.CENTER);
+		graphic.setSpacing(button.getGraphicTextGap());
+		button.setGraphic(graphic);
+		button.setAlignment(Pos.CENTER);
 		String desc = action.getDescription();
 		if (desc != null)
 			button.setTooltip(new Tooltip(desc));
