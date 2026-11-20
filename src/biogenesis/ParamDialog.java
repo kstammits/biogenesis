@@ -41,7 +41,7 @@ import javafx.stage.Stage;
 /**
  * JavaFX port of the parameters dialog. Same five tabs, same fields, same
  * validation semantics; layout uses GridPane rows instead of FlowLayout rows.
- * See {@link NetConfigWindow} for the Swing-EDT to FX-thread handoff.
+ * Built on the FX thread via {@link Fx}.
  */
 public class ParamDialog {
 	private ComboBox<String> localeCombo = null;

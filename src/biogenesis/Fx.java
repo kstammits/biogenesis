@@ -29,9 +29,8 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.stage.FileChooser;
 
 /**
- * Temporary Swing-to-JavaFX bridge. Ensures the FX toolkit is started and
- * routes UI work onto the FX Application Thread. Deleted once MainWindow
- * itself is JavaFX (then everything already runs on the FX thread).
+ * FX toolkit helper. Ensures the FX toolkit is started and routes UI work
+ * onto the FX Application Thread (the sim thread drives UI off-thread).
  */
 public final class Fx {
 	private Fx() {}
@@ -65,7 +64,7 @@ public final class Fx {
 
 	/**
 	 * Run a dialog on the FX Application Thread and block the caller for the
-	 * result. Lets Swing-EDT code use modal FX dialogs with unchanged flow.
+	 * result, so sim-thread code can use modal FX dialogs with unchanged flow.
 	 */
 	public static <T> T ask(Callable<T> dialog) {
 		ensureStarted();

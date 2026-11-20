@@ -38,7 +38,7 @@ import javafx.stage.Stage;
 
 /**
  * JavaFX port of the network connections window.
- * See {@link NetConfigWindow} for the Swing-EDT to FX-thread handoff.
+ * Built on the FX thread via {@link Fx}.
  */
 public class NetConnectionsWindow {
 

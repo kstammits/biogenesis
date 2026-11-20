@@ -22,8 +22,6 @@ import java.util.*;
 import java.util.prefs.*;
 import java.awt.*;
 
-import javax.swing.JFrame;
-
 /**
  * This class contains all global program parameters and a few useful methods for
  * reading or writing them from the user preferences.
@@ -44,7 +42,11 @@ public final class Utils {
 	final static int DEF_WINDOW_Y = 0;
 	final static int DEF_WINDOW_WIDTH = 640;
 	final static int DEF_WINDOW_HEIGHT = 480;
-	final static int DEF_WINDOW_STATE = JFrame.NORMAL;
+	/** Normal window state (value matches old JFrame.NORMAL for prefs compat). */
+	final static int WINDOW_STATE_NORMAL = 0;
+	/** Maximized window state (value matches old JFrame.MAXIMIZED_BOTH for prefs compat). */
+	final static int WINDOW_STATE_MAXIMIZED = 6;
+	final static int DEF_WINDOW_STATE = WINDOW_STATE_NORMAL;
 	/**
 	 * This is the default value of organisms that are created when a new world begins.
 	 */

@@ -33,9 +33,8 @@ import javafx.stage.Stage;
 
 /**
  * JavaFX port of the network configuration dialog.
- * Constructed on the Swing EDT like before; the window itself is built
- * asynchronously on the FX Application Thread via {@link Fx} (both call
- * sites are fire-and-forget, so the lost modal blocking is irrelevant).
+ * The window is built on the FX Application Thread via {@link Fx} (both call
+ * sites are fire-and-forget, so modal blocking is irrelevant).
  */
 public class NetConfigWindow {
 	protected CheckBox acceptConnectionsCheck;

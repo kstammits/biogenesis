@@ -18,9 +18,6 @@
 package biogenesis;
 
 
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
 import java.io.*;
 
 import java.text.NumberFormat;
@@ -38,16 +35,10 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import javax.swing.Action;
-import javax.swing.ImageIcon;
-import javax.swing.KeyStroke;
 
 public class MainWindow {
 	protected VisibleWorld _visibleWorld;
@@ -215,53 +206,32 @@ public class MainWindow {
 	}
 
 	/**
-	 * Wraps a Swing action in an FX toolbar button. Bodies ignore the event,
-	 * so a null ActionEvent is safe.
+	 * Wraps a command in an FX toolbar button, snapshotting its live text,
+	 * icon, tooltip and enabled state. Chrome rebuilds via refreshChrome().
 	 */
 	Button toolButtonFor(StdAction action) {
-		Button button = new Button((String) action.getValue(Action.NAME), iconView(action));
-		Object desc = action.getValue(Action.SHORT_DESCRIPTION);
+		Button button = new Button(action.getName(), iconView(action));
+		String desc = action.getDescription();
 		if (desc != null)
-			button.setTooltip(new Tooltip(desc.toString()));
+			button.setTooltip(new Tooltip(desc));
 		button.setDisable(!action.isEnabled());
-		button.setOnAction(evt -> action.actionPerformed(null));
+		button.setOnAction(evt -> action.perform());
 		return button;
 	}
 
 	/**
-	 * Converts a Swing accelerator KeyStroke (plain letters like P/S, with
-	 * modifiers when present) into an FX KeyCombination.
-	 */
-	private static KeyCombination acceleratorOf(StdAction action) {
-		Object acc = action.getValue(Action.ACCELERATOR_KEY);
-		if (!(acc instanceof KeyStroke))
-			return null;
-		KeyStroke ks = (KeyStroke) acc;
-		KeyCode code = KeyCode.getKeyCode(java.awt.event.KeyEvent.getKeyText(ks.getKeyCode()));
-		if (code == null)
-			return null;
-		int mods = ks.getModifiers();
-		return new KeyCodeCombination(code,
-				(mods & InputEvent.SHIFT_DOWN_MASK) != 0 ? KeyCombination.SHIFT_DOWN : KeyCombination.SHIFT_ANY,
-				(mods & InputEvent.CTRL_DOWN_MASK) != 0 ? KeyCombination.CONTROL_DOWN : KeyCombination.CONTROL_ANY,
-				(mods & InputEvent.ALT_DOWN_MASK) != 0 ? KeyCombination.ALT_DOWN : KeyCombination.ALT_ANY,
-				(mods & InputEvent.META_DOWN_MASK) != 0 ? KeyCombination.META_DOWN : KeyCombination.META_ANY,
-				KeyCombination.SHORTCUT_ANY);
-	}
-
-	/**
-	 * Wraps a Swing action in an FX menu item, keeping the icon policy of the
-	 * old menu (icons dropped where the Swing items nulled them).
+	 * Wraps a command in an FX menu item, keeping the icon policy of the
+	 * old menu (icons dropped where the actions nulled them).
 	 */
 	private static MenuItem menuItemFor(StdAction action, boolean keepIcon) {
-		MenuItem item = new MenuItem((String) action.getValue(Action.NAME));
+		MenuItem item = new MenuItem(action.getName());
 		if (keepIcon)
 			item.setGraphic(iconView(action));
 		item.setDisable(!action.isEnabled());
-		KeyCombination acc = acceleratorOf(action);
+		KeyCombination acc = action.getAccelerator();
 		if (acc != null)
 			item.setAccelerator(acc);
-		item.setOnAction(evt -> action.actionPerformed(null));
+		item.setOnAction(evt -> action.perform());
 		return item;
 	}
 
@@ -394,7 +364,7 @@ public class MainWindow {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			_trackedOrganism = null;
 			_world.genesis();
 			scrollPane.setContent(_visibleWorld);
@@ -408,8 +378,8 @@ public class MainWindow {
 		private static final long serialVersionUID = 1L;
 		protected String name2;
 		protected String description2;
-		protected Integer mnemonic2;
-		protected ImageIcon icon2;
+		protected int mnemonic2;
+		protected String iconPath2;
 
 		protected String name2_key;
 		protected String desc2_key;
@@ -421,16 +391,16 @@ public class MainWindow {
 			super(text1, icon_path1, desc1);
 			name2 = Messages.getString(text2);
 			description2 = Messages.getString(desc2);
-			icon2 = createIcon(icon_path2);
+			iconPath2 = icon_path2;
 			mnemonic2 = Messages.getMnemonic(text2);
 			name2_key = text2;
 			desc2_key = desc2;
 			active = false;
 
-			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_PAUSE_ACCELERATOR")));
+			accelerator = keyCombinationFor(Messages.getString("T_PAUSE_ACCELERATOR"));
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (_isProcessActive)
 				pauseGame();
 			else
@@ -439,19 +409,17 @@ public class MainWindow {
 
 		public void toogle() {
 			String aux;
-			ImageIcon auxicon;
-			Integer auxmnemonic;
-			aux = (String) getValue(NAME);
-			putValue(NAME, name2);
+			aux = name;
+			name = name2;
 			name2 = aux;
-			aux = (String) getValue(SHORT_DESCRIPTION);
-			putValue(SHORT_DESCRIPTION, description2);
+			aux = description;
+			description = description2;
 			description2 = aux;
-			auxicon = (ImageIcon) getValue(SMALL_ICON);
-			putValue(SMALL_ICON, icon2);
-			icon2 = auxicon;
-			auxmnemonic = (Integer) getValue(MNEMONIC_KEY);
-			putValue(MNEMONIC_KEY, mnemonic2);
+			aux = iconPath;
+			iconPath = iconPath2;
+			iconPath2 = aux;
+			int auxmnemonic = mnemonic;
+			mnemonic = mnemonic2;
 			mnemonic2 = auxmnemonic;
 			active = !active;
 		}
@@ -461,7 +429,8 @@ public class MainWindow {
 			super.changeLocale();
 			name2 = Messages.getString(name2_key);
 			description2 = Messages.getString(desc2_key);
-			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_PAUSE_ACCELERATOR")));
+			mnemonic2 = Messages.getMnemonic(name2_key);
+			accelerator = keyCombinationFor(Messages.getString("T_PAUSE_ACCELERATOR"));
 		}
 
 		public void setActive(boolean newState) {
@@ -480,10 +449,10 @@ public class MainWindow {
 		private static final long serialVersionUID = 1L;
 		public SaveGameAction(String text, String icon_path, String desc) {
 			super(text, icon_path, desc);
-			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_SAVE_ACCELERATOR")));
+			accelerator = keyCombinationFor(Messages.getString("T_SAVE_ACCELERATOR"));
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (_gameFile != null)
 				saveObject(_world, _gameFile);
 			else
@@ -493,7 +462,7 @@ public class MainWindow {
 		@Override
 		public void changeLocale() {
 			super.changeLocale();
-			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(Messages.getString("T_SAVE_ACCELERATOR")));
+			accelerator = keyCombinationFor(Messages.getString("T_SAVE_ACCELERATOR"));
 		}
 	}
 
@@ -503,7 +472,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			_world.addCO2(500);
 		}
 	}
@@ -514,7 +483,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			_world.decreaseCO2(500);
 		}
 	}
@@ -525,7 +494,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			netConnectionsWindow();
 		}
 	}
@@ -536,7 +505,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			setTrackedOrganism(null);
 		}
 	}
@@ -547,7 +516,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			boolean processState = _isProcessActive;
 			_isProcessActive = false;
 			try {
@@ -604,7 +573,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			saveGameAs();
 		}
 	}
@@ -615,7 +584,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			quit();
 		}
 	}
@@ -656,7 +625,7 @@ public class MainWindow {
 		return (int) stage.getHeight();
 	}
 	public int getExtendedState() {
-		return stage.isMaximized() ? Frame.MAXIMIZED_BOTH : Frame.NORMAL;
+		return stage.isMaximized() ? Utils.WINDOW_STATE_MAXIMIZED : Utils.WINDOW_STATE_NORMAL;
 	}
 
 	class StatisticsAction extends StdAction {
@@ -665,7 +634,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (_statisticsWindow != null)
 				_statisticsWindow.dispose();
 			_statisticsWindow = _world.createStatisticsWindow(MainWindow.this);
@@ -678,7 +647,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			new LabWindow(MainWindow.this);
 		}
 	}
@@ -689,7 +658,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			_world.killAll();
 		}
 	}
@@ -700,7 +669,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			_world.disperseAll();
 		}
 	}
@@ -711,7 +680,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			paramDialog();
 		}
 	}
@@ -722,7 +691,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 		String DirNameManual = "/usr/share/doc/biogenesis/biogenesis_manual";
 		if ((new File(DirNameManual+"/manual_"+Messages.getLanguage()+".html")).exists()) {
 			BareBonesBrowserLaunch.openURL(DirNameManual+"/manual_"+Messages.getLanguage()+".html");
@@ -746,7 +715,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			checkLastVersion();
 		}
 	}
@@ -757,7 +726,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			about();
 		}
 	}
@@ -768,7 +737,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			netConfig();
 		}
 	}
@@ -779,7 +748,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			boolean on = Utils.toggleEFFICIENCY_MODE();
 			Utils.savePreferences();
 			setStatusMessage(on ? "Efficiency mode ON" : "Efficiency mode OFF"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -794,7 +763,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (_visibleWorld != null)
 				_visibleWorld.zoomIn();
 		}
@@ -806,7 +775,7 @@ public class MainWindow {
 			super(text, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (_visibleWorld != null)
 				_visibleWorld.zoomOut();
 		}
@@ -1046,7 +1015,7 @@ public class MainWindow {
 		stage.setResizable(true);
 		stage.setWidth(Utils.WINDOW_WIDTH);
 		stage.setHeight(Utils.WINDOW_HEIGHT);
-		if (Utils.WINDOW_STATE == Frame.MAXIMIZED_BOTH)
+		if (Utils.WINDOW_STATE == Utils.WINDOW_STATE_MAXIMIZED)
 			stage.setMaximized(true);
 		stage.show();
 

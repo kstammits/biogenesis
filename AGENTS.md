@@ -23,15 +23,19 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
 ## Architecture notes
 - `WorldView.java` seam: `World`/`Organism` talk to the view only through it.
   Headless tests attach a no-op view.
-- `Fx.java` is a TEMPORARY Swing→FX bridge (`run`/`ask`/alerts/file choosers).
-  Deleted once `MainWindow` becomes FX. Its only branchy logic —
-  `withAppendedExt` (save-dialog extension rule incl. PNG keep-as-typed) — is
-  covered by `FxLogicTest`. Alert/file-chooser wrappers are thin; verify by eyeball.
+- `Fx.java` is the FX toolkit helper (`run`/`ask`/alerts/file choosers).
+  Its only branchy logic — `withAppendedExt` (save-dialog extension rule
+  incl. PNG keep-as-typed) — is covered by `FxLogicTest`. Alert/file-chooser
+  wrappers are thin; verify by eyeball.
 - Ported windows use `Stage` + `APPLICATION_MODAL`. Established pattern:
   constructor takes parent, `Fx.run(this::buildAndShow)`, OK writes prefs,
-  Cancel closes. Preview canvases render via `GeneticCode.draw` into a
-  `BufferedImage` → `SwingFXUtils.toFXImage` (keep this bridge; port renderers
-  to `GraphicsContext` only after `VisibleWorld`/`MainWindow` are done).
+  Cancel closes. Preview canvases + `VisibleWorld` render via AWT
+  (`World`/`GeneticCode.draw`) into a `BufferedImage` →
+  `SwingFXUtils.toFXImage`. Keep this bridge — Karl wants the full
+  `GraphicsContext` renderer port later, but it's not hurting anyone right now.
+- `StdAction` is a plain FX command POJO (name/desc/iconPath/accelerator/
+  enabled + `perform()`); no `javax.swing` anywhere. Remaining AWT is renderers
+  only (`Color`/`Graphics`/`BufferedImage` + `SwingFXUtils`/`ImageIO` bridge).
 - Serial contract: `FILE_VERSION 800`, `VERSION 901` in `Utils.java`.
   i18n via `Messages.java` + 7 `messages*.properties` (keep 0 missing keys).
 
@@ -54,7 +58,7 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   `VisibleWorld` canvas (Pane+Canvas in FX ScrollPane, coalesced redraw, FX ContextMenus),
   `MainWindow` shell (Stage/MenuBar/ToolBar/ScrollPane, StdAction wrappers, no Swing windows).
   Migration complete: no `javax.swing` window code remains (`StdAction` command
-  objects + `Utils` frame constants aside — renderers still on AWT).
+  objects + `Utils` frame constants gone too — renderers still on AWT).
 - Next: Karl's backlog (FPS limits, zooms, bg color, decoupled sim-speed,
   branching saves). SimSmoke green each time.
 

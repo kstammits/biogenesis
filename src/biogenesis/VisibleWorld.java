@@ -19,14 +19,12 @@ package biogenesis;
 
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.Action;
 
 import org.xml.sax.SAXException;
 
@@ -47,9 +45,8 @@ import javafx.scene.layout.Pane;
  * MainWindow's FX ScrollPane. Rendering still goes through the AWT
  * {@link World#draw} into a BufferedImage converted with SwingFXUtils
  * (same bridge as the preview canvases); the renderers move to
- * GraphicsContext only after MainWindow itself is FX. Redraw requests
- * coalesce through a dirty flag so a burst of sim-thread repaints costs
- * a single frame render, like Swing's RepaintManager did.
+ * GraphicsContext later. Redraw requests coalesce through a dirty flag
+ * so a burst of sim-thread repaints costs a single frame render.
  */
 public class VisibleWorld extends Pane implements WorldView {
 	/**
@@ -188,7 +185,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			desc_key2 = desc2;
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				if (_mainWindow._trackedOrganism == b)
@@ -200,13 +197,13 @@ public class VisibleWorld extends Pane implements WorldView {
 
 		public void setTracking(boolean isTracking) {
 			if (isTracking) {
-				putValue(NAME, Messages.getString(name_key2));
-				putValue(SHORT_DESCRIPTION, Messages.getString(desc_key2));
-				putValue(MNEMONIC_KEY, Messages.getMnemonic(name_key2));
+				name = Messages.getString(name_key2);
+				description = Messages.getString(desc_key2);
+				mnemonic = Messages.getMnemonic(name_key2);
 			} else {
-				putValue(NAME, Messages.getString(name_key));
-				putValue(SHORT_DESCRIPTION, Messages.getString(desc_key));
-				putValue(MNEMONIC_KEY, Messages.getMnemonic(name_key));
+				name = Messages.getString(name_key);
+				description = Messages.getString(desc_key);
+				mnemonic = Messages.getMnemonic(name_key);
 			}
 		}
 	}
@@ -217,7 +214,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				double q = Math.min(10, _mainWindow.getWorld().getCO2());
@@ -234,7 +231,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				b.useEnergy(b.getEnergy()/2);
@@ -248,7 +245,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				b.die(null);
@@ -262,7 +259,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				clippedGeneticCode = b.getGeneticCode();
@@ -276,7 +273,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				boolean processState = _mainWindow._isProcessActive;
@@ -319,7 +316,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && !b.isAlive()) {
 				for (int i = 0; i < b._segments; i++)
@@ -339,7 +336,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (getSelectedOrganism() != null && !getSelectedOrganism().isAlive()) {
 				Organism b = getSelectedOrganism();
 				b.useEnergy(b.getEnergy());
@@ -353,7 +350,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				b.reproduce();
@@ -367,7 +364,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				b._age = 0;
@@ -381,7 +378,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			Organism b = getSelectedOrganism();
 			if (b != null && b.isAlive()) {
 				_mainWindow.saveObjectAs(b.getGeneticCode());
@@ -395,7 +392,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			if (clippedGeneticCode != null) {
 				pasteGeneticCode(clippedGeneticCode, mouseX, mouseY);
 			}
@@ -408,7 +405,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			GeneticCode g = new GeneticCode();
 			Organism newBiot = new Organism(_mainWindow.getWorld(), g);
 			if (newBiot.pasteOrganism(mouseX, mouseY))
@@ -422,7 +419,7 @@ public class VisibleWorld extends Pane implements WorldView {
 			super(text_key, icon_path, desc);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void perform() {
 			GeneticCode g;
 			Organism newBiot;
 			boolean processState = _mainWindow._isProcessActive;
@@ -751,8 +748,7 @@ public class VisibleWorld extends Pane implements WorldView {
 
 	/**
 	 * Creates all popup menus. Runs on the FX thread; menu items wrap the
-	 * Swing actions (still owned by the Swing toolbar) and read their live
-	 * text/enabled state at build time.
+	 * StdAction commands and read their live text/enabled state at build time.
 	 */
 	private void createPopupMenu() {
 		popupAlive = new ContextMenu();
@@ -785,13 +781,13 @@ public class VisibleWorld extends Pane implements WorldView {
 		}
 	}
 	/**
-	 * Wraps a Swing action in an FX menu item. Bodies ignore the event, so a
-	 * null ActionEvent is safe.
+	 * Wraps a command in an FX menu item, snapshotting its live text and
+	 * enabled state at build time.
 	 */
 	private MenuItem itemFor(StdAction action) {
-		MenuItem item = new MenuItem((String) action.getValue(Action.NAME));
+		MenuItem item = new MenuItem(action.getName());
 		item.setDisable(!action.isEnabled());
-		item.setOnAction(evt -> action.actionPerformed(null));
+		item.setOnAction(evt -> action.perform());
 		return item;
 	}
 	/**
@@ -846,7 +842,7 @@ public class VisibleWorld extends Pane implements WorldView {
 				setSelectedOrganism(b);
 				if (b.isAlive()) {
 					trackAction.setTracking(_mainWindow._trackedOrganism == b);
-					trackMenuItem.setText((String) trackAction.getValue(Action.NAME));
+					trackMenuItem.setText(trackAction.getName());
 					popupAlive.show(canvas, screenX, screenY);
 				}
 				else
