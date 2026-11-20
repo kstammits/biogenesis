@@ -18,128 +18,134 @@
 package biogenesis;
 
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.*;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 
-public class NetConnectionsWindow extends JDialog {
-	private static final long serialVersionUID = Utils.FILE_VERSION;
-	
+/**
+ * JavaFX port of the network connections window.
+ * See {@link NetConfigWindow} for the Swing-EDT to FX-thread handoff.
+ */
+public class NetConnectionsWindow {
+
 	protected MainWindow mainWindow;
-	
-	private JTextField ipText, portText;
-	private JPanel connectionsPanel;
-	private JScrollPane connectionsScroll;
-	
+
+	private TextField ipText, portText;
+	private GridPane connectionsGrid;
+	private Stage stage;
+
 	public String getPortText() {
 		return portText.getText();
 	}
 	public String getIPText() {
 		return ipText.getText();
 	}
-	
-	public NetConnectionsWindow(MainWindow parent) {
-		super(parent);
-		mainWindow = parent;
-		setTitle(Messages.getString("T_NETWORK_CONNECTIONS")); //$NON-NLS-1$
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);	
-		setComponents();
-		pack();
-		setResizable(false);
-		setVisible(true);
-	}
-	
-	private void setComponents() {
-		JPanel newConnectionPanel = new JPanel();
-		newConnectionPanel.add(new JLabel(Messages.getString("T_IP"))); //$NON-NLS-1$
-		ipText = new JTextField(15);
-		newConnectionPanel.add(ipText);
-		newConnectionPanel.add(new JLabel(Messages.getString("T_PORT"))); //$NON-NLS-1$
-		portText = new JTextField(5);
-		newConnectionPanel.add(portText);
-		JButton newConnectionButton = new JButton(Messages.getString("T_NEW_CONNECTION")); //$NON-NLS-1$
-		newConnectionButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				try {
-					int port = Integer.parseInt(getPortText());
-					if (port > 0) {
-						try {
-							InetAddress address = InetAddress.getByName(getIPText());
-							NetServerThread netServer = mainWindow.startServer();
-							Connection connection = netServer.newConnection(address, port);
-							if (connection != null)
-								connection.connect();
-							refreshConnectionsPanel();
-						} catch (UnknownHostException e) {
-							JOptionPane.showMessageDialog(null,Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
-									Messages.getString("T_CANT_STABLISH_CONNECTION")+e.getLocalizedMessage(),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
-						}
-					}
-				} catch (NumberFormatException e) {
-					JOptionPane.showMessageDialog(null,Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
-							Messages.getString("T_PORT_MUST_BE_A_NUMBER"),JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
-				}
-			}
-		});
-		newConnectionPanel.add(newConnectionButton);
-		
-		connectionsPanel = new JPanel();
-		connectionsScroll = new JScrollPane(connectionsPanel);
-		connectionsScroll.setPreferredSize(new Dimension(440,300));
-		refreshConnectionsPanel();
-		getContentPane().setLayout(new BorderLayout());
-		getContentPane().add(newConnectionPanel, BorderLayout.NORTH);
-		getContentPane().add(connectionsScroll,BorderLayout.CENTER);
-	}
-	
-	protected void refreshConnectionsPanel() {
-		connectionsPanel.removeAll();
-		NetServerThread netServer = mainWindow.getNetServer();
-		if (netServer != null) {	
-			int i;
-			Iterator<Connection> it;
-			GridBagConstraints constraints = new GridBagConstraints();
-			constraints.insets = new Insets(2,4,2,4);
-			List<Connection> connections = netServer.getConnections();
-			connectionsPanel.setLayout(new GridBagLayout());
-			Connection c;
-			synchronized(connections) {
-				for (i=0, it = connections.iterator(); it.hasNext(); i++) {
-					c = it.next();
-					constraints.gridx = 0;
-					constraints.gridy = i;
-					connectionsPanel.add(new JLabel(c.getRemoteAddress().toString()), constraints);
-					constraints.gridx = 1;
-					connectionsPanel.add(new JLabel(Integer.toString(c.getRemotePort())), constraints);
-					JButton button = new JButton(Messages.getString("T_DISCONNECT")); //$NON-NLS-1$
-					button.addActionListener(new disconnectAction(c));
-					constraints.gridx = 2;
-					connectionsPanel.add(button, constraints);
-				}
-			}
-		}
-		validate();
-		repaint();
-	}
-	
-	private class disconnectAction implements ActionListener {
-		private Connection connection;
-		
-		public disconnectAction(Connection c) {
-			connection = c;
-		}
 
-		public void actionPerformed(ActionEvent e) {
-			connection.send(NetServerThread.DISCONNECT);
-			connection.setState(Connection.STATE_DISCONNECTED);
-			refreshConnectionsPanel();
+	public NetConnectionsWindow(MainWindow parent) {
+		mainWindow = parent;
+		Fx.run(this::buildAndShow);
+	}
+
+	private void buildAndShow() {
+		stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.setTitle(Messages.getString("T_NETWORK_CONNECTIONS")); //$NON-NLS-1$
+		stage.setResizable(false);
+
+		GridPane form = new GridPane();
+		form.setHgap(8);
+		form.setVgap(8);
+		form.add(new Label(Messages.getString("T_IP")), 0, 0); //$NON-NLS-1$
+		ipText = new TextField();
+		ipText.setPrefColumnCount(15);
+		form.add(ipText, 1, 0);
+		form.add(new Label(Messages.getString("T_PORT")), 2, 0); //$NON-NLS-1$
+		portText = new TextField();
+		portText.setPrefColumnCount(5);
+		form.add(portText, 3, 0);
+		Button newConnectionButton = new Button(Messages.getString("T_NEW_CONNECTION")); //$NON-NLS-1$
+		newConnectionButton.setDefaultButton(true);
+		newConnectionButton.setOnAction(evt -> onNewConnection());
+		form.add(newConnectionButton, 4, 0);
+
+		connectionsGrid = new GridPane();
+		connectionsGrid.setHgap(8);
+		connectionsGrid.setVgap(4);
+		refreshConnectionsPanel();
+		ScrollPane scroll = new ScrollPane(connectionsGrid);
+		scroll.setPrefSize(440, 300);
+
+		VBox root = new VBox(10, form, scroll);
+		root.setPadding(new Insets(10));
+		stage.setScene(new Scene(root));
+		stage.sizeToScene();
+		stage.show();
+	}
+
+	private void onNewConnection() {
+		try {
+			int port = Integer.parseInt(getPortText());
+			if (port > 0) {
+				try {
+					InetAddress address = InetAddress.getByName(getIPText());
+					NetServerThread netServer = mainWindow.startServer();
+					Connection connection = netServer.newConnection(address, port);
+					if (connection != null)
+						connection.connect();
+					refreshConnectionsPanel();
+				} catch (UnknownHostException e) {
+					errorAlert(Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
+							Messages.getString("T_CANT_STABLISH_CONNECTION")+e.getLocalizedMessage()); //$NON-NLS-1$
+				}
+			}
+		} catch (NumberFormatException e) {
+			errorAlert(Messages.getString("T_CONNECTION_FAILED"), //$NON-NLS-1$
+					Messages.getString("T_PORT_MUST_BE_A_NUMBER")); //$NON-NLS-1$
+		}
+	}
+
+	private void errorAlert(String title, String message) {
+		Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.showAndWait();
+	}
+
+	protected void refreshConnectionsPanel() {
+		connectionsGrid.getChildren().clear();
+		NetServerThread netServer = mainWindow.getNetServer();
+		if (netServer != null) {
+			List<Connection> connections = netServer.getConnections();
+			synchronized(connections) {
+				int i = 0;
+				for (Connection c : connections) {
+					connectionsGrid.add(new Label(c.getRemoteAddress().toString()), 0, i);
+					connectionsGrid.add(new Label(Integer.toString(c.getRemotePort())), 1, i);
+					Button button = new Button(Messages.getString("T_DISCONNECT")); //$NON-NLS-1$
+					final Connection target = c;
+					button.setOnAction(evt -> {
+						target.send(NetServerThread.DISCONNECT);
+						target.setState(Connection.STATE_DISCONNECTED);
+						refreshConnectionsPanel();
+					});
+					connectionsGrid.add(button, 2, i);
+					i++;
+				}
+			}
 		}
 	}
 }
