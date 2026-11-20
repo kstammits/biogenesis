@@ -54,3 +54,15 @@ unchanged; UI is ported leaves-first (dialogs → canvas → shell).
   `VisibleWorld` canvas (JFXPanel+Canvas, coalesced redraw, FX ContextMenus).
 - Next: `MainWindow` shell (last Swing). One window per commit,
   SimSmoke green each time.
+
+## Backlog (Karl's list — do NOT start unasked)
+- FPS limits: governor (`MainWindow.currentDelay`, auto-pause past 1000ms) trips
+  on cold starts; revisit caps/floor once the shell is FX.
+- Window zooms: `zoomFactor`/`Utils.ZOOM_FACTOR` plumbing is in, but UX (zoom to
+  cursor, fit-window, persisted per-world) is unfinished.
+- Background color: world canvas is hardcoded black (`VisibleWorld`, panels);
+  make it a preference.
+- Sim-speed target (decoupled FPS): sim ticks are currently locked to the paint
+  loop (`startLifeProcess`/`lifeProcess`); split into independent sim-rate and
+  render-rate targets.
+- Someday: branching save-files (versioned/forked `.bgw` lineages).
