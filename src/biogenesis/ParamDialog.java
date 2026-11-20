@@ -18,92 +18,127 @@
 package biogenesis;
 
 
-import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.ToggleGroup;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 
-import java.awt.*;
-import java.awt.event.*;
+/**
+ * JavaFX port of the parameters dialog. Same five tabs, same fields, same
+ * validation semantics; layout uses GridPane rows instead of FlowLayout rows.
+ * See {@link NetConfigWindow} for the Swing-EDT to FX-thread handoff.
+ */
+public class ParamDialog {
+	private ComboBox<String> localeCombo = null;
+	private TextField widthText = null;
+	private TextField heightText = null;
+	private TextField delayText = null;
+	protected RadioButton hardwareNoneRadio = null;
+	protected RadioButton hardwareOpenGLRadio = null;
+	protected CheckBox hardwareFBObjectCheck = null;
+	private TextField frictionText = null;
+	private TextField elasticityText = null;
+	private TextField initialnumberText = null;
+	private TextField initialenergyText = null;
+	private TextField initialO2Text = null;
+	private TextField initialCO2Text = null;
+	private TextField stressresistanceText = null;
+	private TextField majormutationrateText = null;
+	private TextField minormutationrateText = null;
+	private TextField minormutationamplitudeText = null;
+	private TextField spontaneousmutationrateText = null;
+	private TextField redcostText = null;
+	private TextField greencostText = null;
+	private TextField bluecostText = null;
+	private TextField cyancostText = null;
+	private TextField whitecostText = null;
+	private TextField graycostText = null;
+	private TextField yellowcostText = null;
+	private TextField segmentcostText = null;
+	private TextField drainText = null;
+	private TextField greenenergyText = null;
+	private TextField organicenergyText = null;
+	private TextField organicsubsText = null;
+	private TextField redprobText = null;
+	private TextField greenprobText = null;
+	private TextField blueprobText = null;
+	private TextField cyanprobText = null;
+	private TextField whiteprobText = null;
+	private TextField grayprobText = null;
+	private TextField yellowprobText = null;
+	private TextField decayenergyText = null;
+	private Button OKButton = null;
+	private Button cancelButton = null;
+	private Button defaultButton = null;
 
-public class ParamDialog extends JDialog {
-	private static final long serialVersionUID = Utils.FILE_VERSION;
-	private JComboBox localeCombo = null;
-	private JTextField widthText = null;
-	private JTextField heightText = null;
-	private JTextField delayText = null;
-	protected JRadioButton hardwareNoneRadio = null;
-	protected JRadioButton hardwareOpenGLRadio = null;
-	private ButtonGroup hardwareGroup = null;
-	protected JCheckBox hardwareFBObjectCheck = null;
-	private JTextField frictionText = null;
-	private JTextField elasticityText = null;
-	private JTextField initialnumberText = null;
-	private JTextField initialenergyText = null;
-	private JTextField initialO2Text = null;
-	private JTextField initialCO2Text = null;
-	private JTextField stressresistanceText = null;
-	private JTextField majormutationrateText = null;
-	private JTextField minormutationrateText = null;
-	private JTextField minormutationamplitudeText = null;
-	private JTextField spontaneousmutationrateText = null;
-	private JTextField redcostText = null;
-	private JTextField greencostText = null;
-	private JTextField bluecostText = null;
-	private JTextField cyancostText = null;
-	private JTextField whitecostText = null;
-	private JTextField graycostText = null;
-	private JTextField yellowcostText = null;
-	private JTextField segmentcostText = null;
-	private JTextField drainText = null;
-	private JTextField greenenergyText = null;
-	private JTextField organicenergyText = null;
-	private JTextField organicsubsText = null;
-	private JTextField redprobText = null;
-	private JTextField greenprobText = null;
-	private JTextField blueprobText = null;
-	private JTextField cyanprobText = null;
-	private JTextField whiteprobText = null;
-	private JTextField grayprobText = null;
-	private JTextField yellowprobText = null;
-	private JTextField decayenergyText = null;
-	private JButton OKButton = null;
-	private JButton cancelButton = null;
-	private JButton defaultButton = null;
-	
 	protected MainWindow mainWindow;
-	
+	private Stage stage;
+
 	public ParamDialog(MainWindow parent) {
-		// Configurem les caracter�stiques generals
-		super(parent,Messages.getString("T_PARAMETERS_CONFIGURATION"),true); //$NON-NLS-1$
 		mainWindow = parent;
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setComponents();
-		pack();
-		setResizable(false);
-		// Configurem les accions dels butons
-		OKButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                    	checkParams();
-                    	Utils.savePreferences();
-                    	dispose();
-                    }
-                    });
-		cancelButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                    	dispose();
-                    }
-                    });
-		defaultButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				defaultPreferences();
-			}
-		});
-		// Ja est� tot apunt
-		setVisible(true);
+		Fx.run(this::buildAndShow);
 	}
-	
+
+	private void buildAndShow() {
+		stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.setTitle(Messages.getString("T_PARAMETERS_CONFIGURATION")); //$NON-NLS-1$
+		stage.setResizable(false);
+
+		OKButton = new Button(Messages.getString("T_OK")); //$NON-NLS-1$
+		OKButton.setDefaultButton(true);
+		OKButton.setOnAction(evt -> { checkParams(); Utils.savePreferences(); stage.close(); });
+		cancelButton = new Button(Messages.getString("T_CANCEL")); //$NON-NLS-1$
+		cancelButton.setCancelButton(true);
+		cancelButton.setOnAction(evt -> stage.close());
+		defaultButton = new Button(Messages.getString("T_DEFAULT_VALUES")); //$NON-NLS-1$
+		defaultButton.setOnAction(evt -> defaultPreferences());
+		HBox buttons = new HBox(8, OKButton, cancelButton, defaultButton);
+		buttons.setAlignment(Pos.CENTER);
+
+		TabPane tabs = new TabPane();
+		tabs.getTabs().add(new Tab(Messages.getString("T_GENERAL"), setGeneralTab())); //$NON-NLS-1$
+		tabs.getTabs().add(new Tab(Messages.getString("T_WORLD"), setWorldTab())); //$NON-NLS-1$
+		tabs.getTabs().add(new Tab(Messages.getString("T_ORGANISMS"), setOrganismsTab())); //$NON-NLS-1$
+		tabs.getTabs().add(new Tab(Messages.getString("T_METABOLISM"), setMetabolismTab())); //$NON-NLS-1$
+		tabs.getTabs().add(new Tab(Messages.getString("T_GENES"), setGenesTab())); //$NON-NLS-1$
+		tabs.getTabs().forEach(t -> t.setClosable(false));
+
+		VBox root = new VBox(10, tabs, buttons);
+		root.setPadding(new Insets(10));
+		stage.setScene(new Scene(root));
+		stage.sizeToScene();
+		stage.show();
+	}
+
+	private static TextField numField(String initial) {
+		TextField f = new TextField(initial);
+		f.setPrefColumnCount(6);
+		return f;
+	}
+
+	private static GridPane grid() {
+		GridPane g = new GridPane();
+		g.setHgap(8);
+		g.setVgap(6);
+		return g;
+	}
+
 	protected void defaultPreferences() {
 		widthText.setText(String.valueOf(Utils.DEF_WORLD_WIDTH));
 		heightText.setText(String.valueOf(Utils.DEF_WORLD_HEIGHT));
@@ -145,7 +180,7 @@ public class ParamDialog extends JDialog {
 		case 5:
 			hardwareNoneRadio.setSelected(true);
 			hardwareFBObjectCheck.setSelected(false);
-			hardwareFBObjectCheck.setEnabled(false);
+			hardwareFBObjectCheck.setDisable(true);
 			break;
 		case 1:
 		case 3:
@@ -158,64 +193,36 @@ public class ParamDialog extends JDialog {
 			break;
 		}
 	}
-	
-	protected void setComponents() {
-		getContentPane().setLayout(new BorderLayout());
-		// Set up buttons
-		JPanel buttonsPanel = new JPanel();
-		OKButton = new JButton(Messages.getString("T_OK")); //$NON-NLS-1$
-		cancelButton = new JButton(Messages.getString("T_CANCEL")); //$NON-NLS-1$
-		defaultButton = new JButton(Messages.getString("T_DEFAULT_VALUES")); //$NON-NLS-1$
-		buttonsPanel.add(OKButton);
-		buttonsPanel.add(cancelButton);
-		buttonsPanel.add(defaultButton);
-		getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
-		JTabbedPane tabbedPane = new JTabbedPane();
-		// Set up general tab
-		tabbedPane.addTab(Messages.getString("T_GENERAL"), setGeneralTab()); //$NON-NLS-1$
-		// Set up world tab
-		tabbedPane.addTab(Messages.getString("T_WORLD"), setWorldTab()); //$NON-NLS-1$
-		// Set up organisms tab
-		tabbedPane.addTab(Messages.getString("T_ORGANISMS"), setOrganismsTab()); //$NON-NLS-1$
-		// Set up metabolism tab
-		tabbedPane.addTab(Messages.getString("T_METABOLISM"), setMetabolismTab()); //$NON-NLS-1$
-		// Set up genes tab
-		tabbedPane.addTab(Messages.getString("T_GENES"), setGenesTab()); //$NON-NLS-1$
-		getContentPane().add(tabbedPane, BorderLayout.CENTER);
-	}
-	
-	protected JPanel setGeneralTab() {
-		JPanel generalPanel = new JPanel();
-		generalPanel.setLayout(new BoxLayout(generalPanel,BoxLayout.Y_AXIS));
+
+	protected VBox setGeneralTab() {
+		VBox general = new VBox(8);
+		general.setPadding(new Insets(6));
 		// Language
-		JPanel panel = new JPanel();
-		JLabel label = new JLabel(Messages.getString("T_LANGUAGE")); //$NON-NLS-1$
-		panel.add(label);
-		localeCombo = new JComboBox(Messages.getSupportedLocalesNames());
-		localeCombo.setSelectedIndex(Messages.getLocaleIndex());
-		panel.add(localeCombo);
-		generalPanel.add(panel);
-		//Frames per second
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_TIME_PER_FRAME")); //$NON-NLS-1$
-		panel.add(label);
-		delayText = new JTextField(Integer.toString(Utils.DELAY),6);
-		panel.add(delayText);
-		label = new JLabel(Messages.getString("T_MILLISECONDS")); //$NON-NLS-1$
-		panel.add(label);
-		generalPanel.add(panel);
+		HBox lang = new HBox(8,
+				new Label(Messages.getString("T_LANGUAGE")), //$NON-NLS-1$
+				localeCombo = new ComboBox<>());
+		localeCombo.getItems().addAll(Messages.getSupportedLocalesNames());
+		localeCombo.getSelectionModel().select(Messages.getLocaleIndex());
+		lang.setAlignment(Pos.CENTER_LEFT);
+		general.getChildren().add(lang);
+		// Frames per second
+		delayText = numField(Integer.toString(Utils.DELAY));
+		HBox delay = new HBox(8,
+				new Label(Messages.getString("T_TIME_PER_FRAME")), delayText, //$NON-NLS-1$
+				new Label(Messages.getString("T_MILLISECONDS"))); //$NON-NLS-1$
+		delay.setAlignment(Pos.CENTER_LEFT);
+		general.getChildren().add(delay);
 		// OpenGL
-		panel = new JPanel();
-		panel.setLayout(new GridLayout(5,1));
-		panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
-				Messages.getString("T_HARDWARE_ACCELERATION"))); //$NON-NLS-1$
-		hardwareNoneRadio = new JRadioButton(Messages.getString("T_NONE")); //$NON-NLS-1$
-		hardwareOpenGLRadio = new JRadioButton(Messages.getString("T_OPENGL")); //$NON-NLS-1$
-		hardwareFBObjectCheck = new JCheckBox(Messages.getString("T_DISABLE_FBOBJECT")); //$NON-NLS-1$
+		hardwareNoneRadio = new RadioButton(Messages.getString("T_NONE")); //$NON-NLS-1$
+		hardwareOpenGLRadio = new RadioButton(Messages.getString("T_OPENGL")); //$NON-NLS-1$
+		hardwareFBObjectCheck = new CheckBox(Messages.getString("T_DISABLE_FBOBJECT")); //$NON-NLS-1$
+		ToggleGroup hardwareGroup = new ToggleGroup();
+		hardwareNoneRadio.setToggleGroup(hardwareGroup);
+		hardwareOpenGLRadio.setToggleGroup(hardwareGroup);
 		switch (Utils.HARDWARE_ACCELERATION) {
 		case 0:
 			hardwareNoneRadio.setSelected(true);
-			hardwareFBObjectCheck.setEnabled(false);
+			hardwareFBObjectCheck.setDisable(true);
 			break;
 		case 1:
 		case 2:
@@ -229,241 +236,162 @@ public class ParamDialog extends JDialog {
 			hardwareFBObjectCheck.setSelected(true);
 			break;
 		}
-		hardwareGroup = new ButtonGroup();
-		hardwareGroup.add(hardwareNoneRadio);
-		hardwareGroup.add(hardwareOpenGLRadio);
-		hardwareNoneRadio.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if (hardwareNoneRadio.isSelected())
-					hardwareFBObjectCheck.setEnabled(false);
-				else
-					hardwareFBObjectCheck.setEnabled(true);				
-			}
-		});
-		panel.add(hardwareNoneRadio);
-		panel.add(hardwareOpenGLRadio);
-		panel.add(hardwareFBObjectCheck);
-		panel.add(new JLabel(Messages.getString("T_DIRECTX_IS_AUTOMATICALLY_DETECTED_AND_INITIALIZED"))); //$NON-NLS-1$
-		panel.add(new JLabel(Messages.getString("T_APPLICATION_MUST_BE_RESTARTED_TO_APPLY_CHANGES"))); //$NON-NLS-1$
-		generalPanel.add(panel);
-		return generalPanel;
+		hardwareNoneRadio.selectedProperty().addListener(
+			(obs, was, is) -> hardwareFBObjectCheck.setDisable(is));
+		VBox hw = new VBox(6, hardwareNoneRadio, hardwareOpenGLRadio, hardwareFBObjectCheck,
+				new Label(Messages.getString("T_DIRECTX_IS_AUTOMATICALLY_DETECTED_AND_INITIALIZED")), //$NON-NLS-1$
+				new Label(Messages.getString("T_APPLICATION_MUST_BE_RESTARTED_TO_APPLY_CHANGES"))); //$NON-NLS-1$
+		hw.setPadding(new Insets(6));
+		TitledPane hwPane = new TitledPane(Messages.getString("T_HARDWARE_ACCELERATION"), hw); //$NON-NLS-1$
+		hwPane.setCollapsible(false);
+		general.getChildren().add(hwPane);
+		return general;
 	}
-	
-	protected JPanel setWorldTab() {
-		JPanel worldPanel = new JPanel();
-		worldPanel.setLayout(new BoxLayout(worldPanel,BoxLayout.Y_AXIS));
-		// World size
-		JPanel panel = new JPanel();
-		JLabel label = new JLabel(Messages.getString("T_WIDTH")); //$NON-NLS-1$
-		panel.add(label);
-		widthText = new JTextField(Integer.toString(Utils.WORLD_WIDTH),6);
-		panel.add(widthText);
-		label = new JLabel(Messages.getString("T_HEIGHT")); //$NON-NLS-1$
-		panel.add(label);
-		heightText = new JTextField(Integer.toString(Utils.WORLD_HEIGHT),6);
-		panel.add(heightText);
-		worldPanel.add(panel);
-		// Initial O2 - initial CO2
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_INITIAL_OXYGEN")); //$NON-NLS-1$
-		panel.add(label);
-		initialO2Text = new JTextField(Double.toString(Utils.INITIAL_O2),6);
-		panel.add(initialO2Text);
-		label = new JLabel(Messages.getString("T_INITIAL_CARBON_DIOXIDE")); //$NON-NLS-1$
-		panel.add(label);
-		initialCO2Text = new JTextField(Double.toString(Utils.INITIAL_CO2),6);
-		panel.add(initialCO2Text);
-		worldPanel.add(panel);
-		// Friction - Elasticity
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_FRICTION_COEFFICIENT")); //$NON-NLS-1$
-		panel.add(label);
-		frictionText = new JTextField(Double.toString(Utils.FRICTION),6);
-		panel.add(frictionText);
-		worldPanel.add(panel);
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_ELASTICITY_COEFFICIENT")); //$NON-NLS-1$
-		panel.add(label);
-		elasticityText = new JTextField(Double.toString(Utils.ELASTICITY),6);
-		panel.add(elasticityText);
-		worldPanel.add(panel);
-		
-		return worldPanel;
+
+	protected GridPane setWorldTab() {
+		GridPane world = grid();
+		world.setPadding(new Insets(6));
+		widthText = numField(Integer.toString(Utils.WORLD_WIDTH));
+		heightText = numField(Integer.toString(Utils.WORLD_HEIGHT));
+		world.addRow(0, new Label(Messages.getString("T_WIDTH")), widthText, //$NON-NLS-1$
+				new Label(Messages.getString("T_HEIGHT")), heightText); //$NON-NLS-1$
+		initialO2Text = numField(Double.toString(Utils.INITIAL_O2));
+		initialCO2Text = numField(Double.toString(Utils.INITIAL_CO2));
+		world.addRow(1, new Label(Messages.getString("T_INITIAL_OXYGEN")), initialO2Text, //$NON-NLS-1$
+				new Label(Messages.getString("T_INITIAL_CARBON_DIOXIDE")), initialCO2Text); //$NON-NLS-1$
+		frictionText = numField(Double.toString(Utils.FRICTION));
+		world.addRow(2, new Label(Messages.getString("T_FRICTION_COEFFICIENT")), frictionText); //$NON-NLS-1$
+		elasticityText = numField(Double.toString(Utils.ELASTICITY));
+		world.addRow(3, new Label(Messages.getString("T_ELASTICITY_COEFFICIENT")), elasticityText); //$NON-NLS-1$
+		return world;
 	}
-	
-	protected JPanel setOrganismsTab() {
-		JPanel organismsPanel = new JPanel();
-		organismsPanel.setLayout(new BoxLayout(organismsPanel,BoxLayout.Y_AXIS));
-		// Initial number - initial energy
-		JPanel panel = new JPanel();
-		JLabel label = new JLabel(Messages.getString("T_INITIAL_NUMBER")); //$NON-NLS-1$
-		panel.add(label);
-		initialnumberText = new JTextField(Integer.toString(Utils.INITIAL_ORGANISMS),6);
-		panel.add(initialnumberText);
-		label = new JLabel(Messages.getString("T_INITIAL_ENERGY")); //$NON-NLS-1$
-		panel.add(label);
-		initialenergyText = new JTextField(Integer.toString(Utils.INITIAL_ENERGY),6);
-		panel.add(initialenergyText);
-		organismsPanel.add(panel);
+
+	protected GridPane setOrganismsTab() {
+		GridPane org = grid();
+		org.setPadding(new Insets(6));
+		initialnumberText = numField(Integer.toString(Utils.INITIAL_ORGANISMS));
+		initialenergyText = numField(Integer.toString(Utils.INITIAL_ENERGY));
+		org.addRow(0, new Label(Messages.getString("T_INITIAL_NUMBER")), initialnumberText, //$NON-NLS-1$
+				new Label(Messages.getString("T_INITIAL_ENERGY")), initialenergyText); //$NON-NLS-1$
 		// X-Mod: Stress resistance replaces life expectancy;
 		// major mutation rate replaces vanilla mutation percentage.
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_STRESS_RESISTANCE")); //$NON-NLS-1$
-		panel.add(label);
-		stressresistanceText = new JTextField(Double.toString(Utils.STRESS_RESISTANCE),6);
-		panel.add(stressresistanceText);
-		label = new JLabel(Messages.getString("T_MAJOR_MUTATION_RATE")); //$NON-NLS-1$
-		panel.add(label);
-		majormutationrateText = new JTextField(Double.toString(Utils.MAJOR_MUTATION_RATE),6);
-		panel.add(majormutationrateText);
-		organismsPanel.add(panel);
+		stressresistanceText = numField(Double.toString(Utils.STRESS_RESISTANCE));
+		majormutationrateText = numField(Double.toString(Utils.MAJOR_MUTATION_RATE));
+		org.addRow(1, new Label(Messages.getString("T_STRESS_RESISTANCE")), stressresistanceText, //$NON-NLS-1$
+				new Label(Messages.getString("T_MAJOR_MUTATION_RATE")), majormutationrateText); //$NON-NLS-1$
 		// X-Mod: Minor rate - Minor amplitude
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_MINOR_MUTATION_RATE")); //$NON-NLS-1$
-		panel.add(label);
-		minormutationrateText = new JTextField(Double.toString(Utils.MINOR_MUTATION_RATE),6);
-		panel.add(minormutationrateText);
-		label = new JLabel(Messages.getString("T_MINOR_MUTATION_AMPLITUDE")); //$NON-NLS-1$
-		panel.add(label);
-		minormutationamplitudeText = new JTextField(Double.toString(Utils.MINOR_MUTATION_AMPLITUDE),6);
-		panel.add(minormutationamplitudeText);
-		organismsPanel.add(panel);
+		minormutationrateText = numField(Double.toString(Utils.MINOR_MUTATION_RATE));
+		minormutationamplitudeText = numField(Double.toString(Utils.MINOR_MUTATION_AMPLITUDE));
+		org.addRow(2, new Label(Messages.getString("T_MINOR_MUTATION_RATE")), minormutationrateText, //$NON-NLS-1$
+				new Label(Messages.getString("T_MINOR_MUTATION_AMPLITUDE")), minormutationamplitudeText); //$NON-NLS-1$
 		// X-Mod: Spontaneous mutation rate
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_SPONTANEOUS_MUTATION_RATE")); //$NON-NLS-1$
-		panel.add(label);
-		spontaneousmutationrateText = new JTextField(Double.toString(Utils.SPONTANEOUS_MUTATION_RATE),6);
-		panel.add(spontaneousmutationrateText);
-		organismsPanel.add(panel);
-		// Upkeep cost
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_UPKEEP_COST_DIVISOR")); //$NON-NLS-1$
-		panel.add(label);
-		segmentcostText = new JTextField(Integer.toString(Utils.SEGMENT_COST_DIVISOR),6);
-		panel.add(segmentcostText);
-		organismsPanel.add(panel);
-		// Drain substance
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_SUBSTANCE_DRAINAGE_DIVISOR")); //$NON-NLS-1$
-		panel.add(label);
-		drainText = new JTextField(Integer.toString(Utils.DRAIN_SUBS_DIVISOR),6);
-		panel.add(drainText);
-		organismsPanel.add(panel);
-		// Decay energy
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_DECAY_ENERGY")); //$NON-NLS-1$
-		panel.add(label);
-		decayenergyText = new JTextField(Double.toString(Utils.DECAY_ENERGY),6);
-		panel.add(decayenergyText);
-		organismsPanel.add(panel);
-		return organismsPanel;
+		spontaneousmutationrateText = numField(Double.toString(Utils.SPONTANEOUS_MUTATION_RATE));
+		org.addRow(3, new Label(Messages.getString("T_SPONTANEOUS_MUTATION_RATE")), spontaneousmutationrateText); //$NON-NLS-1$
+		segmentcostText = numField(Integer.toString(Utils.SEGMENT_COST_DIVISOR));
+		org.addRow(4, new Label(Messages.getString("T_UPKEEP_COST_DIVISOR")), segmentcostText); //$NON-NLS-1$
+		drainText = numField(Integer.toString(Utils.DRAIN_SUBS_DIVISOR));
+		org.addRow(5, new Label(Messages.getString("T_SUBSTANCE_DRAINAGE_DIVISOR")), drainText); //$NON-NLS-1$
+		decayenergyText = numField(Double.toString(Utils.DECAY_ENERGY));
+		org.addRow(6, new Label(Messages.getString("T_DECAY_ENERGY")), decayenergyText); //$NON-NLS-1$
+		return org;
 	}
-	
-	protected JPanel setMetabolismTab() {
-		JPanel metabolismPanel = new JPanel();
-		metabolismPanel.setLayout(new BoxLayout(metabolismPanel,BoxLayout.Y_AXIS));
-		// Photosynthetic metabolism
-		JPanel panel = new JPanel();
-		JLabel label = new JLabel(Messages.getString("T_PHOTOSYNTHETIC_METABOLISM")); //$NON-NLS-1$
-		label.setAlignmentX(Component.CENTER_ALIGNMENT);
-		metabolismPanel.add(label);
-		metabolismPanel.add(Box.createVerticalStrut(10));
-		// Obtained energy
-		label = new JLabel(Messages.getString("T_OBTAINED_ENERGY_DIVISOR")); //$NON-NLS-1$
-		panel.add(label);
-		greenenergyText = new JTextField(Integer.toString(Utils.GREEN_OBTAINED_ENERGY_DIVISOR),6);
-		panel.add(greenenergyText);
-		metabolismPanel.add(panel);
-		// Chemoorganotrophic metabolism
-		label = new JLabel(Messages.getString("T_CHEMOORGANOTROPHIC_METABOLISM")); //$NON-NLS-1$
-		label.setAlignmentX(Component.CENTER_ALIGNMENT);
-		metabolismPanel.add(Box.createVerticalStrut(10));
-		metabolismPanel.add(label);
-		metabolismPanel.add(Box.createVerticalStrut(10));
-		// Obtained energy
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_OBTAINED_ENERGY")); //$NON-NLS-1$
-		panel.add(label);
-		organicenergyText = new JTextField(Double.toString(Utils.ORGANIC_OBTAINED_ENERGY),6);
-		panel.add(organicenergyText);
-		metabolismPanel.add(panel);
-		// Released energy
-		panel = new JPanel();
-		label = new JLabel(Messages.getString("T_RELEASED_ENERGY_PROPORTION")); //$NON-NLS-1$
-		panel.add(label);
-		organicsubsText = new JTextField(Double.toString(Utils.ORGANIC_SUBS_PRODUCED),6);
-		panel.add(organicsubsText);
-		metabolismPanel.add(panel);
-		
-		return metabolismPanel;
-	}
-	
-	protected JPanel setGenesTab() {
-		JPanel genesPanel = new JPanel();
-		genesPanel.setLayout(new GridLayout(8,3));
-		JLabel label;
 
-		genesPanel.add(new JLabel(Messages.getString("T_COLOR2"),SwingConstants.CENTER)); //$NON-NLS-1$
-		genesPanel.add(new JLabel(Messages.getString("T_PROBABILITY"),SwingConstants.CENTER)); //$NON-NLS-1$
-		genesPanel.add(new JLabel(Messages.getString("T_COST"),SwingConstants.CENTER)); //$NON-NLS-1$
-		
-		label = new JLabel(Messages.getString("T_RED"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		redprobText = new JTextField(Integer.toString(Utils.RED_PROB));
-		genesPanel.add(redprobText);
-		redcostText = new JTextField(Double.toString(Utils.RED_ENERGY_CONSUMPTION));
-		genesPanel.add(redcostText);
-		
-		label = new JLabel(Messages.getString("T_GREEN"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		greenprobText = new JTextField(Integer.toString(Utils.GREEN_PROB));
-		genesPanel.add(greenprobText);
-		greencostText = new JTextField(Double.toString(Utils.GREEN_ENERGY_CONSUMPTION));
-		genesPanel.add(greencostText);
-		
-		label = new JLabel(Messages.getString("T_BLUE"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		blueprobText = new JTextField(Integer.toString(Utils.BLUE_PROB));
-		genesPanel.add(blueprobText);
-		bluecostText = new JTextField(Double.toString(Utils.BLUE_ENERGY_CONSUMPTION));
-		genesPanel.add(bluecostText);
-		
-		label = new JLabel(Messages.getString("T_CYAN"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		cyanprobText = new JTextField(Integer.toString(Utils.CYAN_PROB));
-		genesPanel.add(cyanprobText);
-		cyancostText = new JTextField(Double.toString(Utils.CYAN_ENERGY_CONSUMPTION));
-		genesPanel.add(cyancostText);
-		
-		label = new JLabel(Messages.getString("T_WHITE"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		whiteprobText = new JTextField(Integer.toString(Utils.WHITE_PROB));
-		genesPanel.add(whiteprobText);
-		whitecostText = new JTextField(Double.toString(Utils.WHITE_ENERGY_CONSUMPTION));
-		genesPanel.add(whitecostText);
-		
-		label = new JLabel(Messages.getString("T_GRAY"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		grayprobText = new JTextField(Integer.toString(Utils.GRAY_PROB));
-		genesPanel.add(grayprobText);
-		graycostText = new JTextField(Double.toString(Utils.GRAY_ENERGY_CONSUMPTION));
-		genesPanel.add(graycostText);
-	
-		label = new JLabel(Messages.getString("T_YELLOW"),SwingConstants.CENTER); //$NON-NLS-1$
-		genesPanel.add(label);
-		yellowprobText = new JTextField(Integer.toString(Utils.YELLOW_PROB));
-		genesPanel.add(yellowprobText);
-		yellowcostText = new JTextField(Double.toString(Utils.YELLOW_ENERGY_CONSUMPTION));
-		genesPanel.add(yellowcostText);
-		
-		return genesPanel;
+	protected VBox setMetabolismTab() {
+		VBox met = new VBox(8);
+		met.setPadding(new Insets(6));
+		Label photo = new Label(Messages.getString("T_PHOTOSYNTHETIC_METABOLISM")); //$NON-NLS-1$
+		photo.setMaxWidth(Double.MAX_VALUE);
+		photo.setAlignment(Pos.CENTER);
+		met.getChildren().add(photo);
+		greenenergyText = numField(Integer.toString(Utils.GREEN_OBTAINED_ENERGY_DIVISOR));
+		HBox obtained = new HBox(8,
+				new Label(Messages.getString("T_OBTAINED_ENERGY_DIVISOR")), greenenergyText); //$NON-NLS-1$
+		obtained.setAlignment(Pos.CENTER_LEFT);
+		met.getChildren().add(obtained);
+		Label chemo = new Label(Messages.getString("T_CHEMOORGANOTROPHIC_METABOLISM")); //$NON-NLS-1$
+		chemo.setMaxWidth(Double.MAX_VALUE);
+		chemo.setAlignment(Pos.CENTER);
+		met.getChildren().add(chemo);
+		organicenergyText = numField(Double.toString(Utils.ORGANIC_OBTAINED_ENERGY));
+		HBox organic = new HBox(8,
+				new Label(Messages.getString("T_OBTAINED_ENERGY")), organicenergyText); //$NON-NLS-1$
+		organic.setAlignment(Pos.CENTER_LEFT);
+		met.getChildren().add(organic);
+		organicsubsText = numField(Double.toString(Utils.ORGANIC_SUBS_PRODUCED));
+		HBox released = new HBox(8,
+				new Label(Messages.getString("T_RELEASED_ENERGY_PROPORTION")), organicsubsText); //$NON-NLS-1$
+		released.setAlignment(Pos.CENTER_LEFT);
+		met.getChildren().add(released);
+		return met;
 	}
-	
+
+	protected GridPane setGenesTab() {
+		GridPane genes = grid();
+		genes.setPadding(new Insets(6));
+		Label header = new Label(Messages.getString("T_COLOR2")); //$NON-NLS-1$
+		header.setMaxWidth(Double.MAX_VALUE);
+		header.setAlignment(Pos.CENTER);
+		Label prob = new Label(Messages.getString("T_PROBABILITY")); //$NON-NLS-1$
+		prob.setMaxWidth(Double.MAX_VALUE);
+		prob.setAlignment(Pos.CENTER);
+		Label cost = new Label(Messages.getString("T_COST")); //$NON-NLS-1$
+		cost.setMaxWidth(Double.MAX_VALUE);
+		cost.setAlignment(Pos.CENTER);
+		genes.addRow(0, header, prob, cost);
+		String[] colors = {"RED", "GREEN", "BLUE", "CYAN", "WHITE", "GRAY", "YELLOW"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		for (int i = 0; i < colors.length; i++) {
+			Label name = new Label(Messages.getString("T_" + colors[i])); //$NON-NLS-1$
+			name.setMaxWidth(Double.MAX_VALUE);
+			name.setAlignment(Pos.CENTER);
+			TextField probF = numField("");
+			TextField costF = numField("");
+			genes.addRow(i + 1, name, probF, costF);
+			switch (colors[i]) {
+			case "RED": //$NON-NLS-1$
+				redprobText = probF; redcostText = costF;
+				redprobText.setText(Integer.toString(Utils.RED_PROB));
+				redcostText.setText(Double.toString(Utils.RED_ENERGY_CONSUMPTION));
+				break;
+			case "GREEN": //$NON-NLS-1$
+				greenprobText = probF; greencostText = costF;
+				greenprobText.setText(Integer.toString(Utils.GREEN_PROB));
+				greencostText.setText(Double.toString(Utils.GREEN_ENERGY_CONSUMPTION));
+				break;
+			case "BLUE": //$NON-NLS-1$
+				blueprobText = probF; bluecostText = costF;
+				blueprobText.setText(Integer.toString(Utils.BLUE_PROB));
+				bluecostText.setText(Double.toString(Utils.BLUE_ENERGY_CONSUMPTION));
+				break;
+			case "CYAN": //$NON-NLS-1$
+				cyanprobText = probF; cyancostText = costF;
+				cyanprobText.setText(Integer.toString(Utils.CYAN_PROB));
+				cyancostText.setText(Double.toString(Utils.CYAN_ENERGY_CONSUMPTION));
+				break;
+			case "WHITE": //$NON-NLS-1$
+				whiteprobText = probF; whitecostText = costF;
+				whiteprobText.setText(Integer.toString(Utils.WHITE_PROB));
+				whitecostText.setText(Double.toString(Utils.WHITE_ENERGY_CONSUMPTION));
+				break;
+			case "GRAY": //$NON-NLS-1$
+				grayprobText = probF; graycostText = costF;
+				grayprobText.setText(Integer.toString(Utils.GRAY_PROB));
+				graycostText.setText(Double.toString(Utils.GRAY_ENERGY_CONSUMPTION));
+				break;
+			case "YELLOW": //$NON-NLS-1$
+				yellowprobText = probF; yellowcostText = costF;
+				yellowprobText.setText(Integer.toString(Utils.YELLOW_PROB));
+				yellowcostText.setText(Double.toString(Utils.YELLOW_ENERGY_CONSUMPTION));
+				break;
+			}
+		}
+		return genes;
+	}
+
 	void checkParams() {
 		int i;
 		double d;
-		if (Messages.getLocaleIndex() != localeCombo.getSelectedIndex()) {
-			Messages.setLocale(localeCombo.getSelectedIndex());
+		if (Messages.getLocaleIndex() != localeCombo.getSelectionModel().getSelectedIndex()) {
+			Messages.setLocale(localeCombo.getSelectionModel().getSelectedIndex());
 			mainWindow.changeLocale();
 		}
 		try {
@@ -648,7 +576,7 @@ public class ParamDialog extends JDialog {
 		} catch (NumberFormatException ex) {
 			// Keep old value if there is a problem
 		}
-		
+
 		try {
 			i = Integer.parseInt(greenenergyText.getText());
 			if (i > 0) Utils.GREEN_OBTAINED_ENERGY_DIVISOR = i;
