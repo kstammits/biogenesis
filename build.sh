@@ -26,7 +26,7 @@ fi
 # JavaFX 21 (vendored in lib/javafx, mac-aarch64). Present so the toolchain
 # is ready for the UI port; the Swing app doesn't need it yet.
 FX_DIR="$ROOT/lib/javafx"
-FX_MODULES="javafx.controls,javafx.graphics"
+FX_MODULES="javafx.controls,javafx.graphics,javafx.swing"
 FX_FLAGS=()
 if ls "$FX_DIR"/javafx-*.jar >/dev/null 2>&1; then
   FX_FLAGS=(--module-path "$FX_DIR" --add-modules "$FX_MODULES")

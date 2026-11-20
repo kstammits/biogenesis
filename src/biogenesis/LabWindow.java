@@ -18,78 +18,93 @@
 package biogenesis;
 
 
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.image.WritableImage;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import org.xml.sax.SAXException;
 
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-public class LabWindow extends JDialog implements ActionListener, ChangeListener {
-	private static final long serialVersionUID = Utils.FILE_VERSION;
+/**
+ * JavaFX port of the genetic laboratory. Gene table, combo selectors and
+ * spinners are JavaFX controls; the organism preview still renders through
+ * {@link GeneticCode#draw} into a BufferedImage, converted with
+ * SwingFXUtils (javafx.swing). See {@link NetConfigWindow} for the
+ * Swing-EDT to FX-thread handoff.
+ */
+public class LabWindow {
 	protected MainWindow mainWindow;
 	protected List<Gene> genesList;
-	protected JButton cancelButton;
-	protected JButton okButton;
-	protected JPanel genesPanel;
-	protected JPanel drawPanel;
-	protected JScrollPane genesScroll;
-	protected JLabel energyLabel;
-	protected JLabel segmentsLabel;
-	protected JComboBox symmetryCombo;
-	protected JComboBox mirrorCombo;
-	protected JComboBox disperseCombo;
-	
+	protected Button cancelButton;
+	protected Button okButton;
+	protected GridPane genesGrid;
+	protected Canvas drawCanvas;
+	protected ScrollPane genesScroll;
+	protected Label energyLabel;
+	protected Label segmentsLabel;
+	protected ComboBox<String> symmetryCombo;
+	protected ComboBox<String> mirrorCombo;
+	protected ComboBox<String> disperseCombo;
+
 	protected int symmetry=2;
 	protected int energy=40;
 	protected int mirror=0;
 	protected boolean disperseChildren = false;
-	
+
+	private Stage stage;
+
 	public LabWindow(MainWindow v, GeneticCode gc) {
-		super(v, Messages.getString("T_GENETIC_LABORATORY")); //$NON-NLS-1$
-		init(v, gc);
-	}
-	
-	public LabWindow(MainWindow v) {
-		super(v, Messages.getString("T_GENETIC_LABORATORY")); //$NON-NLS-1$
-		init(v, v.getVisibleWorld().clippedGeneticCode);
-	}
-	
-	private void init(MainWindow v, GeneticCode gc) {
 		mainWindow = v;
+		Fx.run(() -> init(gc));
+	}
+
+	public LabWindow(MainWindow v) {
+		mainWindow = v;
+		Fx.run(() -> init(v.getVisibleWorld().clippedGeneticCode));
+	}
+
+	private void init(GeneticCode gc) {
 		genesList = new ArrayList<Gene>();
 		if (gc != null)
 			importGeneticCode(gc);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);	
+
+		stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.setTitle(Messages.getString("T_GENETIC_LABORATORY")); //$NON-NLS-1$
+
 		setComponents();
-		pack();
-		//setResizable(false);
-		cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-            	dispose();
-            }
-            });
-		okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-            	if (genesList.size() > 0)
-            		mainWindow.getVisibleWorld().setClippedGeneticCode(new GeneticCode(genesList,symmetry, mirror, disperseChildren));
-            	dispose();
-            }
-            });
-		setVisible(true);
+
+		okButton.setOnAction(evt -> {
+			if (genesList.size() > 0)
+				mainWindow.getVisibleWorld().setClippedGeneticCode(new GeneticCode(genesList,symmetry, mirror, disperseChildren));
+			stage.close();
+		});
+		cancelButton.setOnAction(evt -> stage.close());
+
+		stage.sizeToScene();
+		stage.show();
 	}
-	
+
 	/* Initialize the variables of this dialog using a previously existing genetic code */
 	private void importGeneticCode(GeneticCode g) {
 		energy = g.getReproduceEnergy();
@@ -99,348 +114,201 @@ public class LabWindow extends JDialog implements ActionListener, ChangeListener
 		for (int i=0; i<g.getNGenes(); i++)
 			genesList.add((Gene)g.getGene(i).clone());
 	}
-	
+
 	/* Initialize all the components of the dialog */
 	protected void setComponents() {
-		getContentPane().setLayout(new BorderLayout());
-		JPanel generalPanel = new JPanel();
-		generalPanel.setLayout(new GridBagLayout());
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.weightx = 1.0;
-		generalPanel.add(new JLabel(Messages.getString("T_SEGMENTS"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 0;
-		segmentsLabel = new JLabel(Integer.toString(genesList.size() * symmetry));
-		generalPanel.add(segmentsLabel, gridBagConstraints);
-		gridBagConstraints.gridx = 2;
-		gridBagConstraints.gridy = 0;
-		generalPanel.add(new JLabel(Messages.getString("T_ENERGY_TO_REPRODUCE"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 3;
-		gridBagConstraints.gridy = 0;
-		energyLabel = new JLabel(Integer.toString(energy));
-		generalPanel.add(energyLabel, gridBagConstraints);
-		gridBagConstraints.gridx = 4;
-		gridBagConstraints.gridy = 0;
-		generalPanel.add(new JLabel(Messages.getString("T_STRESS_RESISTANCE"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 5;
-		gridBagConstraints.gridy = 0;
-		JLabel life = new JLabel(Double.toString(Utils.STRESS_RESISTANCE));
-		generalPanel.add(life, gridBagConstraints);
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 1;
-		generalPanel.add(new JLabel(Messages.getString("T_SYMMETRY"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 1;
-		String[] symmetryValues = {"1","2","3","4","5","6","7","8"};  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-		symmetryCombo = new JComboBox(symmetryValues);
-		symmetryCombo.setSelectedItem(Integer.toString(symmetry));
-		symmetryCombo.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				if (evt.getStateChange() == ItemEvent.SELECTED) {
-					symmetry = Integer.parseInt((String)symmetryCombo.getSelectedItem());
-					energy = 40 + 3 * symmetry * genesList.size();
-					energyLabel.setText(Integer.toString(energy));
-					segmentsLabel.setText(Integer.toString(genesList.size() * symmetry));
-					drawPanel.repaint();
-				}
-			}
+		GridPane general = new GridPane();
+		general.setHgap(8);
+		general.setVgap(6);
+		general.setPadding(new Insets(6));
+		general.add(new Label(Messages.getString("T_SEGMENTS")), 0, 0); //$NON-NLS-1$
+		segmentsLabel = new Label(Integer.toString(genesList.size() * symmetry));
+		general.add(segmentsLabel, 1, 0);
+		general.add(new Label(Messages.getString("T_ENERGY_TO_REPRODUCE")), 2, 0); //$NON-NLS-1$
+		energyLabel = new Label(Integer.toString(energy));
+		general.add(energyLabel, 3, 0);
+		general.add(new Label(Messages.getString("T_STRESS_RESISTANCE")), 4, 0); //$NON-NLS-1$
+		general.add(new Label(Double.toString(Utils.STRESS_RESISTANCE)), 5, 0);
+		general.add(new Label(Messages.getString("T_SYMMETRY")), 0, 1); //$NON-NLS-1$
+		symmetryCombo = new ComboBox<>();
+		symmetryCombo.getItems().addAll("1","2","3","4","5","6","7","8");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
+		symmetryCombo.getSelectionModel().select(Integer.toString(symmetry));
+		symmetryCombo.setOnAction(evt -> {
+			symmetry = Integer.parseInt(symmetryCombo.getSelectionModel().getSelectedItem());
+			energy = 40 + 3 * symmetry * genesList.size();
+			energyLabel.setText(Integer.toString(energy));
+			segmentsLabel.setText(Integer.toString(genesList.size() * symmetry));
+			redraw();
 		});
-		generalPanel.add(symmetryCombo, gridBagConstraints);
-		gridBagConstraints.gridx = 2;
-		gridBagConstraints.gridy = 1;
-		generalPanel.add(new JLabel(Messages.getString("T_MIRROR"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 3;
-		gridBagConstraints.gridy = 1;
+		general.add(symmetryCombo, 1, 1);
+		general.add(new Label(Messages.getString("T_MIRROR")), 2, 1); //$NON-NLS-1$
 		String[] noyesValues = {Messages.getString("T_NO"), Messages.getString("T_YES")}; //$NON-NLS-1$ //$NON-NLS-2$
-		mirrorCombo = new JComboBox(noyesValues);
-		mirrorCombo.setSelectedIndex(mirror);
-		mirrorCombo.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				if (evt.getStateChange() == ItemEvent.SELECTED) {
-					mirror = mirrorCombo.getSelectedIndex();
-					drawPanel.repaint();
+		mirrorCombo = new ComboBox<>();
+		mirrorCombo.getItems().addAll(noyesValues);
+		mirrorCombo.getSelectionModel().select(mirror);
+		mirrorCombo.setOnAction(evt -> {
+			mirror = mirrorCombo.getSelectionModel().getSelectedIndex();
+			redraw();
+		});
+		general.add(mirrorCombo, 3, 1);
+		general.add(new Label(Messages.getString("T_DISPERSE_CHILDREN")), 4, 1); //$NON-NLS-1$
+		disperseCombo = new ComboBox<>();
+		disperseCombo.getItems().addAll(noyesValues);
+		disperseCombo.getSelectionModel().select(disperseChildren ? 1 : 0);
+		disperseCombo.setOnAction(evt ->
+			disperseChildren = disperseCombo.getSelectionModel().getSelectedIndex() != 0);
+		general.add(disperseCombo, 5, 1);
+
+		genesGrid = new GridPane();
+		genesGrid.setHgap(8);
+		genesGrid.setVgap(4);
+		genesGrid.setPadding(new Insets(6));
+		drawCanvas = new Canvas(200, 200);
+		refreshGenesPanel();
+		genesScroll = new ScrollPane(genesGrid);
+		genesScroll.setPrefSize(440, 300);
+
+		HBox middle = new HBox(8, genesScroll, drawCanvas);
+
+		okButton = new Button(Messages.getString("T_COPY_TO_CLIPBOARD")); //$NON-NLS-1$
+		okButton.setDefaultButton(true);
+		cancelButton = new Button(Messages.getString("T_CANCEL")); //$NON-NLS-1$
+		cancelButton.setCancelButton(true);
+		Button clearButton = new Button(Messages.getString("T_CLEAR")); //$NON-NLS-1$
+		clearButton.setOnAction(evt -> {
+			genesList.clear();
+			refreshGenesPanel();
+		});
+		Button importButton = new Button(Messages.getString("T_IMPORT")); //$NON-NLS-1$
+		importButton.setOnAction(evt -> onImport());
+		HBox buttons = new HBox(8, okButton, cancelButton, clearButton, importButton);
+
+		VBox root = new VBox(8, general, middle, buttons);
+		root.setPadding(new Insets(10));
+		stage.setScene(new Scene(root));
+	}
+
+	private void onImport() {
+		try {
+			File f = Fx.showOpenFile("T_IMPORT", "T_BIOGENESIS_GENETIC_CODE_FILES", "bgg"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (f != null) {
+				try {
+					// Read XML code from file
+					BioXMLParser parser = new BioXMLParser();
+					GeneticCode g = parser.parseGeneticCode(f);
+					genesList.clear();
+					importGeneticCode(g);
+					refreshGenesPanel();
+				} catch (SAXException ex) {
+					System.err.println(ex.getMessage());
+					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
+				} catch (IOException ex) {
+					System.err.println(ex.getMessage());
+					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
-		});
-		generalPanel.add(mirrorCombo, gridBagConstraints);
-		gridBagConstraints.gridx = 4;
-		gridBagConstraints.gridy = 1;
-		generalPanel.add(new JLabel(Messages.getString("T_DISPERSE_CHILDREN"),SwingConstants.CENTER), gridBagConstraints); //$NON-NLS-1$
-		gridBagConstraints.gridx = 5;
-		gridBagConstraints.gridy = 1;
-		disperseCombo = new JComboBox(noyesValues);
-		disperseCombo.setSelectedIndex(disperseChildren==false?0:1);
-		disperseCombo.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				if (evt.getStateChange() == ItemEvent.SELECTED)
-					disperseChildren = disperseCombo.getSelectedIndex()==0? false: true; 
-			}
-		});
-		generalPanel.add(disperseCombo, gridBagConstraints);
-		
-		getContentPane().add(generalPanel,BorderLayout.NORTH);
-		genesPanel = new JPanel();
-		genesScroll = new JScrollPane(genesPanel);
-		genesScroll.setPreferredSize(new Dimension(440,300));
-		refreshGenesPanel();
-		getContentPane().add(genesScroll,BorderLayout.WEST);
-		
-		drawPanel = new JPanel() {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public void paintComponent (Graphics g) {
-				super.paintComponent(g);
-		        draw(g);
-		    }
-		};
-		drawPanel.setPreferredSize(new Dimension(200,200));
-		drawPanel.setBackground(Color.BLACK);
-		getContentPane().add(drawPanel,BorderLayout.CENTER);
-		
-		JPanel buttonsPanel = new JPanel();
-		okButton = new JButton(Messages.getString("T_COPY_TO_CLIPBOARD")); //$NON-NLS-1$
+		} catch (SecurityException ex) {
+			System.err.println(ex.getMessage());
+			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
 
-		buttonsPanel.add(okButton);
-		cancelButton = new JButton(Messages.getString("T_CANCEL")); //$NON-NLS-1$
-		buttonsPanel.add(cancelButton);
-		JButton clearButton = new JButton(Messages.getString("T_CLEAR")); //$NON-NLS-1$
-		clearButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-            	genesList.clear();
-            	refreshGenesPanel();
-            }
-            });
-		buttonsPanel.add(clearButton);
-		JButton importButton = new JButton(Messages.getString("T_IMPORT")); //$NON_NLS-1$
-		importButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				GeneticCode g;
-	    		try {
-	    			File f = Fx.showOpenFile("T_IMPORT", "T_BIOGENESIS_GENETIC_CODE_FILES", "bgg"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	    			if (f != null) {
-	    				try {
-	    					// Read XML code from file
-	    					BioXMLParser parser = new BioXMLParser();
-							g = parser.parseGeneticCode(f);
-							genesList.clear();
-							importGeneticCode(g);
-							refreshGenesPanel();
-	    				} catch (SAXException ex) {
-	    					System.err.println(ex.getMessage());
-	    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_WRONG_FILE_VERSION")); //$NON-NLS-1$ //$NON-NLS-2$
-	    				} catch (IOException ex) {
-	    					System.err.println(ex.getMessage());
-	    					Fx.error(Messages.getString("T_READ_ERROR"), Messages.getString("T_CANT_READ_FILE")); //$NON-NLS-1$ //$NON-NLS-2$
-						}
-	    			}
-	    		} catch (SecurityException ex) {
-	    			System.err.println(ex.getMessage());
-	    			Fx.error(Messages.getString("T_PERMISSION_DENIED"), Messages.getString("T_PERMISSION_DENIED")); //$NON-NLS-1$ //$NON-NLS-2$
-	    		}
-			}
-		});
-		buttonsPanel.add(importButton);
-		getContentPane().add(buttonsPanel,BorderLayout.SOUTH);
-		
-		getRootPane().setDefaultButton(okButton);
+	private void onColorChanged(int index, ColorComboBox combo) {
+		genesList.get(index).setColor(combo.getSelectedColor());
+		redraw();
 	}
-	
-	public void actionPerformed(ActionEvent evt) {
-		if (evt.getActionCommand().startsWith("c")) {
-			int modifiedGene = Integer.parseInt(evt.getActionCommand().substring(1));
-			ColorComboBox colorCombo = (ColorComboBox) evt.getSource();
-			genesList.get(modifiedGene).setColor(colorCombo.getSelectedColor());
-			drawPanel.repaint();
-		}
-		// Add a new gene after the last one
-		if (evt.getActionCommand().equals("add")) { //$NON-NLS-1$
-			Gene gene = new Gene(2.0,0.0,Color.GREEN);
-			genesList.add(gene);
-			refreshGenesPanel();
-		}
-		// Deletes an existing gene
-		if (evt.getActionCommand().startsWith("d")) { //$NON-NLS-1$
-			int deletedGene = Integer.parseInt(evt.getActionCommand().substring(1));
-			genesList.remove(deletedGene);
-			refreshGenesPanel();
-		}
-		// Insert a new gene before the selected position
-		if (evt.getActionCommand().startsWith("i")) { //$NON-NLS-1$
-			Gene gene = new Gene(2.0,0.0,Color.GREEN);
-			int insertPosition = Integer.parseInt(evt.getActionCommand().substring(1));
-			genesList.add(insertPosition, gene);
-			refreshGenesPanel();
-		}
+
+	private void onAddGene() {
+		Gene gene = new Gene(2.0,0.0,Color.GREEN);
+		genesList.add(gene);
+		refreshGenesPanel();
 	}
-	
+
+	private void onDeleteGene(int index) {
+		genesList.remove(index);
+		refreshGenesPanel();
+	}
+
+	private void onInsertGene(int index) {
+		Gene gene = new Gene(2.0,0.0,Color.GREEN);
+		genesList.add(index, gene);
+		refreshGenesPanel();
+	}
+
 	protected void refreshGenesPanel() {
-		genesPanel.removeAll();
-		GridBagLayout gridbag = new GridBagLayout();
-		GridBagConstraints constraints = new GridBagConstraints();
-		genesPanel.setLayout(gridbag);
-		Iterator<Gene> it;
-		int i;
-		Gene gene;
-		constraints.gridx = 1;
-		constraints.gridy = 0;
-		genesPanel.add(new JLabel(Messages.getString("T_GENE")), constraints); //$NON-NLS-1$
-		constraints.gridx = 2;
-		genesPanel.add(new JLabel(Messages.getString("T_LENGTH")), constraints); //$NON-NLS-1$
-		constraints.gridx = 3;
-		genesPanel.add(new JLabel(Messages.getString("T_ROTATION")), constraints); //$NON-NLS-1$
-		constraints.gridx = 4;
-		genesPanel.add(new JLabel(Messages.getString("T_COLOR2")), constraints); //$NON-NLS-1$
-		for (it = genesList.iterator(), i=0; it.hasNext(); i++) {
-			gene = it.next();
-			constraints.gridx = 1;
-			constraints.gridy = i+1;
-			JLabel label = new JLabel(i+": "); //$NON-NLS-1$
-			gridbag.setConstraints(label,constraints);
-			genesPanel.add(label);
-			
-			constraints.gridx = 2;
-			LengthSpinner lengthSpinner = new LengthSpinner(gene);
-			lengthSpinner.addChangeListener(this);
-			genesPanel.add(lengthSpinner, constraints);
-			
-			constraints.gridx = 3;
-			ThetaSpinner thetaSpinner = new ThetaSpinner(gene);
-			thetaSpinner.addChangeListener(this);
-			genesPanel.add(thetaSpinner, constraints);
-			
-			constraints.gridx = 4;
+		genesGrid.getChildren().clear();
+		genesGrid.add(new Label(Messages.getString("T_GENE")), 0, 0); //$NON-NLS-1$
+		genesGrid.add(new Label(Messages.getString("T_LENGTH")), 1, 0); //$NON-NLS-1$
+		genesGrid.add(new Label(Messages.getString("T_ROTATION")), 2, 0); //$NON-NLS-1$
+		genesGrid.add(new Label(Messages.getString("T_COLOR2")), 3, 0); //$NON-NLS-1$
+		for (int i = 0; i < genesList.size(); i++) {
+			final Gene gene = genesList.get(i);
+			final int index = i;
+			genesGrid.add(new Label(i + ": "), 0, i + 1); //$NON-NLS-1$
+
+			Spinner<Double> lengthSpinner = new Spinner<>(
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(2.0, 18.0, gene.getLength(), 0.1));
+			lengthSpinner.setEditable(true);
+			lengthSpinner.setPrefWidth(80);
+			lengthSpinner.valueProperty().addListener((obs, was, is) -> {
+				gene.setLength(is);
+				redraw();
+			});
+			genesGrid.add(lengthSpinner, 1, i + 1);
+
+			int initialTheta = (int) Math.round(gene.getTheta() * 180.0 / Math.PI);
+			while (initialTheta < 0) initialTheta += 360;
+			while (initialTheta > 359) initialTheta -= 360;
+			SpinnerValueFactory.IntegerSpinnerValueFactory thetaFactory =
+					new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 359, initialTheta, 1);
+			thetaFactory.setWrapAround(true);
+			Spinner<Integer> thetaSpinner = new Spinner<>(thetaFactory);
+			thetaSpinner.setEditable(true);
+			thetaSpinner.setPrefWidth(70);
+			thetaSpinner.valueProperty().addListener((obs, was, is) -> {
+				gene.setTheta(is * Math.PI / 180.0);
+				redraw();
+			});
+			genesGrid.add(thetaSpinner, 2, i + 1);
+
 			ColorComboBox colorCombo = new ColorComboBox(gene.getColor());
-			colorCombo.addActionListener(this);
-			colorCombo.setActionCommand("c"+i);
-			genesPanel.add(colorCombo, constraints);
-			
-			constraints.gridx = 5;
-			JButton insertButton = new JButton(Messages.getString("T_INSERT")); //$NON-NLS-1$
-			insertButton.setActionCommand("i"+i); //$NON-NLS-1$
-			gridbag.setConstraints(insertButton,constraints);
-			genesPanel.add(insertButton);
-			insertButton.addActionListener(this);
-			
-			constraints.gridx = 6;
-			JButton deleteButton = new JButton(Messages.getString("T_DELETE")); //$NON-NLS-1$
-			deleteButton.setActionCommand("d"+i); //$NON-NLS-1$
-			gridbag.setConstraints(deleteButton,constraints);
-			genesPanel.add(deleteButton);
-			deleteButton.addActionListener(this);
+			colorCombo.setOnAction(evt -> onColorChanged(index, colorCombo));
+			genesGrid.add(colorCombo, 3, i + 1);
+
+			Button insertButton = new Button(Messages.getString("T_INSERT")); //$NON-NLS-1$
+			insertButton.setOnAction(evt -> onInsertGene(index));
+			genesGrid.add(insertButton, 4, i + 1);
+
+			Button deleteButton = new Button(Messages.getString("T_DELETE")); //$NON-NLS-1$
+			deleteButton.setOnAction(evt -> onDeleteGene(index));
+			genesGrid.add(deleteButton, 5, i + 1);
 		}
-		constraints.gridx = 1;
-		constraints.gridwidth = 2;
-		constraints.gridy = i+1;
-		JButton addButton = new JButton(Messages.getString("T_ADD")); //$NON-NLS-1$
-		addButton.setActionCommand("add"); //$NON-NLS-1$
-		gridbag.setConstraints(addButton,constraints);
-		genesPanel.add(addButton);
-		addButton.addActionListener(this);
-		
+		Button addButton = new Button(Messages.getString("T_ADD")); //$NON-NLS-1$
+		addButton.setOnAction(evt -> onAddGene());
+		genesGrid.add(addButton, 0, genesList.size() + 1);
+
 		energy = 40 + 3 * symmetry * genesList.size();
 		energyLabel.setText(Integer.toString(energy));
 		segmentsLabel.setText(Integer.toString(genesList.size() * symmetry));
-		
-		validate();
-		repaint();
-	}
-	
-	protected void draw(Graphics g) {
-		GeneticCode code = new GeneticCode(genesList, symmetry, mirror, false);
-		code.draw(g, drawPanel.getSize().width, drawPanel.getSize().height);
+		redraw();
 	}
 
-	@Override
-	public void stateChanged(ChangeEvent evt) {
-		if (evt.getSource() instanceof LengthSpinner) {
-			LengthSpinner spinner = (LengthSpinner) evt.getSource();
-			spinner.getGene().setLength(spinner.getLength());
+	/** Preview the current gene list through the AWT renderer, converted for FX. */
+	protected void redraw() {
+		if (drawCanvas == null)
+			return; // still under construction
+		int w = (int) drawCanvas.getWidth();
+		int h = (int) drawCanvas.getHeight();
+		BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		java.awt.Graphics2D g = image.createGraphics();
+		try {
+			g.setBackground(java.awt.Color.BLACK);
+			g.clearRect(0, 0, w, h);
+			new GeneticCode(genesList, symmetry, mirror, false).draw(g, w, h);
+		} finally {
+			g.dispose();
 		}
-		if (evt.getSource() instanceof ThetaSpinner) {
-			ThetaSpinner spinner = (ThetaSpinner) evt.getSource();
-			spinner.getGene().setTheta(spinner.getTheta());
-		}
-		drawPanel.repaint();
-	}
-}
-
-class LengthSpinner extends JSpinner {
-	private static final long serialVersionUID = Utils.VERSION;
-	private Gene _gene;
-
-	public LengthSpinner(Gene gene) {
-		super();
-		_gene = gene;
-		setModel(new SpinnerNumberModel(_gene.getLength(), 2.0, 18.0, 0.1));
-		setEditor(new JSpinner.NumberEditor(this, "#0.0"));
-	}
-
-	public Gene getGene() {
-		return _gene;
-	}
-	
-	public void setGene(Gene gene) {
-		_gene = gene;
-	}
-	
-	public double getLength() {
-		return ((SpinnerNumberModel)getModel()).getNumber().doubleValue();
-	}
-}
-
-class ThetaSpinnerModel extends SpinnerNumberModel {
-	private static final long serialVersionUID = Utils.VERSION;
-	int firstValue, lastValue;
-
-	public ThetaSpinnerModel(int value, int minimum, int maximum, int stepSize) {
-		super(value, minimum, maximum, stepSize);
-		firstValue = minimum;
-		lastValue = maximum;
-	}
-
-	@Override
-	public Object getNextValue() {
-		Object value = super.getNextValue();
-		if (value == null)
-			value = firstValue;
-		return value;
-	}
-
-	@Override
-	public Object getPreviousValue() {
-		Object value = super.getPreviousValue();
-		if (value == null)
-			value = lastValue;
-		return value;
-	}
-}
-
-class ThetaSpinner extends JSpinner {
-	private static final long serialVersionUID = Utils.VERSION;
-	private Gene _gene;
-
-	public ThetaSpinner(Gene gene) {
-		super();
-		_gene = gene;
-		int initialValue = (int)Math.round(_gene.getTheta()*180.0/Math.PI);
-		while (initialValue < 0) initialValue+=360;
-		while (initialValue > 359) initialValue-=360;
-		setModel(new ThetaSpinnerModel(initialValue, 0, 359, 1));
-		setEditor(new JSpinner.NumberEditor(this, "##0"));
-	}
-
-	public Gene getGene() {
-		return _gene;
-	}
-	
-	public void setGene(Gene gene) {
-		_gene = gene;
-	}
-	
-	public double getTheta() {
-		return ((SpinnerNumberModel)getModel()).getNumber().doubleValue()*Math.PI/180.0;
+		WritableImage fxImage = SwingFXUtils.toFXImage(image, null);
+		drawCanvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
 	}
 }
